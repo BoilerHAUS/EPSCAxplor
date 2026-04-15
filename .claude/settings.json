@@ -3,7 +3,12 @@
     "allow": [
       "Bash(npm --version)",
       "Bash(npm install *)",
-      "Bash(npm list *)"
+      "Bash(npm list *)",
+      "Bash(gh repo *)",
+      "Bash(gh label *)"
+    ],
+    "additionalDirectories": [
+      "/home/boilerrat/.claude/sessions"
     ]
   }
 }
