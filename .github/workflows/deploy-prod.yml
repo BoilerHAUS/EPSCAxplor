@@ -26,8 +26,7 @@ jobs:
       - name: Validate API
         run: |
           pip install -r services/api/requirements.txt
-          ruff check services/api/src/
-          mypy services/api/src/
+          cd services/api && ruff check src/ && mypy src/
 
       - name: Set up Node
         uses: actions/setup-node@v4

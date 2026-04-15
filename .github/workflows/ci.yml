@@ -23,13 +23,16 @@ jobs:
         run: pip install -r services/api/requirements.txt
 
       - name: Lint
-        run: ruff check services/api/src/
+        working-directory: services/api
+        run: ruff check src/
 
       - name: Type check
-        run: mypy services/api/src/
+        working-directory: services/api
+        run: mypy src/
 
       - name: Run tests
-        run: pytest services/api/tests/ -v
+        working-directory: services/api
+        run: pytest tests/ -v
 
   validate-web:
     name: Validate Web
