@@ -88,12 +88,30 @@ jobs:
     steps:
       - name: Trigger Dokploy redeploy — API
         run: |
-          curl -s -o /dev/null -w "%{http_code}" \
+          if [ -z "${{ secrets.DOKPLOY_WEBHOOK_API }}" ]; then
+            echo "::error::DOKPLOY_WEBHOOK_API secret is not set"
+            exit 1
+          fi
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST "${{ secrets.DOKPLOY_WEBHOOK_API }}" \
-            -H "Authorization: Bearer ${{ secrets.DOKPLOY_TOKEN }}"
+            -H "Authorization: Bearer ${{ secrets.DOKPLOY_TOKEN }}")
+          echo "Response: $HTTP"
+          if [ "$HTTP" -ne 200 ] && [ "$HTTP" -ne 202 ]; then
+            echo "::error::Dokploy API webhook returned HTTP $HTTP"
+            exit 1
+          fi
 
       - name: Trigger Dokploy redeploy — Web
         run: |
-          curl -s -o /dev/null -w "%{http_code}" \
+          if [ -z "${{ secrets.DOKPLOY_WEBHOOK_WEB }}" ]; then
+            echo "::error::DOKPLOY_WEBHOOK_WEB secret is not set"
+            exit 1
+          fi
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST "${{ secrets.DOKPLOY_WEBHOOK_WEB }}" \
-            -H "Authorization: Bearer ${{ secrets.DOKPLOY_TOKEN }}"
+            -H "Authorization: Bearer ${{ secrets.DOKPLOY_TOKEN }}")
+          echo "Response: $HTTP"
+          if [ "$HTTP" -ne 200 ] && [ "$HTTP" -ne 202 ]; then
+            echo "::error::Dokploy Web webhook returned HTTP $HTTP"
+            exit 1
+          fi
