@@ -1,0 +1,12 @@
+# Corpus manifest — authoritative list of all documents to be ingested.
+# One entry per document. Add entries here before running the download pipeline.
+#
+# Fields:
+#   union:     Union name (slug, lowercase-kebab)
+#   type:      primary_ca | nuclear_pa | moa_supplement | wage_schedule
+#   title:     Human-readable document title
+#   url:       Source URL on epsca.org/resources
+#   filename:  Target filename in corpus/ directory
+#   effective: Effective date (YYYY-MM-DD)
+
+documents: []

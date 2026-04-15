@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  validate-api:
+    name: Validate API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: services/api/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r services/api/requirements.txt
+
+      - name: Lint
+        run: ruff check services/api/src/
+
+      - name: Type check
+        run: mypy services/api/src/
+
+      - name: Run tests
+        run: pytest services/api/tests/ -v
+
+  validate-web:
+    name: Validate Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Type check
+        working-directory: apps/web
+        run: npm run type-check
+
+      - name: Lint
+        working-directory: apps/web
+        run: npm run lint

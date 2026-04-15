@@ -1,0 +1,61 @@
+services:
+  epsca-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: epsca
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - epsca-db-data:/var/lib/postgresql/data
+    networks:
+      - dokploy-network
+    restart: unless-stopped
+
+  epsca-qdrant:
+    image: qdrant/qdrant:latest
+    volumes:
+      - epsca-qdrant-data:/qdrant/storage
+    networks:
+      - dokploy-network
+    restart: unless-stopped
+
+  epsca-api:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/epscaxplor-api:${GIT_SHA:-latest}
+    env_file: .env
+    depends_on:
+      - epsca-db
+      - epsca-qdrant
+    networks:
+      - dokploy-network
+    extra_hosts:
+      - "host-gateway:host-gateway"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.epsca-api.rule=Host(`api.epscaxplor.boilerhaus.org`)"
+      - "traefik.http.routers.epsca-api.entrypoints=websecure"
+      - "traefik.http.routers.epsca-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.epsca-api.loadbalancer.server.port=8000"
+    restart: unless-stopped
+
+  epsca-web:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/epscaxplor-web:${GIT_SHA:-latest}
+    env_file: .env
+    depends_on:
+      - epsca-api
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.epsca-web.rule=Host(`epscaxplor.boilerhaus.org`)"
+      - "traefik.http.routers.epsca-web.entrypoints=websecure"
+      - "traefik.http.routers.epsca-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.epsca-web.loadbalancer.server.port=3000"
+    restart: unless-stopped
+
+volumes:
+  epsca-db-data:
+  epsca-qdrant-data:
+
+networks:
+  dokploy-network:
+    external: true

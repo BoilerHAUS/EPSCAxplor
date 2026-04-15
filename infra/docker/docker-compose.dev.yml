@@ -1,0 +1,30 @@
+# Local development overrides — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+services:
+  epsca-db:
+    ports:
+      - "5432:5432"
+
+  epsca-qdrant:
+    ports:
+      - "6333:6333"
+
+  epsca-api:
+    build:
+      context: ../../services/api
+    volumes:
+      - ../../services/api/src:/app/src
+    environment:
+      ENVIRONMENT: development
+    ports:
+      - "8000:8000"
+
+  epsca-web:
+    build:
+      context: ../../apps/web
+    volumes:
+      - ../../apps/web/src:/app/src
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
