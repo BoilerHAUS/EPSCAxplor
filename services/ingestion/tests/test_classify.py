@@ -21,6 +21,8 @@ def _manifest_entry(
     agreement_scope: str | None = "generation",
     effective_date: str = "2025-05-01",
     expiry_date: str | None = "2030-04-30",
+    title: str = "IBEW Test Agreement",
+    source_url: str | None = "PLACEHOLDER",
 ) -> dict:
     return {
         "union_name": union_name,
@@ -29,6 +31,8 @@ def _manifest_entry(
         "source_filename": source_filename,
         "effective_date": effective_date,
         "expiry_date": expiry_date,
+        "title": title,
+        "source_url": source_url,
     }
 
 
@@ -141,6 +145,32 @@ class TestMetadataFields:
         result = classify(doc, manifest_path)
         assert result.metadata.expiry_date is None
 
+    def test_title_assigned(self, tmp_path: Path) -> None:
+        manifest_path = _write_manifest(
+            tmp_path,
+            [_manifest_entry("ibew.pdf", title="IBEW Generation 2025-2030 Collective Agreement")],
+        )
+        doc = _make_extracted("ibew.pdf", tmp_path)
+        result = classify(doc, manifest_path)
+        assert result.metadata.title == "IBEW Generation 2025-2030 Collective Agreement"
+
+    def test_source_url_assigned(self, tmp_path: Path) -> None:
+        manifest_path = _write_manifest(
+            tmp_path,
+            [_manifest_entry("ibew.pdf", source_url="https://example.com/doc.pdf")],
+        )
+        doc = _make_extracted("ibew.pdf", tmp_path)
+        result = classify(doc, manifest_path)
+        assert result.metadata.source_url == "https://example.com/doc.pdf"
+
+    def test_source_url_none_when_absent_from_manifest(self, tmp_path: Path) -> None:
+        entry = _manifest_entry("ibew.pdf")
+        del entry["source_url"]
+        manifest_path = _write_manifest(tmp_path, [entry])
+        doc = _make_extracted("ibew.pdf", tmp_path)
+        result = classify(doc, manifest_path)
+        assert result.metadata.source_url is None
+
 
 class TestFilenameMatching:
     def test_matches_by_source_filename(self, tmp_path: Path) -> None:
@@ -200,6 +230,8 @@ class TestYamlDateNormalisation:
             "  - union_name: IBEW\n"
             "    document_type: primary_ca\n"
             "    agreement_scope: generation\n"
+            "    title: IBEW Test\n"
+            "    source_url: PLACEHOLDER\n"
             "    source_filename: date-test.pdf\n"
             "    effective_date: 2025-05-01\n"  # bare date → datetime.date
             "    expiry_date: 2030-04-30\n"      # bare date → datetime.date
@@ -216,6 +248,8 @@ class TestYamlDateNormalisation:
             "  - union_name: Sheet Metal\n"
             "    document_type: primary_ca\n"
             "    agreement_scope: null\n"
+            "    title: Sheet Metal Test\n"
+            "    source_url: PLACEHOLDER\n"
             "    source_filename: sm-date.pdf\n"
             "    effective_date: 2025-05-01\n"
             "    expiry_date: 2030-04-30\n"

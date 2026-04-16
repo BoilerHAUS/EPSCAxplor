@@ -17,6 +17,8 @@ def _make_metadata() -> DocumentMetadata:
         agreement_scope="generation",
         effective_date="2025-05-01",
         expiry_date="2030-04-30",
+        title="IBEW Test Agreement",
+        source_url="PLACEHOLDER",
     )
 
 

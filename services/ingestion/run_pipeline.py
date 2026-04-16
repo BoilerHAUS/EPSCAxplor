@@ -1,13 +1,13 @@
 """
 Ingestion pipeline orchestrator.
 
-Runs pipeline stages in order. Use --stage to run a single stage or
-omit it to run all stages sequentially.
+Runs all six stages sequentially against every document in the corpus manifest,
+or a single stage when --stage is specified.
 
 Usage:
-    python run_pipeline.py --stage download
-    python run_pipeline.py --stage extract
-    python run_pipeline.py           # runs all stages
+    python run_pipeline.py                   # runs all stages for all documents
+    python run_pipeline.py --dry-run         # skips store (embed → /dev/null)
+    python run_pipeline.py --stage download  # runs only the download stage
 """
 
 from __future__ import annotations
@@ -15,36 +15,141 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import time
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("run_pipeline")
 
 STAGES = ["download", "extract", "classify", "chunk", "embed", "store"]
 
+_HERE = Path(__file__).parent
+
+
+# ─── Single-stage helpers ─────────────────────────────────────────────────────
+
+
+async def _run_download() -> None:
+    from download import run_download
+
+    results = await run_download()
+    for r in results:
+        detail = r.file_hash or r.error or ""
+        logger.info("[%s] %s — %s", r.status.value.upper(), r.source_filename, detail)
+
+
+# ─── Full pipeline (per-document) ─────────────────────────────────────────────
+
+
+async def _run_full_pipeline(dry_run: bool) -> None:
+    """
+    Run all six stages end-to-end for every document found in the corpus.
+
+    Download stage is skipped here (run it separately via --stage download).
+    Stages 2–6 operate on every PDF already present in corpus/.
+    """
+    from chunk import chunk_document
+
+    import yaml
+
+    from classify import classify
+    from download import CORPUS_DIR, CORPUS_MANIFEST, resolve_corpus_path
+    from embed import embed_chunks
+    from extract import extract_pdf
+    from store import store_document
+
+    with CORPUS_MANIFEST.open() as f:
+        manifest_data = yaml.safe_load(f) or {}
+    entries = list(manifest_data.get("documents", []))
+
+    doc_count = 0
+    total_chunks = 0
+    t_start = time.monotonic()
+
+    for entry in entries:
+        pdf_path = resolve_corpus_path(entry, CORPUS_DIR)
+
+        if not pdf_path.exists():
+            logger.warning("PDF not found, skipping: %s", pdf_path)
+            continue
+
+        source_filename = entry.get("source_filename", pdf_path.name)
+        logger.info("--- %s ---", source_filename)
+        t_doc = time.monotonic()
+
+        # Stage 2: Extract
+        extracted = extract_pdf(pdf_path)
+        logger.info("  extract: %d blocks, %d pages", len(extracted.blocks), extracted.page_count)
+
+        # Stage 3: Classify
+        classified = classify(extracted)
+        logger.info(
+            "  classify: %s / %s",
+            classified.metadata.union_name,
+            classified.metadata.document_type,
+        )
+
+        # Stage 4: Chunk
+        chunks = chunk_document(classified)
+        logger.info("  chunk: %d chunks", len(chunks))
+        total_chunks += len(chunks)
+
+        # Stage 5: Embed
+        embeddings = await embed_chunks(chunks)
+        logger.info("  embed: %d vectors", len(embeddings))
+
+        # Stage 6: Store (skipped on --dry-run)
+        if dry_run:
+            logger.info("  store: SKIPPED (--dry-run)")
+        else:
+            await store_document(classified, chunks, embeddings)
+            logger.info("  store: OK")
+
+        elapsed = time.monotonic() - t_doc
+        logger.info("  done in %.1fs", elapsed)
+        doc_count += 1
+
+    total_elapsed = time.monotonic() - t_start
+    logger.info(
+        "Pipeline complete: %d documents, %d chunks, %.1fs total",
+        doc_count,
+        total_chunks,
+        total_elapsed,
+    )
+
+
+# ─── Entry point ──────────────────────────────────────────────────────────────
+
 
 async def run_stage(stage: str) -> None:
     if stage == "download":
-        from download import run_download
-
-        results = await run_download()
-        for r in results:
-            detail = r.file_hash or r.error or ""
-            logger.info("[%s] %s — %s", r.status.value.upper(), r.source_filename, detail)
-    elif stage == "extract":
-        logger.info("Extract stage not yet wired to orchestrator — run extract.py directly")
-    elif stage == "classify":
-        logger.info("Classify stage not yet wired to orchestrator — use classify.py directly")
-    elif stage == "chunk":
-        logger.info("Chunk stage not yet wired to orchestrator — use chunk.py directly")
+        await _run_download()
+    elif stage in ("extract", "classify", "chunk", "embed", "store"):
+        logger.error(
+            "Stage '%s' cannot be run in isolation — "
+            "omit --stage to run the full pipeline, or use --stage download",
+            stage,
+        )
+        raise SystemExit(1)
     else:
-        logger.warning("Stage '%s' not yet implemented", stage)
+        logger.warning("Unknown stage '%s'", stage)
 
 
-async def main(stages: list[str]) -> None:
-    for stage in stages:
-        logger.info("=== Stage: %s ===", stage)
-        await run_stage(stage)
-    logger.info("Pipeline complete.")
+async def main(stages: list[str], dry_run: bool) -> None:
+    if stages == STAGES:
+        # Full pipeline run
+        t0 = time.monotonic()
+        logger.info("=== Download ===")
+        await _run_download()
+        logger.info("=== Pipeline (extract → store) ===")
+        await _run_full_pipeline(dry_run=dry_run)
+        logger.info("Total wall time: %.1fs", time.monotonic() - t0)
+    else:
+        # Single-stage run
+        for stage in stages:
+            logger.info("=== Stage: %s ===", stage)
+            await run_stage(stage)
+        logger.info("Done.")
 
 
 if __name__ == "__main__":
@@ -55,6 +160,12 @@ if __name__ == "__main__":
         default=None,
         help="Run a single stage (default: run all stages)",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Skip the store stage (embed is still computed but not persisted)",
+    )
     args = parser.parse_args()
     selected = [args.stage] if args.stage else STAGES
-    asyncio.run(main(selected))
+    asyncio.run(main(selected, dry_run=args.dry_run))
