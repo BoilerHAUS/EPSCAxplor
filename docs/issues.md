@@ -24,7 +24,7 @@ Goal: Running infrastructure, empty but functional services. Completion gate: `G
 | [#6](https://github.com/BoilerHAUS/EPSCAxplor/issues/6) | no-pr | [x] | ops: pull nomic-embed-text into Ollama on VPS |
 | [#7](https://github.com/BoilerHAUS/EPSCAxplor/issues/7) | pr | [x] | feat(infra): create Docker Compose production and dev stacks |
 | [#8](https://github.com/BoilerHAUS/EPSCAxplor/issues/8) | pr | [x] | feat(db): create initial database migrations for all PostgreSQL tables |
-| [#9](https://github.com/BoilerHAUS/EPSCAxplor/issues/9) | pr | [ ] | feat(api): build FastAPI skeleton with /health endpoint |
+| [#9](https://github.com/BoilerHAUS/EPSCAxplor/issues/9) | pr | [x] | feat(api): build FastAPI skeleton with /health endpoint |
 | [#10](https://github.com/BoilerHAUS/EPSCAxplor/issues/10) | no-pr | [ ] | ops: deploy epsca-db and epsca-qdrant containers on VPS |
 | [#41](https://github.com/BoilerHAUS/EPSCAxplor/issues/41) | no-pr | [x] | ops: restore ollama-proxy nginx container for EPSCAxplor service connectivity |
 
