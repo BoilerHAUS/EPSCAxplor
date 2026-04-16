@@ -5,7 +5,14 @@
       "Bash(npm install *)",
       "Bash(npm list *)",
       "Bash(gh repo *)",
-      "Bash(gh label *)"
+      "Bash(gh label *)",
+      "Bash(python3 -c ' *)",
+      "Bash(docker-compose -f /media/boilerrat/Bobby/EPSCAxplor/infra/docker/docker-compose.yml config)",
+      "Bash(git commit -m ' *)",
+      "Bash(ls /media/boilerrat/Bobby/EPSCAxplor/.env*)",
+      "Bash(docker rm *)",
+      "Bash(docker exec *)",
+      "Bash(git commit -m 'docs: document local migration testing pattern in CLAUDE.md *)"
     ],
     "additionalDirectories": [
       "/home/boilerrat/.claude/sessions"
