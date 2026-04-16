@@ -2,11 +2,80 @@
 # One entry per document. Add entries here before running the download pipeline.
 #
 # Fields:
-#   union:     Union name (slug, lowercase-kebab)
-#   type:      primary_ca | nuclear_pa | moa_supplement | wage_schedule
-#   title:     Human-readable document title
-#   url:       Source URL on epsca.org/resources
-#   filename:  Target filename in corpus/ directory
-#   effective: Effective date (YYYY-MM-DD)
+#   union_name:      Union display name (matches documents.union_name in PostgreSQL)
+#   document_type:   primary_ca | nuclear_pa | moa_supplement | wage_schedule
+#   agreement_scope: generation | transmission | null (only for IBEW and Labourers)
+#   title:           Full document title as listed on epsca.org/resources
+#   source_url:      Direct download URL from epsca.org. Set to PLACEHOLDER if
+#                    the URL must be obtained manually from the EPSCA website.
+#   source_filename: Target filename in corpus/{union-slug}/{document_type}/
+#   effective_date:  Agreement or wage schedule effective date (YYYY-MM-DD)
+#   expiry_date:     Agreement expiry date (YYYY-MM-DD); null for open-ended documents
+#
+# Phase 1 POC — 6 documents: IBEW Generation, Sheet Metal, United Association
+# (3 primary CAs + 3 Nuclear Project Agreements)
+#
+# NOTE: source_url values below are PLACEHOLDER — visit https://www.epsca.org/resources
+# to obtain the current direct download links before running `python download.py`.
 
-documents: []
+documents:
+
+  # ─── IBEW ──────────────────────────────────────────────────────────────────
+
+  - union_name: "IBEW"
+    document_type: "primary_ca"
+    agreement_scope: "generation"
+    title: "IBEW Generation 2025-2030 Collective Agreement"
+    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_filename: "IBEW Generation- 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "IBEW"
+    document_type: "nuclear_pa"
+    agreement_scope: "generation"
+    title: "IBEW Nuclear Project Agreement"
+    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_filename: "IBEW Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  # ─── Sheet Metal ───────────────────────────────────────────────────────────
+
+  - union_name: "Sheet Metal"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Sheet Metal Workers 2025-2030 Collective Agreement"
+    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_filename: "Sheet Metal - 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Sheet Metal"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Sheet Metal Nuclear Project Agreement"
+    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_filename: "Sheet Metal Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  # ─── United Association ────────────────────────────────────────────────────
+
+  - union_name: "United Association"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "United Association 2025-2030 Collective Agreement"
+    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_filename: "United Association - 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "United Association"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "United Association Nuclear Project Agreement"
+    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_filename: "United Association Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
