@@ -24,7 +24,20 @@
       "Bash(echo \"--- mypy exit: $?\")",
       "Bash(python3 -m bandit -r src/)",
       "Bash(echo \"--- bandit exit: $?\")",
-      "Bash(python3 -m pytest tests/ -v)"
+      "Bash(python3 -m pytest tests/ -v)",
+      "Bash(git checkout *)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(python3 -m ruff check .)",
+      "Bash(python -m ruff check download.py extract.py)",
+      "Bash(python3 -m ruff check download.py extract.py)",
+      "Bash(python3 -m mypy download.py extract.py --strict)",
+      "Bash(python3 -m bandit -r /media/boilerrat/Bobby/EPSCAxplor/services/ingestion/download.py /media/boilerrat/Bobby/EPSCAxplor/services/ingestion/extract.py)",
+      "Bash(gh pr create --repo BoilerHAUS/EPSCAxplor --title 'feat\\(ingestion\\): build download and extract pipeline stages' --body ' *)",
+      "Read(//home/boilerrat/Downloads/**)",
+      "Bash(git rm *)",
+      "Bash(python -m pytest tests/test_classify.py tests/test_chunk.py -v)",
+      "Bash(python3 -m pytest tests/test_classify.py tests/test_chunk.py -v)",
+      "Bash(python3 -m pytest -v)"
     ],
     "additionalDirectories": [
       "/home/boilerrat/.claude/sessions"
