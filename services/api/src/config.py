@@ -1,4 +1,6 @@
-from pydantic_settings import BaseSettings
+from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -8,6 +10,11 @@ class Settings(BaseSettings):
     Pydantic raises a ValidationError at startup if any required field is
     missing, preventing silent misconfiguration in production.
     """
+
+    model_config = SettingsConfigDict(
+        env_file=".env.local",
+        case_sensitive=False,
+    )
 
     database_url: str
     qdrant_url: str
@@ -22,9 +29,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     cors_origins: str = "http://localhost:3000"
 
-    class Config:
-        env_file = ".env.local"
-        case_sensitive = False
 
-
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

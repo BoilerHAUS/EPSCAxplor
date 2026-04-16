@@ -17,15 +17,16 @@ Goal: Running infrastructure, empty but functional services. Completion gate: `G
 | # | type | status | title |
 |---|------|--------|-------|
 | [#1](https://github.com/BoilerHAUS/EPSCAxplor/issues/1) | pr | [x] | chore(ci): commit deploy-dev.yml webhook error handling improvement |
-| [#2](https://github.com/BoilerHAUS/EPSCAxplor/issues/2) | pr | [ ] | chore(ci): add PR template and pull request workflow rules |
-| [#3](https://github.com/BoilerHAUS/EPSCAxplor/issues/3) | no-pr | [ ] | ops: configure GitHub Actions secrets for Dokploy deployment |
-| [#4](https://github.com/BoilerHAUS/EPSCAxplor/issues/4) | no-pr | [ ] | ops: create Dokploy apps on OVH VPS and capture webhook URLs |
-| [#5](https://github.com/BoilerHAUS/EPSCAxplor/issues/5) | no-pr | [ ] | ops: VPS cleanup — remove Nextcloud and Mistral 7B |
-| [#6](https://github.com/BoilerHAUS/EPSCAxplor/issues/6) | no-pr | [ ] | ops: pull nomic-embed-text into Ollama on VPS |
-| [#7](https://github.com/BoilerHAUS/EPSCAxplor/issues/7) | pr | [ ] | feat(infra): create Docker Compose production and dev stacks |
-| [#8](https://github.com/BoilerHAUS/EPSCAxplor/issues/8) | pr | [ ] | feat(db): create initial database migrations for all PostgreSQL tables |
+| [#2](https://github.com/BoilerHAUS/EPSCAxplor/issues/2) | pr | [x] | chore(ci): add PR template and pull request workflow rules |
+| [#3](https://github.com/BoilerHAUS/EPSCAxplor/issues/3) | no-pr | [x] | ops: configure GitHub Actions secrets for Dokploy deployment |
+| [#4](https://github.com/BoilerHAUS/EPSCAxplor/issues/4) | no-pr | [x] | ops: create Dokploy apps on OVH VPS and capture webhook URLs |
+| [#5](https://github.com/BoilerHAUS/EPSCAxplor/issues/5) | no-pr | [x] | ops: VPS cleanup — remove Nextcloud and Mistral 7B |
+| [#6](https://github.com/BoilerHAUS/EPSCAxplor/issues/6) | no-pr | [x] | ops: pull nomic-embed-text into Ollama on VPS |
+| [#7](https://github.com/BoilerHAUS/EPSCAxplor/issues/7) | pr | [x] | feat(infra): create Docker Compose production and dev stacks |
+| [#8](https://github.com/BoilerHAUS/EPSCAxplor/issues/8) | pr | [x] | feat(db): create initial database migrations for all PostgreSQL tables |
 | [#9](https://github.com/BoilerHAUS/EPSCAxplor/issues/9) | pr | [ ] | feat(api): build FastAPI skeleton with /health endpoint |
 | [#10](https://github.com/BoilerHAUS/EPSCAxplor/issues/10) | no-pr | [ ] | ops: deploy epsca-db and epsca-qdrant containers on VPS |
+| [#41](https://github.com/BoilerHAUS/EPSCAxplor/issues/41) | no-pr | [x] | ops: restore ollama-proxy nginx container for EPSCAxplor service connectivity |
 
 ---
 

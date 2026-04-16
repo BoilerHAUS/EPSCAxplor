@@ -70,6 +70,23 @@ SQL
 docker rm -f epsca-db-test
 ```
 
+## Github Issues
+
+Issues are tracked at [BoilerHAUS/EPSCAxplor](https://github.com/BoilerHAUS/EPSCAxplor/issues) and mirrored locally in [docs/issues.md](docs/issues.md).
+
+**Workflow:**
+- Issues are grouped by phase with `[ ]` open and `[x]` closed status.
+- `[no-pr]` items are ops/config tasks; `[pr]` items require a feature branch and PR targeting `main`.
+- Phases are sequential — do not start Phase N+1 until Phase N's completion gate is met.
+
+**When starting a session:** Read `docs/issues.md` to find the current phase and the first open `[ ]` item.
+
+**When an issue is opened:** Add it to the correct phase table in `docs/issues.md` with `[ ]` status and the appropriate `[pr]` or `[no-pr]` type.
+
+**When an issue is closed:** Mark it `[x]` in `docs/issues.md`. If not already closed on GitHub, run `gh issue close N`.
+
+**On request ("review issues" / "sync issues"):** Run `gh issue list --state all --limit 100` and reconcile `docs/issues.md` with the live GitHub state — mark any manually-closed issues `[x]`, add any issues missing from the runbook, and remove entries for issues that no longer exist.
+
 ## Reference Docs
 
 - Architecture & data model: [docs/planning.md](docs/planning.md)

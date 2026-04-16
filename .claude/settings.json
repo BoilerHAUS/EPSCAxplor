@@ -12,7 +12,19 @@
       "Bash(ls /media/boilerrat/Bobby/EPSCAxplor/.env*)",
       "Bash(docker rm *)",
       "Bash(docker exec *)",
-      "Bash(git commit -m 'docs: document local migration testing pattern in CLAUDE.md *)"
+      "Bash(git commit -m 'docs: document local migration testing pattern in CLAUDE.md *)",
+      "Bash(pip install *)",
+      "Bash(ruff check *)",
+      "Bash(mypy src/)",
+      "Bash(pytest tests/ -v)",
+      "Bash(python -m ruff check src/ tests/)",
+      "Bash(echo \"--- ruff exit: $?\")",
+      "Bash(python3 -m ruff check src/ tests/)",
+      "Bash(python3 -m mypy src/)",
+      "Bash(echo \"--- mypy exit: $?\")",
+      "Bash(python3 -m bandit -r src/)",
+      "Bash(echo \"--- bandit exit: $?\")",
+      "Bash(python3 -m pytest tests/ -v)"
     ],
     "additionalDirectories": [
       "/home/boilerrat/.claude/sessions"

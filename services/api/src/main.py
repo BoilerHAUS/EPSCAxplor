@@ -1,8 +1,18 @@
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
-app = FastAPI(title="EPSCAxplor API")
+from src.config import get_settings
+from src.routes.health import router as health_router
 
 
-@app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    get_settings()  # raises ValidationError immediately if env is misconfigured
+    yield
+
+
+app = FastAPI(title="EPSCAxplor API", lifespan=lifespan)
+
+app.include_router(health_router)
