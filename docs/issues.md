@@ -36,7 +36,7 @@ Goal: End-to-end pipeline validated against 3 unions (IBEW Generation, Sheet Met
 
 | # | type | status | title |
 |---|------|--------|-------|
-| [#11](https://github.com/BoilerHAUS/EPSCAxplor/issues/11) | pr | [ ] | feat(ingestion): build download and extract pipeline stages |
+| [#11](https://github.com/BoilerHAUS/EPSCAxplor/issues/11) | pr | [x] | feat(ingestion): build download and extract pipeline stages |
 | [#12](https://github.com/BoilerHAUS/EPSCAxplor/issues/12) | pr | [x] | feat(ingestion): build classify and chunk pipeline stages |
 | [#13](https://github.com/BoilerHAUS/EPSCAxplor/issues/13) | pr | [x] | feat(ingestion): build embed, store, and pipeline orchestrator |
 | [#14](https://github.com/BoilerHAUS/EPSCAxplor/issues/14) | no-pr | [ ] | ops: run Phase 1 POC ingestion (IBEW Generation, Sheet Metal, UA) |
