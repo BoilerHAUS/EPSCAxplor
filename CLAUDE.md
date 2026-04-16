@@ -38,6 +38,38 @@ Answers sourced from model inference rather than retrieved documents are pipelin
 
 Cross-lane PRs require explicit justification.
 
+## Local Development Notes
+
+### Testing migrations locally
+
+`dokploy-network` is an **external** network — `docker compose up` will fail locally
+because that network only exists on the VPS. Do not try to bring up the full stack locally.
+
+For migration testing, spin up a standalone throwaway postgres container with no port
+binding (ports 5432–5434 are likely occupied by other projects) and access it via
+`docker exec`:
+
+```bash
+docker run -d --name epsca-db-test \
+  -e POSTGRES_DB=epsca \
+  -e POSTGRES_USER=epsca_user \
+  -e POSTGRES_PASSWORD=testpassword \
+  postgres:16-alpine
+
+# Apply migrations
+for f in $(ls infra/db/migrations/*.sql | sort); do
+  docker exec -i epsca-db-test psql -U epsca_user -d epsca < "$f"
+done
+
+# Run queries
+docker exec -i epsca-db-test psql -U epsca_user -d epsca <<'SQL'
+-- your SQL here
+SQL
+
+# Teardown
+docker rm -f epsca-db-test
+```
+
 ## Reference Docs
 
 - Architecture & data model: [docs/planning.md](docs/planning.md)
