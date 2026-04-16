@@ -2,7 +2,7 @@ services:
   epsca-db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: epsca
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
@@ -21,7 +21,19 @@ services:
 
   epsca-api:
     image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/epscaxplor-api:${GIT_SHA:-latest}
-    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      QDRANT_URL: ${QDRANT_URL}
+      OLLAMA_URL: ${OLLAMA_URL}
+      OLLAMA_EMBED_MODEL: ${OLLAMA_EMBED_MODEL}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      CLAUDE_HAIKU_MODEL: ${CLAUDE_HAIKU_MODEL}
+      CLAUDE_SONNET_MODEL: ${CLAUDE_SONNET_MODEL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRY_SECONDS: ${JWT_ACCESS_EXPIRY_SECONDS}
+      JWT_REFRESH_EXPIRY_DAYS: ${JWT_REFRESH_EXPIRY_DAYS}
+      ENVIRONMENT: ${ENVIRONMENT}
+      CORS_ORIGINS: ${CORS_ORIGINS}
     depends_on:
       - epsca-db
       - epsca-qdrant
@@ -39,7 +51,8 @@ services:
 
   epsca-web:
     image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/epscaxplor-web:${GIT_SHA:-latest}
-    env_file: .env
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     depends_on:
       - epsca-api
     networks:
