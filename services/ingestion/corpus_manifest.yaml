@@ -15,8 +15,7 @@
 # Phase 1 POC — 6 documents: IBEW Generation, Sheet Metal, United Association
 # (3 primary CAs + 3 Nuclear Project Agreements)
 #
-# NOTE: source_url values below are PLACEHOLDER — visit https://www.epsca.org/resources
-# to obtain the current direct download links before running `python download.py`.
+# source_url values are direct links from https://www.epsca.org/resources (verified 2026-04-16).
 
 documents:
 
@@ -26,7 +25,7 @@ documents:
     document_type: "primary_ca"
     agreement_scope: "generation"
     title: "IBEW Generation 2025-2030 Collective Agreement"
-    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_url: "https://www.epsca.org/upload/request/5?file=IBEW%20Generation-%202025-2030%20Collective%20Agreement.pdf&download=1"
     source_filename: "IBEW Generation- 2025-2030 Collective Agreement.pdf"
     effective_date: "2025-05-01"
     expiry_date: "2030-04-30"
@@ -35,7 +34,7 @@ documents:
     document_type: "nuclear_pa"
     agreement_scope: "generation"
     title: "IBEW Nuclear Project Agreement"
-    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_url: "https://www.epsca.org/upload/request/27?file=IBEW%20Nuclear%20Project%20Agreement.pdf&download=1"
     source_filename: "IBEW Nuclear Project Agreement.pdf"
     effective_date: "2025-05-01"
     expiry_date: "2030-04-30"
@@ -46,7 +45,7 @@ documents:
     document_type: "primary_ca"
     agreement_scope: null
     title: "Sheet Metal Workers 2025-2030 Collective Agreement"
-    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_url: "https://www.epsca.org/upload/request/11?file=Sheet%20Metal%20-%202025-2030%20Collective%20Agreement.pdf&download=1"
     source_filename: "Sheet Metal - 2025-2030 Collective Agreement.pdf"
     effective_date: "2025-05-01"
     expiry_date: "2030-04-30"
@@ -55,7 +54,7 @@ documents:
     document_type: "nuclear_pa"
     agreement_scope: null
     title: "Sheet Metal Nuclear Project Agreement"
-    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_url: "https://www.epsca.org/upload/request/68?file=Sheet%20Metal%20Nuclear%20Project%20Agreement.pdf&download=1"
     source_filename: "Sheet Metal Nuclear Project Agreement.pdf"
     effective_date: "2025-05-01"
     expiry_date: "2030-04-30"
@@ -66,7 +65,7 @@ documents:
     document_type: "primary_ca"
     agreement_scope: null
     title: "United Association 2025-2030 Collective Agreement"
-    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_url: "https://www.epsca.org/upload/request/13?file=UA%20-%202025-2030%20Collective%20Agreement.pdf&download=1"
     source_filename: "United Association - 2025-2030 Collective Agreement.pdf"
     effective_date: "2025-05-01"
     expiry_date: "2030-04-30"
@@ -75,7 +74,7 @@ documents:
     document_type: "nuclear_pa"
     agreement_scope: null
     title: "United Association Nuclear Project Agreement"
-    source_url: "PLACEHOLDER - see https://www.epsca.org/resources"
+    source_url: "https://www.epsca.org/upload/request/76?file=UA%20Nuclear%20Project%20Agreement.pdf&download=1"
     source_filename: "United Association Nuclear Project Agreement.pdf"
     effective_date: "2025-05-01"
     expiry_date: "2030-04-30"
