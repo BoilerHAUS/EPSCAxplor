@@ -32,6 +32,10 @@ async def run_stage(stage: str) -> None:
             logger.info("[%s] %s — %s", r.status.value.upper(), r.source_filename, detail)
     elif stage == "extract":
         logger.info("Extract stage not yet wired to orchestrator — run extract.py directly")
+    elif stage == "classify":
+        logger.info("Classify stage not yet wired to orchestrator — use classify.py directly")
+    elif stage == "chunk":
+        logger.info("Chunk stage not yet wired to orchestrator — use chunk.py directly")
     else:
         logger.warning("Stage '%s' not yet implemented", stage)
 
