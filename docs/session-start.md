@@ -28,3 +28,4 @@ Start by reading docs/issues.md and telling me which issue you're picking up and
 - If you want to target a specific issue, append: `Work on issue #N.`
 - If multiple issues in a phase are unblocked, the agent will pick the most logical starting point.
 - The `[no-pr]` issues (ops/config tasks) can be done in parallel with PR issues — flag them when you complete them manually so the doc stays accurate.
+- be efficient, follow token efficiency guidelines in CLAUDE.md

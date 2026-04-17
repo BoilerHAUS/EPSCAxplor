@@ -112,3 +112,9 @@ Issues are tracked at [BoilerHAUS/EPSCAxplor](https://github.com/BoilerHAUS/EPSC
 
 Figma, Vercel, PubMed, Gmail, Google Calendar, Indeed, Jam, Excalidraw, Mermaid Chart.
 Do not invoke these for this project.
+
+## Token Efficiency
+
+- Use the token efficiency skill located in .claude's skills directory for general token savings.
+- Use the markdown-token-optimizer skill on all project markdown files
+- Use caveman skill in lite mode
