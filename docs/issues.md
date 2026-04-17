@@ -42,7 +42,7 @@ Goal: End-to-end pipeline validated against 3 unions (IBEW Generation, Sheet Met
 | [#14](https://github.com/BoilerHAUS/EPSCAxplor/issues/14) | no-pr | [x] | ops: run Phase 1 POC ingestion (IBEW Generation, Sheet Metal, UA) |
 | [#15](https://github.com/BoilerHAUS/EPSCAxplor/issues/15) | pr | [x] | feat(rag): implement query pre-processing (nuclear detection, union/scope detection) |
 | [#16](https://github.com/BoilerHAUS/EPSCAxplor/issues/16) | pr | [x] | feat(rag): implement Qdrant filtered similarity search and context assembly |
-| [#17](https://github.com/BoilerHAUS/EPSCAxplor/issues/17) | pr | [ ] | feat(api): implement POST /query endpoint with model routing and response structure |
+| [#17](https://github.com/BoilerHAUS/EPSCAxplor/issues/17) | pr | [x] | feat(api): implement POST /query endpoint with model routing and response structure |
 | [#18](https://github.com/BoilerHAUS/EPSCAxplor/issues/18) | no-pr | [ ] | ops: evaluate Phase 1 POC against gold question set |
 | [#39](https://github.com/BoilerHAUS/EPSCAxplor/issues/39) | pr | [x] | chore(ci): extract shared validation steps into reusable workflow |
 
