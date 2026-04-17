@@ -116,7 +116,9 @@ async def _upsert_document_row(
                 doc.metadata.source_url,
                 source_filename,
                 datetime.date.fromisoformat(doc.metadata.effective_date),
-                datetime.date.fromisoformat(doc.metadata.expiry_date) if doc.metadata.expiry_date else None,
+                datetime.date.fromisoformat(doc.metadata.expiry_date)
+                if doc.metadata.expiry_date
+                else None,
                 file_hash,
                 chunk_count,
             )
