@@ -20,6 +20,7 @@ Environment variables:
 
 from __future__ import annotations
 
+import datetime
 import hashlib
 import logging
 import os
@@ -114,8 +115,8 @@ async def _upsert_document_row(
                 doc.metadata.title,
                 doc.metadata.source_url,
                 source_filename,
-                doc.metadata.effective_date,
-                doc.metadata.expiry_date,
+                datetime.date.fromisoformat(doc.metadata.effective_date),
+                datetime.date.fromisoformat(doc.metadata.expiry_date) if doc.metadata.expiry_date else None,
                 file_hash,
                 chunk_count,
             )
