@@ -14,6 +14,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from qdrant_client.http.models import QueryResponse
 from qdrant_client.models import (
     DatetimeRange,
     FieldCondition,
@@ -308,6 +309,10 @@ def _make_ollama_mock(mock_http: MagicMock) -> AsyncMock:
     return mock_post
 
 
+def _make_query_response(hits: list[ScoredPoint]) -> QueryResponse:
+    return QueryResponse(points=hits)
+
+
 class TestRetrieve:
     """retrieve calls Ollama (embed) then Qdrant (search); both are mocked."""
 
@@ -342,7 +347,7 @@ class TestRetrieve:
         ):
             _make_ollama_mock(mock_http)
             mock_qdrant = AsyncMock()
-            mock_qdrant.search = AsyncMock(return_value=hits)
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response(hits))
             mock_qdrant_cls.return_value = mock_qdrant
 
             results = await retrieve("overtime rates", settings=settings)
@@ -358,7 +363,7 @@ class TestRetrieve:
         ):
             mock_post = _make_ollama_mock(mock_http)
             mock_qdrant = AsyncMock()
-            mock_qdrant.search = AsyncMock(return_value=[])
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
             mock_qdrant_cls.return_value = mock_qdrant
 
             await retrieve("overtime rates for IBEW", settings=settings)
@@ -377,12 +382,12 @@ class TestRetrieve:
         ):
             _make_ollama_mock(mock_http)
             mock_qdrant = AsyncMock()
-            mock_qdrant.search = AsyncMock(return_value=[])
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
             mock_qdrant_cls.return_value = mock_qdrant
 
             await retrieve("overtime rates", settings=settings)
 
-        call_kwargs = mock_qdrant.search.call_args
+        call_kwargs = mock_qdrant.query_points.call_args
         assert call_kwargs.kwargs["collection_name"] == COLLECTION
         assert call_kwargs.kwargs["limit"] == TOP_K
         assert call_kwargs.kwargs["with_payload"] is True
@@ -395,13 +400,13 @@ class TestRetrieve:
         ):
             _make_ollama_mock(mock_http)
             mock_qdrant = AsyncMock()
-            mock_qdrant.search = AsyncMock(return_value=[])
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
             mock_qdrant_cls.return_value = mock_qdrant
 
             await retrieve("overtime rates", settings=settings)
 
-        call_kwargs = mock_qdrant.search.call_args
-        assert call_kwargs.kwargs["query_vector"] == FAKE_VECTOR
+        call_kwargs = mock_qdrant.query_points.call_args
+        assert call_kwargs.kwargs["query"] == FAKE_VECTOR
 
     @pytest.mark.asyncio
     async def test_returns_empty_list_when_no_hits(self, settings: Settings) -> None:
@@ -411,7 +416,7 @@ class TestRetrieve:
         ):
             _make_ollama_mock(mock_http)
             mock_qdrant = AsyncMock()
-            mock_qdrant.search = AsyncMock(return_value=[])
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
             mock_qdrant_cls.return_value = mock_qdrant
 
             results = await retrieve("something obscure", settings=settings)
@@ -426,7 +431,7 @@ class TestRetrieve:
         ):
             _make_ollama_mock(mock_http)
             mock_qdrant = AsyncMock()
-            mock_qdrant.search = AsyncMock(return_value=[])
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
             mock_qdrant_cls.return_value = mock_qdrant
 
             await retrieve("overtime rates", settings=settings)
