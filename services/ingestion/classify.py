@@ -31,6 +31,8 @@ class DocumentMetadata:
     agreement_scope: str | None
     effective_date: str
     expiry_date: str | None
+    title: str
+    source_url: str | None
 
 
 @dataclass
@@ -57,18 +59,19 @@ def _to_date_str(value: object) -> str:
 
 
 @functools.lru_cache(maxsize=8)
-def _load_manifest_entries(manifest_path: Path) -> list[dict[str, object]]:
+def _load_manifest_entries(manifest_path: Path) -> tuple[dict[str, object], ...]:
     """
     Load and cache manifest entries from a corpus_manifest.yaml file.
 
-    Caching avoids repeated file I/O and YAML parsing when ``classify`` is
-    called once per document in a pipeline run against a fixed manifest.
-    The cache is keyed on the absolute path, so tests using isolated
+    Returns an immutable tuple so that callers cannot accidentally mutate the
+    cached value.  Caching avoids repeated file I/O and YAML parsing when
+    ``classify`` is called once per document in a pipeline run against a fixed
+    manifest.  The cache is keyed on the absolute path, so tests using isolated
     ``tmp_path`` manifests each get their own cache entry.
     """
     with manifest_path.open() as f:
         data = yaml.safe_load(f) or {}
-    return list(data.get("documents", []))
+    return tuple(data.get("documents", []))
 
 
 def classify(
@@ -96,6 +99,7 @@ def classify(
     for entry in entries:
         if entry.get("source_filename") == filename:
             expiry_raw = entry.get("expiry_date")
+            source_url_raw = entry.get("source_url")
             return ClassifiedDocument(
                 extracted=doc,
                 metadata=DocumentMetadata(
@@ -108,6 +112,8 @@ def classify(
                     ),
                     effective_date=_to_date_str(entry["effective_date"]),
                     expiry_date=_to_date_str(expiry_raw) if expiry_raw is not None else None,
+                    title=str(entry.get("title", "")),
+                    source_url=str(source_url_raw) if source_url_raw is not None else None,
                 ),
             )
 
