@@ -24,11 +24,13 @@ Design notes
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import cast
 
 import httpx
 from pydantic import BaseModel
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import (
+    Condition,
     DatetimeRange,
     FieldCondition,
     Filter,
@@ -101,7 +103,7 @@ def build_filter(
         ]
     )
 
-    must: list[Filter | FieldCondition] = [expiry_guard]
+    must: list[Condition] = [expiry_guard]
 
     if union_filter:
         must.append(
@@ -137,7 +139,8 @@ async def _embed(text: str, settings: Settings) -> list[float]:
             timeout=30.0,
         )
         response.raise_for_status()
-    return response.json()["embedding"]
+    data = response.json()
+    return cast(list[float], data.get("embedding", []))
 
 
 def _point_to_chunk(point: ScoredPoint) -> ChunkResult:
@@ -190,11 +193,11 @@ async def retrieve(
     filt = build_filter(union_filter, include_nuclear_pa, agreement_scope)
 
     qdrant = AsyncQdrantClient(url=settings.qdrant_url)
-    hits = await qdrant.search(
+    response = await qdrant.query_points(
         collection_name=COLLECTION,
-        query_vector=vector,
+        query=vector,
         query_filter=filt,
         limit=TOP_K,
         with_payload=True,
     )
-    return [_point_to_chunk(hit) for hit in hits]
+    return [_point_to_chunk(hit) for hit in response.points]
