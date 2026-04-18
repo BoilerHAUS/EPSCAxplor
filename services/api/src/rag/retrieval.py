@@ -41,7 +41,7 @@ from qdrant_client.models import (
 from src.config import Settings
 
 COLLECTION: str = "epsca_chunks"
-TOP_K: int = 6
+TOP_K: int = 10
 
 
 class ChunkResult(BaseModel):
