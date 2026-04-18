@@ -1,6 +1,6 @@
 # Phase 1 POC Evaluation Results
 
-**Run date:** 2026-04-18 02:35 UTC  
+**Run date:** 2026-04-18 13:16 UTC  
 **Questions:** 30  
 **API errors:** 0  
 
@@ -27,11 +27,19 @@
 
 **Answer:**
 
-The provided documents do not contain information about the journeyperson hourly rate for IBEW Generation electricians effective May 1, 2025.
+The provided documents do not contain information about a single journeyperson hourly rate for IBEW Generation electricians effective May 1, 2025.
 
-While [SOURCE 4] and [SOURCE 5] confirm that the IBEW Generation 2025-2030 Collective Agreement is effective May 1, 2025, and [SOURCE 4] identifies "electrician journeyperson" as a bargaining unit classification, the actual wage rate table or schedule is not included in the source materials provided to me.
+However, the documents show that wage rates vary by geographic location and Local Union. For example:
 
-To locate this information, you would need to consult the wage schedules section of the IBEW Generation 2025-2030 Collective Agreement, which typically appears in a dedicated wages article (often Article 700 or similar in EPSCA agreements).
+- **Local 530 (Sarnia)**: The wage schedule shows a journeyperson base rate of $53.35/hour effective May 1, 2025 [SOURCE 5, Wage Schedule E-3-C, page 1]
+
+- **Local 586 (Ottawa)**: A wage schedule exists for this Local effective May 1, 2025, but the journeyperson hourly rate is not displayed in the provided excerpt [SOURCE 8, Wage Schedule E-13-C]
+
+- **Local 402 (Thunder Bay)**: A wage schedule exists for this Local effective May 1, 2025, but the journeyperson hourly rate is not displayed in the provided excerpt [SOURCE 9, Wage Schedule E-16-C]
+
+- **Local 105 (Hamilton)**: A wage schedule exists for this Local effective May 1, 2025, but the journeyperson hourly rate is not displayed in the provided excerpt [SOURCE 10, Wage Schedule E-6-C]
+
+To obtain the complete journeyperson rates for all geographic areas, you would need access to the full wage schedule pages for each Local Union.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
@@ -39,18 +47,20 @@ To locate this information, you would need to consult the wage schedules section
 
 | # | Union | Document | Article | Section |
 |---|-------|----------|---------|---------|
-| 4 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
-| 5 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 5 | IBEW | IBEW Generation Wage Schedule E-3-C LU 530 Sarnia |  |  |
+| 8 | IBEW | IBEW Generation Wage Schedule E-13-C LU 586 Ottawa |  |  |
+| 9 | IBEW | IBEW Generation Wage Schedule E-16-C LU 402 Thunde |  |  |
+| 10 | IBEW | IBEW Generation Wage Schedule E-6-C LU 105 Hamilto |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3469ms  
+**Latency:** 4675ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| ☐ Yes / ☐ No / x Partial | x Yes / ☐ No |There must be issues reading the schedules, answer cited that journeymen wages are not listed but they are ![alt text](image.png)|
 
 ---
 
@@ -60,27 +70,33 @@ To locate this information, you would need to consult the wage schedules section
 
 **Answer:**
 
-The provided documents do not contain information about foreman wage premiums for IBEW Generation electricians.
+Based on the provided documents, the foreman wage premium for IBEW Generation electricians is as follows:
 
-While the agreement references "foreperson and subforeperson" classifications in the bargaining unit [SOURCE 1, Section 200 A(ii)], the sources provided do not include wage schedules or premium rates for these positions.
+**Foreperson:** The greater of 12% above the journeyperson base hourly rate OR the established percentage above the journeyperson rate differential as set out in the existing wage schedules. [SOURCE 10, Section 6, Subsection F]
 
-To find this information, you would need to consult the wage schedules that are referenced in the agreement, which are not included in the documents provided to me.
+**Subforeperson:** The greater of 6% above the journeyperson base hourly rate OR the established percentage differential above the journeyperson rate as set out in the existing wage schedules. [SOURCE 10, Section 6, Subsection F]
+
+The agreement further notes that "The rates of pay for all forepeople and subforepeople covered by this Agreement will be set forth in the current wage schedules." [SOURCE 10, Section 6, Subsection F]
+
+The provided documents do not contain the actual wage schedules showing the specific dollar amounts for these premiums. To determine the exact foreman wage premium in dollars per hour, you would need to consult the current wage schedules referenced in the agreement.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 10 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 2884ms  
+**Latency:** 3173ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| ☐ Yes / ☐ No / x Partial | ☐ Yes / x No | Should have went to the wage schedules, al wages are clearly laud out, that said, IBEW has 14 wage schedules on generation side alone, so answer should provide a couple results but then try to clarify specific schedule or ask for averages or something.
 
 ---
 
@@ -90,35 +106,39 @@ _No citations returned._
 
 **Answer:**
 
-The provided documents do not contain information about a specific tool allowance (monetary amount) for IBEW Generation electricians.
+Based on the provided documents, there is **no tool allowance specified** for IBEW Generation electricians.
 
-However, the documents do specify the **required tools** that all journeypeople electricians must have. According to [SOURCE 1, Page 49-50], the IBEW Generation 2025-2030 Collective Agreement includes a detailed "TOOL LIST" of specific hand tools that journeypeople electricians are required to possess, including items such as:
+The collective agreement includes a **tool list** that specifies which tools journeypeople electricians are required to have [SOURCE 1, Page 49], but it does not state a monetary allowance or reimbursement for those tools.
 
-- Centre punch, cold chisel, files, hammers, hacksaw frame
-- Knife, level, pliers (5 pairs), screwdrivers (6), square, tape measure
-- Tap wrench, tool box, and tool pouch with belt
+The tool list includes items such as:
+- Centre punch, cold chisel, files, hammers, hacksaws
+- Pliers (5 pairs in various types)
+- Screwdrivers (6 total)
+- Square, steel tape, tap wrench
+- Tool box and tool pouch/belt
 
-The agreement distinguishes between:
-- **Trade tools** (the items listed above, which are the responsibility of the employee) [SOURCE 1, Page 49-50]
-- **Gang tools** (issued to forepersons and used by crews, which are the Employer's responsibility) [SOURCE 3, Page 35-36]
+[SOURCE 1, Pages 49-50]
 
-If you are asking about a monetary tool allowance or tool replacement allowance, that information is not present in the provided documents.
+The agreement does address tool replacement procedures [SOURCE 3, Page 35], indicating that employees receiving tools from a tool crib are responsible for their return in good condition, and the employer must reimburse employees within 60 days if tools are lost or damaged. However, there is no stated hourly or lump-sum tool allowance.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 3 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 4728ms  
+**Latency:** 4610ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | looks good|
 
 ---
 
@@ -128,11 +148,11 @@ _No citations returned._
 
 **Answer:**
 
-The provided documents do not contain information about the specific journeyperson hourly rate for Sheet Metal workers effective May 1, 2025.
+The provided documents do not contain the specific journeyperson hourly rate for Sheet Metal workers effective May 1, 2025.
 
-While the sources reference "Article 13 WAGES" [SOURCE 1, Section 12.4, Page 21], the actual wage table with the journeyperson hourly rate is not included in the excerpts provided. The documents do contain related wage information, such as foreperson rates being 15% above the journeyperson rate [SOURCE 5, Section 20.5], but this does not provide the base journeyperson rate itself.
+While the sources include the 2025-2030 Sheet Metal Workers Collective Agreement and wage schedules effective May 1, 2025, the actual base hourly rate amounts are not shown in the excerpts provided. The documents reference shift differentials, overtime multiples, and deductions (such as union dues and training fund contributions) that apply to the base rate, but do not display the base hourly rate itself.
 
-To obtain the specific hourly rate, you would need to consult the complete Article 13 section of the Sheet Metal Workers 2025-2030 Collective Agreement.
+To find the journeyperson hourly rate, you would need to consult the complete wage schedule documents (such as SM-03, SM-05, SM-13, etc.) for the specific local union geographic area where work is being performed, as rates may vary by location.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
@@ -141,14 +161,14 @@ To obtain the specific hourly rate, you would need to consult the complete Artic
 _No citations returned._
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3181ms  
+**Latency:** 3066ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| ☐ Yes / ☐ No / x Partial | x Yes / ☐ No | Again all wages are in the wage schedule documents. In this case there are 16 of them. Results should have found examples from there and queried to get more specific results per region. |
 
 ---
 
@@ -158,31 +178,30 @@ _No citations returned._
 
 **Answer:**
 
-The provided documents do not contain the specific apprentice wage rates for Sheet Metal workers under the 2025-2030 collective agreement.
+The provided documents do not contain information about specific apprentice wage rates for Sheet Metal workers under the 2025-2030 collective agreement.
 
-While the agreement references wage schedules multiple times, the actual wage rate tables are not included in the sources provided. 
+While the agreement references that wage schedules are "attached hereto" [SOURCE 6, Article 13.1], the actual wage schedule tables are not included in the source materials provided to me. The documents confirm that apprentice wage rates exist and are set out in those schedules [SOURCE 2, Section 12.4 and SOURCE 6, Article 13.1], but the specific dollar amounts or rate percentages are not present in the excerpts available.
 
-[SOURCE 6, Section 13.1] states: "The rates of pay for employees in the classifications listed in Article 2 of this Agreement shall be as set forth in the wage schedules, attached hereto." However, these wage schedules themselves are not present in the documents provided to me.
-
-[SOURCE 2, Section 12.4] confirms that apprentices exist in the bargaining unit and specifies that apprentices who complete their contract requirements become journeypeople upon successful completion of the Provincial qualifying examination, but does not state the wage rates applicable during the apprenticeship period.
-
-To obtain the specific apprentice wage rates, you would need to consult the actual wage schedule documents that are referenced but not included in these excerpts.
+To obtain the apprentice wage rates, you would need to consult the complete wage schedule appendix to the Sheet Metal Workers 2025-2030 Collective Agreement.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 2 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 12.4 |
+| 6 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 13.1 |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3452ms  
+**Latency:** 3378ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| ☐ Yes / ☐ No / x Partial | x Yes / ☐ No | See above|
 
 ---
 
@@ -194,29 +213,33 @@ _No citations returned._
 
 The provided documents do not contain information about a "general foreman" wage rate for Sheet Metal workers.
 
-However, the agreement does specify rates for supervisory positions:
+The documents reference foreperson and subforeperson classifications. According to [SOURCE 5, Section 20.5, Page 26], the rate of pay structure is:
 
-**Foreperson:** 15% above the journeyperson rate [SOURCE 5, Section 20.5]
+- **Foreperson**: fifteen percent (15%) above the journeyperson rate
+- **Subforeperson**: seven percent (7%) above the journeyperson rate
 
-**Subforeperson:** 7% above the journeyperson rate [SOURCE 5, Section 20.5]
+However, the actual dollar amounts for the journeyperson rate (which would be needed to calculate the foreperson rate) are not included in the sources provided. The documents indicate that [SOURCE 2, Section 13.1, Page 22] establishes that "rates of pay for employees in the classifications listed in Article 2 of this Agreement shall be as set forth in the wage schedules, attached hereto," but the wage schedules themselves are not provided in these sources.
 
-The documents do not define a classification called "general foreman" or provide a separate wage rate for that position. If you are looking for the foreperson or subforeperson rate, those are calculated as premiums on the journeyperson rate, which is set out in the wage schedules referenced in [SOURCE 2, Section 13.1], but those schedules are not included in the provided sources.
+If you are looking for the specific dollar wage rate, you would need access to the wage schedules that are referenced throughout the agreement.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 2 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 13.1 |
+| 5 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 20.5 |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3379ms  
+**Latency:** 3815ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| ☐ Yes / ☐ No / x Partial | x Yes / ☐ No | General Foreman are usually not covered under these agreements so therefore the answer was correct, but I am not sure if it got it correct for the right reasons. |
 
 ---
 
@@ -226,27 +249,61 @@ _No citations returned._
 
 **Answer:**
 
-The provided documents do not contain information about the specific journeyperson hourly rate for United Association plumbers effective May 1, 2025.
+# United Association Journeyperson Plumber Hourly Rates — May 1, 2025
 
-While the sources reference the journeyperson base hourly rate in the context of calculating differentials for forepeople and subforepeople [SOURCE 1, Section 9.5], and in contexts related to travel pay calculations [SOURCE 3, SOURCE 4, SOURCE 5, SOURCE 6], the actual dollar amount of the journeyperson base hourly rate itself is not stated in any of the provided documents.
+The journeyperson hourly rate for United Association plumbers effective May 1, 2025 **varies by local union and geographic area**. There is no single rate across Ontario. Here are the rates:
 
-To obtain this information, you would need to consult the wage schedules or tables that typically accompany collective agreements, which are not included in the sources provided.
+| Local | Geographic Area | Journeyperson Base Hourly Rate |
+|-------|-----------------|--------------------------------|
+| 628 | Thunder Bay | $48.98 |
+| 71 | Ottawa | $49.87 |
+| 800 | Sault Ste. Marie | $47.14 |
+| 67 | Brantford/Hamilton | $50.14 |
+| 67 | Niagara | $49.29 |
+| 401 | Kingston | $50.33 |
+| 46 | Barrie | $49.20 |
+| 800 | Sudbury | $47.96 |
+| 401 | Belleville | $50.29 |
+
+**Source Citations:**
+
+- Local 628 Thunder Bay: [SOURCE 1], Grade 13-6 Journeyman-450035, effective 2025-05-01
+- Local 71 Ottawa: [SOURCE 2], Grade 13-6 Journeyman-450035, effective 2025-05-01
+- Local 800 Sault Ste. Marie: [SOURCE 3], Grade 13-6 Journeyman-450035, effective 2025-05-01
+- Local 67 Brantford/Hamilton: [SOURCE 4], Grade 13-6 Journeyman-450035, effective 2025-05-01
+- Local 67 Niagara: [SOURCE 5], Grade 13-6 Journeyman-450035, effective 2025-05-01
+- Local 401 Kingston: [SOURCE 6], Grade 13-6 Journeyman-450035, effective 2025-05-01
+- Local 46 Barrie: [SOURCE 7], Grade 13-6 Journeyman-450035, effective 2025-05-01
+- Local 800 Sudbury: [SOURCE 8], Grade 13-6 Journeyman-450035, effective 2025-05-01
+- Local 401 Belleville: [SOURCE 9], Grade 13-6 Journeyman-450035, effective 2025-05-01
+
+These are **base hourly rates only** and do not include vacation, statutory holiday, welfare, pension, or union funds components, which are listed separately in the wage schedules.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | United Association | United Association Wage Schedule Local 628 Thunder |  |  |
+| 2 | United Association | United Association Wage Schedule Local 71 Ottawa |  |  |
+| 3 | United Association | United Association Wage Schedule Local 800 Sault S |  |  |
+| 4 | United Association | United Association Wage Schedule Local 67 Brantfor |  |  |
+| 5 | United Association | United Association Wage Schedule Local 67 Niagara |  |  |
+| 6 | United Association | United Association Wage Schedule Local 401 Kingsto |  |  |
+| 7 | United Association | United Association Wage Schedule Local 46 Barrie |  |  |
+| 8 | United Association | United Association Wage Schedule Local 800 Sudbury |  |  |
+| 9 | United Association | United Association Wage Schedule Local 401 Bellevi |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 2767ms  
+**Latency:** 6499ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | Pretty good job here |
 
 ---
 
@@ -258,29 +315,41 @@ _No citations returned._
 
 # Foreman Premium for United Association Workers
 
-The foreman premium for United Association workers is **15%** above the journeyperson base hourly rate. Additionally, a subforeman differential of **7.5%** above the journeyperson base hourly rate is also provided.
+The foreman premium for United Association workers is **15% above the journeyperson base hourly rate** [SOURCE 3, Section 9.5].
 
-## Supporting Clause
+## Supporting Clause Text
 
-[SOURCE 3, Section 9.5, page 15]:
+Section 9.5 of the United Association 2025-2030 Collective Agreement states:
 
-> "9.5 The forepeople's differential shall be 15% above the journeyperson base hourly rate. The increase in forepeople rate shall not apply to Greenpeople rates. The subforepeople's differential shall be 7.5% above the journeyperson base hourly rate."
+> "The forepeople's differential shall be 15% above the journeyperson base hourly rate. The increase in forepeople rate shall not apply to Greenpeople rates. The subforepeople's differential shall be 7.5% above the journeyperson base hourly rate." [SOURCE 3, Section 9.5, Page 15]
+
+This 15% differential is consistently reflected across all wage schedules provided, including schedules for Local 46 Barrie [SOURCE 4], Local 401 Kingston [SOURCE 5], Local 67 Niagara [SOURCE 7], Local 71 Ottawa [SOURCE 8], Local 628 Thunder Bay [SOURCE 9], and Local 401 Belleville [SOURCE 10].
+
+Additionally, for subforemen, a differential of 7.5% above the journeyperson base hourly rate applies [SOURCE 3, Section 9.5].
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 3 | United Association | United Association 2025-2030 Collective Agreement |  | 9.5 |
+| 4 | United Association | United Association Wage Schedule Local 46 Barrie |  |  |
+| 5 | United Association | United Association Wage Schedule Local 401 Kingsto |  |  |
+| 7 | United Association | United Association Wage Schedule Local 67 Niagara |  |  |
+| 8 | United Association | United Association Wage Schedule Local 71 Ottawa |  |  |
+| 9 | United Association | United Association Wage Schedule Local 628 Thunder |  |  |
+| 10 | United Association | United Association Wage Schedule Local 401 Bellevi |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 2597ms  
+**Latency:** 4629ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -294,41 +363,45 @@ _No citations returned._
 
 # Overtime Definition for IBEW Generation Electricians (2025-2030)
 
-Under the IBEW Generation 2025-2030 Collective Agreement, overtime is defined based on hours worked beyond the normal daily scheduled amount under a standard eight (8) hour day, five (5) day per week work schedule.
+The IBEW Generation agreement does not provide an explicit general definition of what "constitutes" overtime. Instead, it specifies **when overtime rates apply** based on hours worked, which effectively defines overtime by its triggers.
 
-## Overtime Pay Rates
+## Overtime Triggers Under Standard Schedule
 
-**For Monday to Friday work:**
+For employees working on an **eight (8) hour day and five (5) day per week work schedule (Monday to Friday)**:
 
-- Hours worked **beyond the normal daily scheduled number of hours up to a maximum of 2 hours per day** are paid at **1½ times the basic hourly rate** [SOURCE 6, Section 806 A]
+> "overtime work shall be paid at one and one-half (1 ½) times the basic hourly rate for all hours worked beyond the normal daily scheduled number of hours up to a maximum of two (2) hours per day. All hours in excess of 10 hours per day shall be paid at two (2) times the base hourly rate." [SOURCE 6, Section 806 A]
 
-- **All hours in excess of 10 hours per day** are paid at **two (2) times the base hourly rate** [SOURCE 6, Section 806 A]
+This means:
+- **Hours 9-10 per day** = 1.5× rate (overtime)
+- **Hours 11+ per day** = 2× rate (double time)
+
+## Three-Shift Operations
+
+Under three-shift operations, the agreement establishes different daily hour thresholds by shift type [SOURCE 8, Section 800 B]. However, the provided documents do not contain Section 806 language specific to three-shift operations, so the overtime triggers for those shifts are not provided in these sources.
 
 ## Voluntary Distribution
 
-All overtime shall be worked on a **voluntary basis** and shall be **distributed as equally as possible among all IBEW members** [SOURCE 1, Section 8, Page 24]
-
-## Rest Periods for Overtime Work
-
-- A **ten (10) minute rest period** must be allotted prior to the end of the normal shift before commencing overtime work [SOURCE 2, Section 802 B]
-
-- A **fifteen (15) minute rest period** must be allotted after each two hours of overtime worked, at the time directed by the Employer [SOURCE 2, Section 802 C]
+Importantly, the agreement states: "All overtime shall be worked on a voluntary basis and shall be distributed as equally as possible among all IBEW members." [SOURCE 1, Page 24]
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 6 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 8 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 4335ms  
+**Latency:** 5587ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -338,31 +411,35 @@ _No citations returned._
 
 **Answer:**
 
-Based on the provided sources, the overtime rate for IBEW Generation workers on a Saturday is **two (2) times the basic hourly rate**.
+# Overtime Rate for IBEW Generation Workers on Saturday
 
-**Supporting clause text:**
+**The overtime rate for IBEW Generation workers performing overtime work on a Saturday is two (2) times the basic hourly rate.**
 
-"Overtime work performed on Saturday, Sunday, Recognized Holidays and non-shift days shall be paid at two (2) times the basic hourly rate." [SOURCE 2, Article 806, Section A; also SOURCE 3, same article and section]
+## Supporting Clause
 
-This rate applies regardless of whether the employee is working under an 8-hour/5-day schedule or a 10-hour/4-day schedule.
+Section 806 A states:
 
-Additionally, the wage schedule confirms: "Regularly scheduled hours of work on Saturday, Sunday, Statutory, Recognized Holidays, and non-shift days shall be paid at two times the straight time hourly rate." [SOURCE 6, Wage Schedule, All Shifts section]
+> "Overtime work performed on Saturday, Sunday, Recognized Holidays and non-shift days shall be paid at two (2) times the basic hourly rate." [SOURCE 2, Page 24]
+
+This provision applies regardless of the work schedule type (whether the employee is on an eight-hour five-day schedule or a ten-hour four-day schedule). The rate applies to all overtime hours worked on Saturday, not just hours beyond a certain threshold.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 2 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3980ms  
+**Latency:** 3176ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -374,35 +451,41 @@ _No citations returned._
 
 # Maximum Regular Daily Hours for IBEW Generation Workers
 
-The maximum regular daily hours for IBEW Generation workers varies depending on the shift operation established by the Employer:
+The maximum regular daily hours depend on the shift operation established by the employer:
 
-**One or Two Shift Operation:**
-40 hours per week (Monday to Friday inclusive) [SOURCE 1, Section 800 A]
+**For One (1) or Two (2) Shift Operations:**
+The agreement establishes a **40-hour weekly schedule** (Monday to Friday inclusive), but does not specify a maximum daily hour limit in the primary hours clause. [SOURCE 1, Article 800 A]
 
-**Three Shift Operation:**
-- Day shift: **8 hours per day** [SOURCE 6, Section 800 B]
-- Afternoon shift: **7½ hours per day** [SOURCE 6, Section 800 B]
-- Night shift: **7 hours per day** [SOURCE 6, Section 800 B]
+However, the daily hour structure is clarified through the overtime provisions:
+- For an **8-hour day schedule**: The normal daily scheduled hours are 8 hours. Overtime is paid for hours beyond 8 hours per day, with a maximum of 2 hours at time-and-a-half, and all hours in excess of 10 hours per day at double time. [SOURCE 2, Article 806 A]
 
-**For overtime purposes**, when working on an eight (8) hour day schedule (Monday to Friday inclusive), the normal daily scheduled number of hours appears to be 8 hours, with overtime triggering beyond that point up to a maximum of 2 hours at 1½ times the rate, and all hours in excess of 10 hours per day paid at double time [SOURCE 2, Section 806 A].
+- For a **10-hour day schedule** (4 days per week): The normal daily scheduled hours are 10 hours. Overtime is paid for hours beyond 10 hours per day, with a maximum of 2 hours at time-and-a-half, and all hours in excess of 12 hours per day at double time. [SOURCE 7, Article 806]
 
-The applicable maximum depends on which shift operation structure the Employer has established at the worksite.
+**For Three (3) Shift Operations:**
+- Day shift: **8 hours** [SOURCE 6, Article 800 B]
+- Afternoon shift: **7.5 hours** [SOURCE 6, Article 800 B]
+- Night shift: **7 hours** [SOURCE 6, Article 800 B]
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 2 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 6 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 7 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3984ms  
+**Latency:** 4348ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -414,33 +497,43 @@ _No citations returned._
 
 # Regular Daily Hours of Work for Sheet Metal Workers
 
-The regular daily hours of work for Sheet Metal workers can be structured in two ways:
+The regular daily hours of work for Sheet Metal workers depend on the operational structure:
 
-**Either:**
-- Four (4) consecutive ten-hour shifts per week, or
-- Five (5) consecutive eight-hour shifts per week
+## Standard Operations (One or Two Shift):
 
-Both arrangements total 40 hours per week worked Monday through Friday. [SOURCE 1, Section 22.1, Page 27]
+For employers operating on a one or two shift basis, employees work **40 hours per week** (Monday to Friday) with daily hours established as either:
+- **Four (4) consecutive ten-hour shifts**, or  
+- **Five (5) consecutive eight-hour shifts**
 
-The specific daily hours must be established for a minimum period of 30 days, and employers must provide at least five (5) days' written notice to the Local Union before changing the daily hours of work. [SOURCE 1, Section 22.1, Page 27]
+Daily hours must be established for a minimum of 30 days, with at least five days' written notice required before any changes. [SOURCE 1, Section 22.1, Page 27]
 
-**Note on special circumstances:** For remote work locations north of the French River where employees cannot return home daily, employers may establish a fourteen (14) consecutive day shift schedule followed by seven (7) consecutive days off at the employer's discretion. [SOURCE 5, Section 22.6, Page 28]
+## Remote/Northern Operations:
+
+For work north of the French River in remote locations, employers may establish a schedule of **fourteen (14) consecutive days** of work followed by seven (7) consecutive days off. [SOURCE 5, Section 22.6, Page 28]
+
+## Project-Specific Schedules:
+
+For certain projects (Appendix B - 7 Day Coverage), employees may work **four consecutive shifts** (day, afternoon, or night) followed by four scheduled days off, with regularly scheduled hours of **ten (10) hours per day** Monday to Friday. [SOURCE 2, Section 48.1, Page 51]
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 22.1 |
+| 2 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 48.1 |
+| 5 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 22.6 |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3810ms  
+**Latency:** 5511ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -450,35 +543,54 @@ _No citations returned._
 
 **Answer:**
 
-# Sheet Metal Workers' Overtime Rate on Sunday
+# Overtime Rate for Sheet Metal Workers on Sunday
 
-The overtime rate for Sheet Metal workers on a Sunday is **two (2) times the basic hourly rate**.
+The overtime rate for Sheet Metal workers on a Sunday is **2 times (double time) the basic hourly rate for all hours worked**.
 
-## Supporting Clause
+## Supporting Documentation
 
-[SOURCE 1, Section 23.1, Page 28]:
-> "Overtime work performed on Saturday, Sunday, Recognized Holidays and non-shift days shall be paid at two (2) times the basic hourly rate."
+This rate is consistently specified across multiple sources:
 
-This rate applies regardless of whether the employee is working under an 8-hour/5-day schedule or a 10-hour/4-day schedule, as both schedule types reference the same Sunday overtime provision.
+**Primary Collective Agreement:**
+"Overtime work performed on Saturday, Sunday, Recognized Holidays and non-shift days shall be paid at two (2) times the basic hourly rate." [SOURCE 2, Section 23.1, Page 28]
 
-Additionally, [SOURCE 2, Section 2.0, Page 58] confirms this rate under the "All Shifts" provision:
-> "Regularly scheduled hours of work on Saturday, Sunday, non-shift days, Statutory and Recognized Holidays shall be paid at two times the straight time hourly rate."
+**Wage Schedules (all localities):**
+Multiple wage schedules confirm the same rate with identical language:
+- "Sat., Sun. & Holidays - 2 times for all hours worked." [SOURCE 1, Sheet Metal Wage Schedule SM-13 LU 47 Ottawa, Page 1]
+- [SOURCE 3, Sheet Metal Wage Schedule SM-16 LU 397 Thunder Bay, Page 1]
+- [SOURCE 5, Sheet Metal Wage Schedule SM-14 LU 504 Sudbury, Page 1]
+- [SOURCE 7, Sheet Metal Wage Schedule SM-11 LU 30 Peterborough, Page 2]
+- [SOURCE 8, Sheet Metal Wage Schedule SM-01 LU 235 Windsor, Page 2]
+- [SOURCE 9, Sheet Metal Wage Schedule SM-05 LU 562 Kitchener, Page 2]
+- [SOURCE 10, Sheet Metal Wage Schedule SM-03 LU 235 Sarnia, Page 2]
+
+This rate applies regardless of whether Sunday work is overtime or regularly scheduled work. [SOURCE 4, Section 2.0, Page 58]
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | Sheet Metal | Sheet Metal Wage Schedule SM-13 LU 47 Ottawa |  |  |
+| 2 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 23.1 |
+| 3 | Sheet Metal | Sheet Metal Wage Schedule SM-16 LU 397 Thunder Bay |  |  |
+| 4 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 2.0 |
+| 5 | Sheet Metal | Sheet Metal Wage Schedule SM-14 LU 504 Sudbury |  |  |
+| 7 | Sheet Metal | Sheet Metal Wage Schedule SM-11 LU 30 Peterborough |  |  |
+| 8 | Sheet Metal | Sheet Metal Wage Schedule SM-01 LU 235 Windsor |  |  |
+| 9 | Sheet Metal | Sheet Metal Wage Schedule SM-05 LU 562 Kitchener |  |  |
+| 10 | Sheet Metal | Sheet Metal Wage Schedule SM-03 LU 235 Sarnia |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3655ms  
+**Latency:** 5442ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -490,45 +602,50 @@ _No citations returned._
 
 # Daily Overtime Rules for Sheet Metal Workers (2025-2030)
 
-The daily overtime rates for Sheet Metal workers depend on the work schedule in effect:
+The 2025-2030 Sheet Metal Workers Collective Agreement establishes the following daily overtime rules:
 
-## 8-Hour Day / 5-Day Week Schedule
+## For 8-Hour Day / 5-Day Week Schedule
 
-For employees working an 8-hour day and 5-day per week schedule (Monday to Friday):
-- **1.5x the basic hourly rate** for all hours worked beyond the normal daily scheduled hours, up to a maximum of 2 hours per day
-- **2x the basic hourly rate** for all hours in excess of 10 hours per day
+For hours worked beyond the normal daily scheduled number of hours:
+- **Up to 2 hours per day**: 1½ times the basic hourly rate
+- **All hours in excess of 10 hours per day**: 2 times the basic hourly rate
 
-[SOURCE 3, Section 23.1, Page 28]
+[SOURCE 10, Section 23.1, Page 28]
 
-## 10-Hour Day / 4-Day Week Schedule
+## For 10-Hour Day / 4-Day Week Schedule
 
-For employees working a 10-hour day and 4-day per week schedule (Monday to Friday):
-- **1.5x the basic hourly rate** for all hours worked beyond the normal daily scheduled hours, up to a maximum of 2 hours per day
-- **2x the basic hourly rate** for all hours in excess of 12 hours per day
+For hours worked beyond the normal daily scheduled number of hours:
+- **Up to 2 hours per day**: 1½ times the basic hourly rate
+- **All hours in excess of 12 hours per day**: 2 times the basic hourly rate
 
-[SOURCE 3, Section 23.1, Page 28]
+[SOURCE 10, Section 23.1, Page 28]
 
 ## Weekend and Holiday Work
 
-Overtime work performed on Saturday, Sunday, Recognized Holidays, and non-shift days shall be paid at **2x the basic hourly rate** regardless of the daily schedule. [SOURCE 3, Section 23.1, Page 28]
+Overtime work performed on Saturday, Sunday, Recognized Holidays, and non-shift days shall be paid at **2 times the basic hourly rate** regardless of the schedule type.
 
-**Important Note:** Shift differentials are not paid on overtime hours. [SOURCE 2, Section 22.1, Page 27]
+[SOURCE 10, Section 23.1, Page 28]
+
+**Note:** These rules apply to Monday–Friday scheduled work. Shift differentials are not paid on overtime hours. [SOURCE 2, Section 22.1, Page 27]
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 2 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 22.1 |
+| 10 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 23.1 |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 4283ms  
+**Latency:** 3421ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -540,36 +657,43 @@ _No citations returned._
 
 # Double-Time Rate Provision for United Association Workers
 
-Based on the provided documents, United Association workers receive double-time pay (two times the straight time hourly rate) in the following circumstances:
+Based on the provided collective agreement, United Association workers receive double-time (two times the base hourly rate) under the following circumstances:
 
-## Standard Shift Provisions
+## Regular Hours on Weekends and Holidays
 
-**For regular shift work:** All regularly scheduled hours worked on Saturday, Sunday, Statutory and Recognized Holidays, and non-shift days shall be paid at two times the straight time hourly rate. [SOURCE 1, Section 9.1, Page 67]
+Regularly scheduled hours of work on **Saturday, Sunday, Statutory and Recognized Holidays** are paid at two times the straight time hourly rate. [SOURCE 1, Section 9.1, Page 51]
 
-**For 10-hour shift work:** Regularly scheduled hours of work on Saturday and Sunday shall be paid at two times the straight time hourly rate. Statutory and Recognized Holidays shall also be paid at two times the straight time hourly rate. [SOURCE 6, Section 48.1, Page 46]
+For the 10-hour shift schedule, the same provision applies: regularly scheduled hours on Saturday and Sunday, and Statutory and Recognized Holidays, are paid at two times the straight time hourly rate. [SOURCE 6, Section 48.1, Page 44]
 
----
+## Overtime Hours
 
-**Supporting clause text from SOURCE 1:**
-> "All Shifts: Regularly scheduled hours of work on Saturday, Sunday, Statutory and Recognized Holidays and nonshift days shall be paid at two times the straight time hourly rate."
+Double-time rates also apply to **overtime work**:
 
-The provided documents do not contain a separate "double-time rate provision" distinct from these shift and holiday payment rules. If you are looking for information about overtime rates beyond double-time, the documents reference Article 24 - Overtime Rates, but the specific overtime rate multiplier is not included in the sources provided.
+- When working an 8-hour day/5-day week schedule: all hours in excess of 10 hours per day are paid at two times the base hourly rate. [SOURCE 10, Section 24.1, Page 25]
+
+- When working a 10-hour day/4-day week schedule: all hours in excess of 12 hours per day are paid at two times the base hourly rate. [SOURCE 10, Section 24.1, Page 25]
+
+- Overtime work performed on Saturday, Sunday, Recognized Holidays, and non-shift days is paid at two times the basic hourly rate. [SOURCE 10, Section 24.1, Page 25]
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | United Association | United Association 2025-2030 Collective Agreement |  | 9.1 |
+| 6 | United Association | United Association 2025-2030 Collective Agreement |  | 48.1 |
+| 10 | United Association | United Association 2025-2030 Collective Agreement |  | 24.1 |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 4019ms  
+**Latency:** 4055ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -579,33 +703,33 @@ _No citations returned._
 
 **Answer:**
 
-Based on the provided sources, **the start time for a regular day shift for United Association workers is between 6:00 AM and 9:00 AM for nuclear work, or 8:00 AM with a possible one-hour variance either way for all other locations.**
+# Start Time for Regular Shifts
 
-**Supporting clause:**
+The start time for the day shift under the United Association 2025-2030 agreement depends on the work location:
 
-Section 23.2 states: "The start time for the day shift shall be between 6:00 AM and 9:00 AM (nuclear only) or a start time of 8:00 AM with a possible one (1) hour variance either way (all other locations)." [SOURCE 1, Section 23.2, Page 24]
+**For nuclear locations:** The day shift start time shall be between **6:00 AM and 9:00 AM** [SOURCE 1, Section 23.2]
 
-This means:
-- **Nuclear projects:** 6:00 AM to 9:00 AM
-- **All other locations:** 7:00 AM to 9:00 AM (8:00 AM ±1 hour)
+**For all other locations:** The day shift start time shall be **8:00 AM with a possible one (1) hour variance either way** (meaning between 7:00 AM and 9:00 AM) [SOURCE 1, Section 23.2]
 
-The section also notes that "Crews may have staggered start times" and that any shift changes must commence on the first regularly scheduled day of the week, with at least 5 days' notice required.
+The agreement also notes that "Crews may have staggered start times" and that "The afternoon shift shall be immediately following the day shift or within two (2) hours either way at the end of the day shift." [SOURCE 1, Section 23.2]
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | United Association | United Association 2025-2030 Collective Agreement |  | 23.2 |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3679ms  
+**Latency:** 3376ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -617,36 +741,53 @@ _No citations returned._
 
 **Answer:**
 
-The provided documents do not contain a specific dollar amount for the "board allowance" for IBEW Generation workers working away from home.
+# Board Allowance for IBEW Generation Workers Working Away from Home
 
-However, the documents describe the **options** available to employees whose regular residence is 110+ road-driven kilometers from a project:
+The provided documents do not contain a specific monetary "board allowance" stated as a single fixed amount.
 
-[SOURCE 4, Page 30] states that an employee may receive:
-- Free room and board in camp or good standard of board and lodging; **or**
-- A subsistence allowance; **or**
-- A travel allowance
+Instead, the IBEW Generation collective agreement provides **room and board provisions with multiple options**, depending on the worker's circumstances:
 
-If an employee chooses not to stay in camp and exercises the option to receive a "room and board allowance," they qualify for a **subsistence allowance** [SOURCE 4, Page 30], but the actual dollar amounts are referenced as "set out below" in the agreement—a reference that is not included in the provided document excerpts.
+## Primary Provision
 
-The documents also specify travel time payments for employees receiving room and board allowance [SOURCE 1, Page 33], but these are time-based payments (ranging from ½ hour to actual travel time) rather than a fixed allowance amount.
+When an employee's regular residence is greater than or equal to 110 road-driven kilometers from a project and the employee maintains temporary accommodation at or near the project, the employer may supply either:
 
-To obtain the specific dollar amounts for the board/subsistence allowance, you would need to consult the complete agreement including the rate tables referenced in these clauses.
+- Free room and board in camp or good standard board and lodging within reasonable distance; **or**
+- A subsistence allowance; **or**  
+- A travel allowance [SOURCE 8, Article 1101 A(i)]
+
+## If Employee Exercises Option Not to Stay in Camp
+
+If an employee chooses not to stay in camp or accept free room and board, they receive a **subsistence allowance** (the amount varies by project location—North or South of the French River, or specific projects like Pickering, Darlington, and Bruce Power) [SOURCE 8, Article 1101 A(ii); SOURCE 2, Article 1101(b)-(e)].
+
+## Travel Allowance Within Locals 402 and 1687
+
+If receiving room and board allowance, employees receive **travel time compensation** based on distance from nearest available accommodation:
+- 40–56 road km: ½ hour regular time pay
+- 57–80 road km: 1 hour regular time pay
+- 81–120 road km: 1½ hours regular time pay
+- 121–160 road km: 2 hours regular time pay
+- Over 160 road km: actual travel time at regular time rate [SOURCE 1, Article 1100, Section D]
+
+The specific subsistence allowance rates are referenced but not fully detailed in the provided source pages.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 8 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 5016ms  
+**Latency:** 7577ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -656,37 +797,39 @@ _No citations returned._
 
 **Answer:**
 
-## Answer
+# Board Allowance Distance Threshold for IBEW Generation Workers
 
-An IBEW Generation worker qualifies for board allowance when their regular residence is **greater than or equal to 110 road-driven kilometers from the project** [SOURCE 4, Article 1101 A; SOURCE 2, definition of "Regular Residence" subsection (b)].
+An IBEW Generation worker must be **greater than or equal to 110 road-driven kilometers** from their regular residence to the project to qualify for room and board allowance.
 
-### Supporting Clause Text
+## Supporting Clause
 
-The agreement states:
+Article 1101 A states:
 
-"When the employee is in receipt of Room & Board Allowance on remote projects, and where the nearest place of accommodation is in excess of sixty (60) road-driven kilometres from the job, the employer shall have the option of providing transportation from the temporary accommodation, or paying travel allowance..." [SOURCE 4, Article 1100 B]
+> "The following conditions will apply for employees whose Room and Board regular residence* is greater than or equal to 110 road-driven kilometers from the project: (i) An Employer may supply either: (a) free room and board in camp or a good standard of board and lodging within a reasonable distance of a project; or (b) a subsistence allowance; or (c) a travel allowance." [SOURCE 4, Article 1101 A]
 
-And more directly:
+This threshold applies across multiple project locations (North of French River, South of French River, Pickering, Darlington, and Bruce Power Projects), though the specific allowance amounts and conditions may vary by location. [SOURCE 2, SOURCE 3, SOURCE 4]
 
-"The following conditions will apply for employees whose Room and Board regular residence is greater than or equal to 110 road-driven kilometers from the project: (i) An Employer may supply either: (a) free room and board in camp or a good standard of board and lodging within a reasonable distance of a project; or (b) a subsistence allowance; or (c) a travel allowance." [SOURCE 4, Article 1101 A(i)]
-
-The 110 km threshold applies to projects located both North and South of the French River, with specific provisions also for Pickering, Darlington, and Bruce Power Projects [SOURCE 2 and SOURCE 3, subsections (b) through (e)].
+For employees living less than 110 kilometers from the project, the daily travel allowance provisions under Article 1100 A apply instead. [SOURCE 6, Article 1100 A(i)–(iv)]
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 2 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 4 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 6 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 5581ms  
+**Latency:** 5018ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -696,43 +839,37 @@ _No citations returned._
 
 **Answer:**
 
-# Subsistence Allowance for Sheet Metal Workers
+# Subsistence Allowance for Sheet Metal Workers Working Away from Home
 
-The provided documents establish the **eligibility criteria and payment framework** for subsistence allowance, but do not specify the actual dollar amounts.
+The provided documents establish that Sheet Metal workers qualify for subsistence allowance if their regular residence is **greater than or equal to 110 road-driven kilometers** from the project work location, but the documents do not specify the actual dollar amounts of the subsistence allowance rates themselves. The rate tables are referenced but not fully detailed in the provided excerpts.
 
-## Eligibility
+## Eligibility and Structure
 
-An employee qualifies for subsistence allowance if their regular residence is **greater than or equal to 110 road-driven kilometers** from the project and they choose not to accept room and board provided by the Employer [SOURCE 2, page 37, Section 32.1(b)].
+**Northern Region:** An employee working in the Northern Region (geographic area north of a line drawn between the mouth of the French River and Mattawa) whose regular residence is ≥110 road-driven kilometers from the Project shall be paid a subsistence allowance [SOURCE 2, page 37, Article 32.1(b)(ii)].
 
-The allowance is divided by geographic region:
+**Southern Region:** An employee working in the Southern Region whose regular residence is ≥110 road-driven kilometers from the Project in the Southern Region shall be paid a subsistence allowance [SOURCE 2, page 37, Article 32.1(b)(iii)].
 
-- **Northern Region** (north of a line between the mouth of the French River and Mattawa): Employees working in this region receive subsistence allowance [SOURCE 2, page 37, Section 32.1(b)(ii)]
+**Employee Choice:** An employee may exercise their option not to stay in camp or accept free room and board, and if they choose not to, they receive subsistence allowance instead [SOURCE 2, page 37, Article 32.1(b)].
 
-- **Southern Region** (all remaining areas): Employees working in this region receive subsistence allowance [SOURCE 2, page 37, Section 32.1(b)(iii)]
-
-## Payment Structure
-
-Subsistence allowance is paid "for each day worked or reported for" [SOURCE 2, page 37].
-
-## Critical Gap
-
-The sources state that rates "are set out below" but the actual rate tables are not included in the provided documents. To obtain the specific dollar amounts for the Northern and Southern regions, you would need to consult the complete collective agreement including the rate schedules referenced in these sections.
+The documents reference that "the rates as set out below" apply to each day worked or reported for, but the actual rate tables showing the specific dollar amounts are not included in the provided source excerpts.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 2 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 4328ms  
+**Latency:** 5221ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -744,45 +881,72 @@ _No citations returned._
 
 # Travel Zone Provisions for Sheet Metal Workers
 
-Sheet Metal workers are entitled to daily travel allowances based on their distance from the work location, structured in five distance zones:
+Sheet Metal workers are covered by **two different travel zone systems** depending on the project context:
 
-## Travel Distance Zones and Rates
+## Standard Projects (Article 26)
 
-**Zone 1 – Less than 50 km:** No travel allowance [SOURCE 1, Section 27.1(a)]
+For standard projects, travel zones are based on road-driven distance from the employee's residence to the project [SOURCE 2, Section 26.1]:
 
-**Zone 2 – 50 to 70 km:** Variable rates based on contract year. For example, effective May 1, 2025: $32.56 per day [SOURCE 1, Section 27.1(b); SOURCE 3, Daily Travel Rates table]
+- **Less than 50 km**: No travel allowance [SOURCE 2, 26.1(a)]
+- **50–70 km**: Travel allowance applies [SOURCE 2, 26.1(b)]
+- **70–96 km**: Travel allowance applies [SOURCE 2, 26.1(c)]
+- **96–110 km**: Travel allowance applies [SOURCE 2, 26.1(d)]
+- **110 km or greater**: $60.00 per day (effective May 1, 2025) if employee does not qualify for subsistence allowance or does not maintain temporary accommodation [SOURCE 2, 26.1(e); SOURCE 4]
 
-**Zone 3 – 70 to 96 km:** Variable rates based on contract year. For example, effective May 1, 2025: $37.14 per day [SOURCE 1, Section 27.1(c); SOURCE 3, Daily Travel Rates table]
+**Specific daily travel rates by zone** (2025–2029) [SOURCE 4]:
+- Zone 26.1(b): $33.14–$36.58 per day
+- Zone 26.1(c): $38.50–$42.50 per day
+- Zone 26.1(d): $42.00–$46.36 per day
+- Zone 26.1(e): $60.00 per day
 
-**Zone 4 – 96 to 110 km:** Variable rates based on contract year. For example, effective May 1, 2025: $42.00 per day [SOURCE 1, Section 27.1(d); SOURCE 3, Daily Travel Rates table]
+## OPG Generation Construction Projects (Article 27)
 
-**Zone 5 – 110 km or greater:** $60.00 per day, provided the employee continues to travel 110+ km daily and does not qualify for room and board allowance or maintain temporary accommodation near the work location [SOURCE 1, Section 27.1(e)]
+For OPG Generation Construction Projects, travel zones apply from the **work location or declared assembly point** [SOURCE 1, Section 27.1; SOURCE 3, Section 27.2]:
 
-## Key Conditions
+- **Less than 50 km**: No travel allowance [SOURCE 1, 27.1(a)]
+- **50–70 km**: Travel allowance applies [SOURCE 1, 27.1(b)]
+- **70–96 km**: Travel allowance applies [SOURCE 1, 27.1(c)]
+- **96–110 km**: Travel allowance applies [SOURCE 1, 27.1(d)]
+- **110 km or greater**: Travel allowance applies if employee does not live in camp, receive subsistence, or maintain temporary accommodation [SOURCE 1, 27.1(e)]
 
-- **Distance measurement:** "Road-driven kilometres" is based on the shortest available road-driven distance from where an employee lives to the work location or declared assembly point, as measured through Google Maps [SOURCE 1, Section 27.3]
+**Daily travel rates by zone** (2025–2029) [SOURCE 3]:
+- Zone 27.1(b): $32.56–$35.94 per day
+- Zone 27.1(c): $37.14–$41.00 per day
+- Zone 27.1(d): $42.00–$46.36 per day
+- Zone 27.1(e): $60.00 per day
 
-- **Company vehicle exclusion:** Employees using company vehicles are not entitled to daily travel allowance [SOURCE 1, Section 27.1(f)]
+## Key Definitions and Rules
 
-- **Journeyperson eligibility:** If a journeyperson does not qualify for room and board under Section 27.4 and lives 110+ km from the project, they receive daily travel at Zone 5 rates [SOURCE 1, Section 27.1(g)]
+**"Road-driven kilometers"** is measured as the shortest available road-driven distance from the employee's residence to the project (or work location/assembly point for OPG projects), as determined through Google Maps [SOURCE 2, 26.1; SOURCE 3, 27.3].
 
-- **Attendance requirement:** An employee does not qualify for daily travel allowance when reporting for work but not remaining for scheduled daily hours, unless excused by an authorized employer representative [SOURCE 1, Section 27.5]
+**Employees using company vehicles** are not entitled to daily travel allowance [SOURCE 2, 26.1(f); SOURCE 1, 27.1(f)].
+
+**No travel allowance** is paid if an employee reports for work but does not remain for their scheduled daily hours, unless excused by an authorized employer representative [SOURCE 2, 26.3; SOURCE 1, 27.5].
+
+## Room and Board Alternative (110 km+)
+
+For employees whose regular residence is 110 km or greater from the project, the employer may provide either free room and board or a subsistence allowance as an alternative to daily travel allowance [SOURCE 4, Section 26.2].
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 27.1 |
+| 2 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  | 26.1 |
+| 3 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  |  |
+| 4 | Sheet Metal | Sheet Metal Workers 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 5675ms  
+**Latency:** 7749ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -794,11 +958,11 @@ _No citations returned._
 
 # Travel Time Compensation for United Association Plumbers (2025-2030)
 
-Travel time compensation under the United Association 2025-2030 Collective Agreement varies depending on the work context:
+Travel time compensation under the United Association 2025-2030 Collective Agreement varies depending on the context and distance involved. There is no single travel time compensation rule; instead, the agreement specifies different provisions for different scenarios:
 
-## Remote Projects with Room and Board (OPG Construction)
+## Remote Projects (OPG Construction)
 
-For employees receiving Room and Board allowance on remote OPG construction projects within Local 800 and 628 jurisdictions, where accommodation is more than 40 road kilometers from the job site, travel time is compensated on a tiered basis [SOURCE 1, Section 28.6]:
+For Ontario Power Generation construction projects within the jurisdiction of Locals 800 and 628, where an employee receives Room and Board allowance on remote projects more than 40 road kilometers from accommodation, travel time is compensated as follows [SOURCE 1, Section 28.6]:
 
 - **40–56 road km:** ½ hour regular time pay
 - **57–80 road km:** 1 hour regular time pay
@@ -806,31 +970,41 @@ For employees receiving Room and Board allowance on remote OPG construction proj
 - **121–160 road km:** 2 hours regular time pay
 - **Over 160 road km:** Actual travel time paid at regular time rate
 
-The agreement specifies that "an employee will travel on their own time when returning from their work location to their assembly point" and that these provisions do not apply if the employer provides a vehicle or transportation [SOURCE 1, Section 28.6].
+However, if the employer provides a vehicle or transportation, these travel time provisions do not apply [SOURCE 1, Section 28.6].
 
-## Transfer Situations
+## Recruitment/Transfer of Employees
 
-When employees are transferred to a new project location, the employer pays travelling time at straight-time rates up to a maximum of eight (8) hours' pay, calculated at one (1) hour's pay for each 96 road-driven kilometers of travel [SOURCE 3, Section 30.6].
+For employees being transferred between projects, the employer shall pay travelling time at straight-time rates up to a maximum of 8 hours' pay, calculated at one hour's pay for each 96 road-driven kilometers of travel [SOURCE 3, Section 30.6; SOURCE 5, Section 31.6].
 
-## Non-Ontario Residents (Initial Recruitment)
+For recruitment of Ontario residents beyond 189 road kilometers from a project, travel time is based on one hour's pay for each 96 road-driven kilometers, to a maximum of 8 hours' pay [SOURCE 8, Section 30.2; SOURCE 9, Section 31.2].
 
-For tradespeople recruited from outside Ontario and beyond 189 road-driven kilometers from the project, the employer pays travel time based on one hour's pay for each 96 road-driven kilometers of travel to a maximum of 8 hours' pay for the initial trip [SOURCE 4, Section 30.3].
+For recruitment of non-Ontario residents beyond 189 road kilometers, the same travel time formula applies: one hour's pay per 96 road-driven kilometers, maximum 8 hours' pay [SOURCE 4, Section 30.3; SOURCE 7, Section 31.3].
+
+## Apprentices
+
+Apprentices who do not qualify for Room and Board but live more than 110 road kilometers from the project receive daily travel rates as per Article 28.1(e) [SOURCE 10, Letter of Understanding #8].
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | United Association | United Association 2025-2030 Collective Agreement |  | 28.6 |
+| 3 | United Association | United Association 2025-2030 Collective Agreement |  | 30.6 |
+| 4 | United Association | United Association 2025-2030 Collective Agreement |  | 30.3 |
+| 8 | United Association | United Association 2025-2030 Collective Agreement |  | 30.2 |
+| 10 | United Association | United Association 2025-2030 Collective Agreement |  | 9.1 |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 5501ms  
+**Latency:** 5728ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -842,40 +1016,53 @@ _No citations returned._
 
 **Answer:**
 
-Yes, there are different overtime rules for IBEW Generation workers depending on the work schedule they are assigned to.
+# Overtime Rules for IBEW Generation Workers at Nuclear Project Sites
 
-**For a 10-hour day, 4-day per week schedule (Monday to Friday):**
+Yes, there are different overtime rules depending on the work schedule. IBEW Generation workers at nuclear project sites are subject to different overtime pay scales based on whether they work an 8-hour/5-day schedule or a 10-hour/4-day schedule.
 
-Overtime is paid as follows [SOURCE 1, Page 24]:
-- 1½ times the basic hourly rate for hours worked beyond the normal daily scheduled hours, up to a maximum of 2 hours per day
-- 2 times the base hourly rate for all hours in excess of 12 hours per day
-- 2 times the basic hourly rate for overtime work performed on Saturday, Sunday, Recognized Holidays, and non-shift days
+## 8-Hour / 5-Day Schedule
 
-**For an 8-hour day, 5-day per week schedule (Monday to Friday):**
+When working on an eight (8) hour day and five (5) day per week work schedule (Monday to Friday inclusive):
+- Overtime work shall be paid at **1½ times the basic hourly rate** for all hours worked beyond the normal daily scheduled number of hours up to a maximum of 2 hours per day
+- All hours in excess of 10 hours per day shall be paid at **2 times the base hourly rate**
 
-Overtime is paid as follows [SOURCE 5, Page 23]:
-- 1½ times the basic hourly rate for hours worked beyond the normal daily scheduled hours, up to a maximum of 2 hours per day
-- 2 times the base hourly rate for all hours in excess of 10 hours per day
+[SOURCE 5, Section 806 A]
 
-The key difference is the threshold at which double-time kicks in: 12 hours per day for the 10-hour schedule versus 10 hours per day for the 8-hour schedule.
+## 10-Hour / 4-Day Schedule
 
-Both schedules include the same rules for meal periods and rest periods during overtime work [SOURCE 1, Page 24], and overtime is voluntary and distributed as equally as possible among all IBEW members.
+When working on a ten (10) hour day and four (4) day per week work schedule (Monday to Friday inclusive):
+- Overtime work shall be paid at **1½ times the basic hourly rate** for all hours worked beyond the normal daily scheduled number of hours up to a maximum of 2 hours per day
+- All hours in excess of 12 hours per day shall be paid at **2 times the base hourly rate**
+
+[SOURCE 1, Section 806 A]
+
+## Common Rules for Both Schedules
+
+Regardless of which schedule applies:
+- Overtime work performed on **Saturday, Sunday, Recognized Holidays and non-shift days shall be paid at 2 times the basic hourly rate**
+- **All overtime shall be worked on a voluntary basis** and shall be distributed as equally as possible among all IBEW members
+- Unapproved absences may disentitle an employee to overtime opportunities at the Employer's discretion, subject to referral to the Nuclear Project Committee
+
+[SOURCE 1, Section 806 A and C]
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 5 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3983ms  
+**Latency:** 5368ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -885,35 +1072,32 @@ _No citations returned._
 
 **Answer:**
 
-# IBEW Generation Electricians at Darlington – Additional Provisions
+The provided documents do not contain information about additional provisions that apply specifically to IBEW Generation electricians working at Darlington.
 
-The provided documents do not contain information specifically identifying Darlington or listing additional provisions that apply exclusively to IBEW Generation electricians working at that location.
+While the sources reference "Ontario Power Generation Inc. (OPGI) and Bruce Power LP facilities" generally [SOURCE 2, Section 200 A (iii)], they do not identify Darlington as a specific location or describe any unique provisions that would apply there.
 
-The sources provided establish the general scope of the IBEW Generation 2025-2030 Collective Agreement, which applies to "Ontario Power Generation Inc. (OPGI) and Bruce Power LP generating facilities" [SOURCE 2, Section 200 A(iii)]. However, the documents do not differentiate between specific OPGI or Bruce Power facilities by name, nor do they identify Darlington as a location with unique or additional terms.
-
-**What you may want to check:**
-
-- Project-specific addenda or supplemental agreements that may apply to Darlington work
-- Site-specific letters of understanding (LOUs) between EPSCA and the IBEW
-- Any nuclear facility-specific provisions (if Darlington is a nuclear site) — the agreement does reference "Nuclear sites only" provisions in Section 701A regarding security clearance and training requirements [SOURCE 4 and SOURCE 6]
-
-To obtain Darlington-specific provisions, you would need access to project agreements or site letters not included in the sources provided.
+To obtain information about Darlington-specific provisions, you would need to consult:
+- Any supplementary agreements or letters of understanding specific to the Darlington facility
+- Project-specific addenda to the primary collective agreement
+- Qualified labour relations counsel familiar with EPSCA agreements
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 2 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 4629ms  
+**Latency:** 3274ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| ☐ Yes / ☐ No / x Partial | x Yes / ☐ No | |
 
 ---
 
@@ -923,42 +1107,55 @@ _No citations returned._
 
 **Answer:**
 
-# Special Conditions for Sheet Metal Workers under the Nuclear Project Agreement
+# Special Conditions for Sheet Metal Workers Under the Nuclear Project Agreement
 
-Sheet Metal workers under the Nuclear Project Agreement are subject to several special conditions that override standard EPSCA collective agreement terms:
+Sheet Metal workers under the Nuclear Project Agreement are subject to several special conditions that differ from standard EPSCA collective agreements:
 
-## Scope and Application
-The Nuclear Project Agreement applies only to work performed on existing Ontario Power Generation Inc. (OPG) Nuclear Sites (Pickering, Darlington, Bruce) and Bruce Power LP property, and supersedes the current EPSCA collective agreements. [SOURCE 1, Section 1.1]
+## Scope of Application
+The Nuclear Project Agreement applies only to work on existing Ontario Power Generation Inc. nuclear sites (Pickering, Darlington, Bruce) and Bruce Power LP property, and supersedes the standard EPSCA collective agreements for that work [SOURCE 1, Section 1.1].
 
 ## Key Special Conditions:
 
-**1. Protection Against Displacement**
-Once hired onto a nuclear site, travelers and/or permit workers cannot be displaced or bumped by other members. Unresolved disputes are referred to the Project Committee. [SOURCE 2, Section 6.1]
+**1. Nuclear Qualified Worker (NQW) Requirements**
+Workers must obtain Nuclear Qualified Worker status. During the first two years of the agreement, priority is given to NQWs but non-NQW qualified journeymen/apprentices may be referred. After two years, only NQWs will be referred [SOURCE 10, Section 5.1].
 
-**2. Restricted Worker Transfers**
-Transfers are tightly controlled:
-- **Between employers:** Limited to short-term assignments (14 calendar days), emergent work requiring specific skills, or radiological dose management [SOURCE 6, Section 5.2(A)]
-- **Between sites:** Only permitted if workers are already Nuclear Qualified Workers (NQWs) and the relevant Local has no NQWs available; laid-off workers cannot be replaced by transfers [SOURCE 6, Section 5.2(B)]
-- **Same employer, different sector:** Only for workers already classified as NQWs [SOURCE 6, Section 5.2(C)]
+**2. Worker Protection Against Displacement**
+Once hired onto a nuclear site, travelers and permit workers cannot be displaced or bumped by other members. Unresolved disputes go to the Project Committee [SOURCE 2, Section 6.1].
 
-**3. Composite Crew Restrictions**
-Composite crews may be formed where conditions warrant, but this does not authorize regular assignment of workers outside their skill classification. The "One Person, One Job" principle applies, and composite crews are normally determined at the Mark-Up Meeting with prior notice to involved Local Unions. [SOURCE 4, Section 11.1]
+**3. Transfer Restrictions**
+Transfers between employers, between sites, or between sectors are permitted only under specific conditions:
+- Between employers: limited to short-term assignments (14 days), emergent work with specific skills, or radiological dose management [SOURCE 6, Section 5.2(A)]
+- Between sites: only if employees are already NQWs and the local union has no NQWs available [SOURCE 6, Section 5.2(B)]
+- Between sectors: only if employees are already NQWs [SOURCE 6, Section 5.2(C)]
+
+**4. Composite Crew Restrictions**
+Composite crews (crews with mixed trades) must follow the "One Person, One Job" principle and cannot be used to assign workers outside their skill classification under regular operating conditions [SOURCE 4, Section 11.1].
+
+**5. Standoff Provisions**
+Employers may elect to standoff (not layoff) employees for up to 10 consecutive working days without pay, with no travel allowance and subsistence allowance only if temporary residence is maintained [SOURCE 8, Section 10.1(b)].
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 1 | Sheet Metal | Sheet Metal Nuclear Project Agreement |  | 1.1 |
+| 2 | Sheet Metal | Sheet Metal Nuclear Project Agreement |  | 6.1 |
+| 4 | Sheet Metal | Sheet Metal Nuclear Project Agreement |  | 11.1 |
+| 6 | Sheet Metal | Sheet Metal Nuclear Project Agreement |  | 5.2 |
+| 8 | Sheet Metal | Sheet Metal Nuclear Project Agreement |  | 10.1 |
+| 10 | Sheet Metal | Sheet Metal Nuclear Project Agreement |  | 5.1 |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 4632ms  
+**Latency:** 10649ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -968,41 +1165,40 @@ _No citations returned._
 
 **Answer:**
 
-# Nuclear Project Site Premium for United Association Workers
+# Nuclear Project Premium for United Association Workers
 
-Yes, United Association workers receive a premium for working on nuclear project sites, but it is **limited to a specific condition**.
+Yes, United Association workers receive a premium for working on nuclear project sites, but only under specific radiation protection conditions.
 
-## The Premium
+## Radiation Protection Premium
 
-Employees working in a radiation area while wearing fully enveloping plastic suits or replacement material with an independent air supply receive **$20.00 per day** effective May 1, 2025. [SOURCE 2, Section 41.1(e), Page 42]
+Employees working in radiation areas while wearing fully enveloping plastic suits or replacement material with an independent air supply receive **$20.00 per day effective May 1, 2025** [SOURCE 2, Section 41.1(e), Page 42].
 
-## Supporting Context
+## Radiation Protection Assistant (R.P.A.) Premium
 
-Section 41.1 establishes radiation protection provisions for nuclear work sites (Ontario Power Generation Inc and Bruce Power LP), including:
+Additionally, Construction Radiation Protection Assistants (R.P.A.s) who have completed the required radiation qualification training receive premium wages when performing R.P.A. functions. The agreement states that "R.P.A. will be paid as set out in the wage schedules attached hereto when performing an R.P.A. function" [SOURCE 6, Section 8.8, Page 14]. However, the provided documents do not include the actual wage schedule amounts for R.P.A. positions.
 
-- Access to personal radiation exposure records [SOURCE 2, Section 41.1(b)]
-- Long-term employees who reach their exposure limit receive alternate employment until they can resume radiation work [SOURCE 2, Section 41.1(c)]
-- Employees in radiation areas with protective equipment qualify for the $20.00/day premium [SOURCE 2, Section 41.1(e)]
+## Scope Note
 
-The documents also reference a Construction Radiation Protection Assistant (R.P.A.) classification that is paid according to wage schedules when performing R.P.A. functions, though the specific wage rates are not provided in the excerpted material. [SOURCE 6, Section 8.8, Page 14]
-
-**Important note:** The $20.00/day premium applies specifically to employees working in radiation areas with the specified protective equipment. This is distinct from other site-specific allowances (travel, accommodation, etc.) that may also apply.
+These premiums apply specifically to radiation work at nuclear facilities operated by Ontario Power Generation Inc. and Bruce Power LP [SOURCE 2, Section 41.1, Page 42]. The provided documents do not contain information about whether United Association workers receive additional premiums for non-radiation work on nuclear project sites.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
 **Citations:**
 
-_No citations returned._
+| # | Union | Document | Article | Section |
+|---|-------|----------|---------|---------|
+| 2 | United Association | United Association 2025-2030 Collective Agreement |  | 41.1 |
+| 6 | United Association | United Association 2025-2030 Collective Agreement |  | 8.8 |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 5216ms  
+**Latency:** 4850ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -1012,23 +1208,21 @@ _No citations returned._
 
 **Answer:**
 
-The provided documents do not contain information about travel provisions specifically for IBEW Generation workers under a "Nuclear Project Agreement."
+# Travel Provisions for IBEW Generation Workers Under the Nuclear Project Agreement
 
-Here is what the sources show:
+The provided documents do not contain comprehensive travel provisions specifically under the IBEW Nuclear Project Agreement. 
 
-**Nuclear Project Agreement reference:** [SOURCE 2] contains one section from the IBEW Nuclear Project Agreement (Section 6.1), which addresses only the protection of traveler and permit workers from displacement—not travel provisions themselves.
+The only provision in the Nuclear Project Agreement itself addresses worker displacement, not travel: [SOURCE 2, Section 6.1] states that "Once a worker is hired onto a site covered by this agreement, travelers and/or permit workers shall not be displaced and/or bumped by any other member."
 
-**Travel provisions in the Primary Collective Agreement:** The IBEW Generation 2025-2030 Collective Agreement [SOURCES 1, 3, 4, 5, 6] contains detailed travel provisions covering:
+For detailed travel provisions applicable to IBEW Generation workers (including those on nuclear sites), the documents reference the IBEW Generation 2025-2030 Collective Agreement, which includes:
 
-- Daily travel allowances based on distance from the project [SOURCE 6, Article 1100]
-- Subsistence allowances and travel time payments [SOURCE 1, SOURCE 5]
-- Initial and return travel expenses for recruited tradespeople [SOURCES 3, 4, Article 1102]
+- **Daily Travel Allowance** [SOURCE 8, Article 1100 A] based on distance from the project (ranging from no allowance if living less than 50 km away, to $49.37–$54.50 per day effective May 1, 2025–2029 for employees living 110+ road-driven kilometers away)
 
-However, these provisions appear in the primary IBEW Generation Collective Agreement, not in a separate Nuclear Project Agreement document.
+- **Room and Board/Subsistence Allowance** [SOURCE 9, Article 1101 A] for employees whose regular residence is 110+ road-driven kilometers from the project
 
-If you are asking about travel provisions that apply to nuclear projects specifically, the provided sources do not clearly distinguish between whether the Primary Collective Agreement's travel articles (1100, 1101, 1102) apply to nuclear projects or whether there are separate nuclear-specific provisions. The only Nuclear Project Agreement source provided addresses worker displacement, not travel allowances.
+- **Initial and Return Travel Expenses** [SOURCE 3, Article 1102] covering recruitment travel for employees living 110+ road-driven kilometers away, with varying rates based on distance and location
 
-To obtain the complete travel provisions applicable to nuclear projects, you would need the full text of the IBEW Nuclear Project Agreement.
+The documents note that on nuclear sites specifically, certain hiring and replacement rules apply [SOURCE 10, Section 701A(iv)], but detailed travel-specific provisions unique to nuclear projects are not separately elaborated in the Nuclear Project Agreement excerpt provided.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
@@ -1037,16 +1231,20 @@ To obtain the complete travel provisions applicable to nuclear projects, you wou
 | # | Union | Document | Article | Section |
 |---|-------|----------|---------|---------|
 | 2 | IBEW | IBEW Nuclear Project Agreement |  | 6.1 |
+| 3 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 8 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 9 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 10 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 5309ms  
+**Latency:** 5779ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | |
 
 ---
 
@@ -1062,70 +1260,100 @@ To obtain the complete travel provisions applicable to nuclear projects, you wou
 
 ---
 
+## ⚠️ Important Preliminary Note
+
+The provided source documents **only contain provisions from the IBEW Generation 2025–2030 Collective Agreement**. **No Sheet Metal Workers' 2025–2030 collective agreement has been provided** in the source documents for this conversation.
+
+Therefore, a full side-by-side comparison cannot be completed at this time.
+
+---
+
 ## IBEW Generation — Overtime Rules
 
-**Standard Daily Overtime (8-hour day schedule):**
-The provided IBEW Generation sources do not explicitly state the overtime rate for hours beyond 8 on a standard daily schedule in the excerpts available. However, the agreement does address overtime in the context of a 10-hour day schedule and Saturday/Sunday/Holiday work.
+### Standard 8-Hour / 5-Day Schedule (Monday–Friday)
 
-**10-Hour Day / 4-Day Work Week Schedule:**
-> *"When working on a ten (10) hour day and four (4) day per week work schedule (Monday to Friday inclusive), overtime work shall be paid at one and one-half (1 ½) times the basic hourly rate for all hours worked beyond the normal daily scheduled number of hours up to a maximum of two (2) hours per day. All hours in excess of 12 hours per day shall be paid at two (2) times the base hourly rate."*
-[SOURCE 5, Section 806 (implied), Page 24]
+> **Section 806 A** [SOURCE 8]:
+> "When working on an eight (8) hour day and five (5) day per week work schedule (Monday to Friday inclusive), overtime work shall be paid at **one and one-half (1½) times** the basic hourly rate for all hours worked beyond the normal daily scheduled number of hours up to a maximum of two (2) hours per day. All hours in excess of **10 hours per day** shall be paid at **two (2) times** the base hourly rate."
 
-**Saturday, Sunday, Recognized Holidays, and Non-Shift Days:**
-> *"Overtime work performed on Saturday, Sunday, Recognized Holidays and non-shift days shall be paid at two (2) times the basic hourly rate."*
-[SOURCE 5, Page 24]
+---
 
-**Overtime Meal Provisions:**
-> *"When an employee has not been notified the previous day that they will be required to work for more than two (2) hours beyond the normal quitting time of their shift and after approximately two (2) hours has been worked, they shall be provided with a lunch and allowed thirty (30) minutes to consume same and be paid at the base hourly rate of pay. After each additional four (4) hours is worked, the employee shall be allowed thirty (30) minutes to eat and be paid at the base hourly rate of pay and a lunch when work is required beyond that four (4) hour period. If supplying a hot meal is not possible, the Employer will pay the employee $25.00."*
-[SOURCE 5, Page 24]
+### 10-Hour / 4-Day Schedule (Monday–Friday)
 
-Where an employee **was** notified the previous day:
-> *"no lunch will be provided, but the employee will be allowed thirty (30) minutes to eat and be paid at the base hourly rate of pay."*
-[SOURCE 5, Page 24]
+> **Section 806 A (continued)** [SOURCE 5, SOURCE 7]:
+> "When working on a ten (10) hour day and four (4) day per week work schedule (Monday to Friday inclusive), overtime work shall be paid at **one and one-half (1½) times** the basic hourly rate for all hours worked beyond the normal daily scheduled number of hours up to a maximum of two (2) hours per day. All hours in excess of **12 hours per day** shall be paid at **two (2) times** the base hourly rate."
 
-**Overtime Rest Periods:**
-> *"For employees required to work overtime, a ten (10) minute rest period will be allotted prior to the end of the normal shift before commencing overtime work."*
-[SOURCE 2, Page 21]
+---
 
-> *"For employees working overtime, a fifteen (15) minute rest period will be allotted, at the time directed by the Employer, after each two hours of overtime worked."*
-[SOURCE 2, Page 21]
+### Saturday, Sunday, Recognized Holidays & Non-Shift Days
 
-**Voluntary Nature & Distribution:**
-> *"All overtime shall be worked on a voluntary basis and shall be distributed as equally as possible among all IBEW members."*
-[SOURCE 1 and SOURCE 5, Page 24]
+> **Section 806 A** [SOURCE 5, SOURCE 7]:
+> "Overtime work performed on **Saturday, Sunday, Recognized Holidays and non-shift days** shall be paid at **two (2) times** the basic hourly rate."
 
-**Absenteeism & Overtime Eligibility:**
-> *"At the Employer's discretion, an unapproved absence of the Employee may disentitle the Employee to overtime opportunities. The application of the employer's discretion, will be subject to referral to the Nuclear Project Committee."*
-[SOURCE 5, Page 24]
+> **Note:** This double-time premium is **not applicable to the first eight (8) hours worked on Saturdays, Sundays and Recognized Holidays** [SOURCE 5, SOURCE 7].
 
-**Shift Work Clarification (re: Overtime):**
-A Letter of Understanding clarifies:
-> *"This is to clarify that overtime will be paid in accordance with Section 806 – Overtime."*
-[SOURCE 4, Page 64]
+---
+
+### Voluntary Nature & Distribution of Overtime
+
+> **Section 806 C** [SOURCE 1, SOURCE 5]:
+> "All overtime shall be worked on a **voluntary basis** and shall be **distributed as equally as possible** among all IBEW members."
+
+---
+
+### Absenteeism and Overtime Entitlement
+
+> **Section 806 A** [SOURCE 5, SOURCE 7]:
+> "At the Employer's discretion, an unapproved absence of the Employee **may disentitle** the Employee to overtime opportunities. The application of the employer's discretion will be subject to referral to the Nuclear Project Committee."
+
+---
+
+### Overtime Meal Breaks
+
+> **Section 806 B** [SOURCE 5, SOURCE 7]:
+> - If **not notified the previous day** of extended overtime beyond two (2) hours: employer must provide a lunch and 30 paid minutes after approximately two hours of overtime; then again after each additional four (4) hours. If a hot meal cannot be supplied, the employer pays **$25.00**.
+> - If **notified the previous day**: no meal provided, but employee receives 30 paid minutes to eat.
+> - A paid meal period **supplants** any overlapping rest period.
+
+---
+
+### Rest Periods During Overtime
+
+> **Section 801 B & C** [SOURCE 2]:
+> - A **ten (10) minute rest period** prior to the end of the normal shift before commencing overtime.
+> - A **fifteen (15) minute rest period** after each **two (2) hours of overtime worked**.
+
+---
+
+### Shift-Specific Overtime Clarification (Letter of Understanding)
+
+> **LOU re: Shift Schedules** [SOURCE 4]:
+> "This is to clarify that overtime will be paid in accordance with **Section 806 – Overtime**."
 
 ---
 
 ## Sheet Metal Workers — Overtime Rules
 
-The provided documents **do not include** a Sheet Metal Workers 2025–2030 Collective Agreement. No sources covering Sheet Metal Workers' overtime provisions have been supplied in this conversation.
+**The provided documents do not contain information about the Sheet Metal Workers' 2025–2030 Collective Agreement.**
 
-> **"The provided documents do not contain information about Sheet Metal Workers' overtime rules under a 2025–2030 agreement."**
-
-A comparison cannot be completed without the Sheet Metal Workers' source document. Please provide the relevant Sheet Metal Workers Collective Agreement to enable a side-by-side comparison.
+No provisions regarding overtime rates, voluntary overtime, distribution rules, meal breaks during overtime, or rest periods during overtime are available for Sheet Metal Workers in the supplied sources. A comparison on these points cannot be made.
 
 ---
 
-## Summary of What Can and Cannot Be Compared
+## Summary
 
 | Provision | IBEW Generation | Sheet Metal Workers |
 |---|---|---|
-| Overtime rate (beyond daily hours) | 1.5x up to 2 hrs over on 10-hr schedule; 2x beyond 12 hrs [SOURCE 5] | **Not available in provided documents** |
-| Saturday/Sunday/Holiday overtime | 2x basic hourly rate [SOURCE 5] | **Not available in provided documents** |
-| Voluntary overtime | Yes, distributed equally [SOURCE 1, SOURCE 5] | **Not available in provided documents** |
-| Overtime rest breaks | 10 min before OT; 15 min per 2 hrs of OT [SOURCE 2] | **Not available in provided documents** |
-| Meal provisions during OT | 30 min paid at straight time; $25 if hot meal unavailable [SOURCE 5] | **Not available in provided documents** |
+| OT rate (beyond daily hours, up to 2 hrs) | 1.5× [SOURCE 8] | *Not available* |
+| OT rate beyond 10 hrs/day (8-hr schedule) | 2× [SOURCE 8] | *Not available* |
+| OT rate beyond 12 hrs/day (10-hr schedule) | 2× [SOURCE 5] | *Not available* |
+| Saturday/Sunday/Holiday OT rate | 2× [SOURCE 5] | *Not available* |
+| Voluntary basis | Yes [SOURCE 1] | *Not available* |
+| Equal distribution required | Yes [SOURCE 1] | *Not available* |
+| Overtime rest periods | 10 min pre-OT; 15 min per 2 hrs OT [SOURCE 2] | *Not available* |
 
 ---
+
+To complete this comparison, the Sheet Metal Workers' 2025–2030 Collective Agreement would need to be provided as a source document.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
@@ -1133,18 +1361,21 @@ A comparison cannot be completed without the Sheet Metal Workers' source documen
 
 | # | Union | Document | Article | Section |
 |---|-------|----------|---------|---------|
+| 1 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 | 2 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 4 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 | 5 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 8 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
 
 **Model used:** `claude-sonnet-4-6`  
-**Latency:** 20163ms  
+**Latency:** 24490ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| ☐ Yes / ☐ No / x Partial | x Yes / ☐ No | Not sure why it was unable to locate the Sheet Metal CA, it was part of the ingestion. |
 
 ---
 
@@ -1154,13 +1385,13 @@ A comparison cannot be completed without the Sheet Metal Workers' source documen
 
 **Answer:**
 
-The provided documents do not contain information about United Association journeyperson base rates as of May 2025.
+I cannot answer this question based on the provided documents.
 
-I can confirm that [SOURCE 4] identifies the IBEW Generation 2025-2030 Collective Agreement as effective May 1, 2025, but the specific wage schedules showing the IBEW journeyperson base rate are not included in the sources provided to me. [SOURCE 3] references that "The rates of pay for all forepeople and subforepeople covered by this Agreement will be set forth in the current wage schedules," but those schedules themselves are not reproduced in the source documents.
+The sources contain wage schedules for **IBEW Generation** workers as of May 2025 [SOURCE 1, SOURCE 7]. For example, the IBEW Generation journeyperson base rate effective May 1, 2025, is $54.98/hour for Local 530 [SOURCE 7, E-3-C LU 530 Sarnia, 07-6 JOURNEYMAN, 2025-05-01 line].
 
-To answer your question, I would need:
-1. The wage schedule page from the IBEW Generation 2025-2030 agreement showing the journeyperson base hourly rate effective May 1, 2025
-2. The corresponding wage schedule from a United Association collective agreement effective as of May 2025
+However, **the provided documents do not contain any information about United Association wages or collective agreements**. Without United Association wage data, I cannot compare the two unions' journeyperson base rates.
+
+To answer your question, you would need to provide United Association collective agreement or wage schedule documents covering the same time period (May 2025).
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
@@ -1168,18 +1399,18 @@ To answer your question, I would need:
 
 | # | Union | Document | Article | Section |
 |---|-------|----------|---------|---------|
-| 3 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
-| 4 | IBEW | IBEW Generation 2025-2030 Collective Agreement |  |  |
+| 1 | IBEW | IBEW Generation Wage Schedule E-3-C LU 530 Sarnia |  |  |
+| 7 | IBEW | IBEW Generation Wage Schedule E-3-C LU 530 Sarnia |  |  |
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3967ms  
+**Latency:** 3994ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| ☐ Yes / x No / ☐ Partial | x Yes / ☐ No | All wages to the 3 test unions have been ingested. |
 
 ---
 
@@ -1191,13 +1422,11 @@ To answer your question, I would need:
 
 **Answer:**
 
-The provided documents do not contain information about specific pension benefit amounts or details for retired Boilermakers under EPSCA agreements.
+The provided documents do not contain information about pension benefits for retired Boilermakers under EPSCA agreements.
 
-The documents I have access to cover the United Association and Sheet Metal Workers unions, not Boilermakers. Additionally, while the agreements establish that employers must contribute to "operative welfare, pension and SUB plans established or recognized in the locality" [SOURCE 6, Section 19.1], the actual pension benefit details—such as retirement income amounts, vesting schedules, or eligibility criteria for retirees—are not included in the source documents provided.
+The sources provided cover collective agreements for the United Association (plumbers and pipe fitters), Sheet Metal Workers, and IBEW (electricians) unions. There is no Boilermakers union agreement or specific information about retired Boilermakers' pension benefits included in these documents.
 
-The agreements reference that "the amount(s) of welfare, pension and SUB contributions to be paid will be set out in the wage schedules attached hereto" [SOURCE 6, Section 19.1], but those wage schedules with specific pension contribution amounts are not provided in the sources available to me.
-
-To obtain detailed pension benefit information for Boilermakers or any other trade, you would need to consult the actual pension plan documents administered by the relevant union or pension trustee.
+To obtain information about Boilermakers pension benefits under EPSCA agreements, you would need to consult the relevant Boilermakers collective agreement or contact EPSCA directly.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
@@ -1206,14 +1435,14 @@ To obtain detailed pension benefit information for Boilermakers or any other tra
 _No citations returned._
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 3904ms  
+**Latency:** 2859ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| x Yes / ☐ No / ☐ Partial | x Yes / ☐ No | This is good, we haven't ingested anything for the boilermakers yet, so it should not have made anything up, good that it did not halucinate. |
 
 ---
 
@@ -1223,16 +1452,15 @@ _No citations returned._
 
 **Answer:**
 
-# Grievance Arbitration Process for IBEW Transmission Workers at Bruce Power
+I don't have the provided sources needed to answer your question. You've asked about the grievance arbitration process for IBEW Transmission workers at Bruce Power, but no collective agreement documents have been included in this conversation yet.
 
-The provided documents do not contain information about a specific grievance arbitration process for IBEW Transmission workers at Bruce Power.
+To provide you with an accurate, cited answer about the grievance arbitration process, I would need access to:
 
-To answer your question accurately, I would need access to:
-- The IBEW collective agreement covering Bruce Power
-- Any project-specific or site-specific agreements that apply to Bruce Power transmission work
-- Bruce Power-specific labour relations documentation
+- The relevant IBEW collective agreement covering Bruce Power workers, or
+- A Bruce Power-specific project agreement, or
+- EPSCA collective agreement documentation that addresses this dispute resolution procedure
 
-If you have such documents available, please provide them and I'll be able to identify the relevant grievance arbitration procedures, timelines, arbitrator selection methods, and other procedural requirements.
+Please provide the relevant source documents, and I'll be able to cite the specific articles and sections governing the grievance arbitration process.
 
 ⚠️ This answer is for reference only and does not constitute legal advice.
 
@@ -1241,14 +1469,14 @@ If you have such documents available, please provide them and I'll be able to id
 _No citations returned._
 
 **Model used:** `claude-haiku-4-5-20251001`  
-**Latency:** 2323ms  
+**Latency:** 2695ms  
 **Query log ID:** `N/A`
 
 **Manual review:**
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| ☐ Yes / ☐ No / x Partial | ☐ Yes / x No | not sure about this one|
 
 ---
 
