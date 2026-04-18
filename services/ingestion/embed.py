@@ -49,7 +49,11 @@ async def embed_chunks(
     if not chunks:
         return []
 
-    texts = [c.text for c in chunks]
+    # nomic-embed-text on this Ollama instance saturates around 4500 chars (~2048 tokens
+    # at ~2 chars/token for dense markdown tables). Truncate embed input only; the full
+    # text is preserved in the stored chunk for citation display.
+    MAX_EMBED_CHARS = 4000
+    texts = [c.text[:MAX_EMBED_CHARS] for c in chunks]
     embeddings: list[list[float]] = []
 
     async with httpx.AsyncClient(base_url=base_url, timeout=120.0) as client:
