@@ -52,7 +52,7 @@ async def embed_chunks(
     # nomic-embed-text on this Ollama instance saturates around 4500 chars (~2048 tokens
     # at ~2 chars/token for dense markdown tables). Truncate embed input only; the full
     # text is preserved in the stored chunk for citation display.
-    MAX_EMBED_CHARS = 4000
+    MAX_EMBED_CHARS = 2500
     texts = [c.text[:MAX_EMBED_CHARS] for c in chunks]
     embeddings: list[list[float]] = []
 
