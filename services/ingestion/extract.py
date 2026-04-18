@@ -11,10 +11,14 @@ and Stage 4 (chunk.py) which applies structure-aware chunking.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import pdfplumber
+
+_PAGE_COMMENT_RE = re.compile(r"<!--\s*page:\s*(\d+)\s*-->")
+_TABLE_SEPARATOR_RE = re.compile(r"^\|[-| :]+\|$")
 
 # Type alias for an immutable table (tuple-of-tuples preserves frozen semantics)
 TableRows = tuple[tuple[str | None, ...], ...]
@@ -54,6 +58,120 @@ class ExtractedDocument:
 def _to_table_rows(raw: list[list[str | None]]) -> TableRows:
     """Convert pdfplumber's list-of-lists into an immutable tuple-of-tuples."""
     return tuple(tuple(row) for row in raw)
+
+
+def _parse_pipe_table(lines: list[str]) -> TableRows | None:
+    """Parse a contiguous block of pipe-table lines into TableRows.
+
+    Returns None if the block is not a valid pipe table (missing separator row).
+    Separator row (e.g. |---|---|) is excluded from the returned rows.
+    """
+    if len(lines) < 2:
+        return None
+
+    sep_index = next(
+        (i for i, ln in enumerate(lines) if _TABLE_SEPARATOR_RE.match(ln.strip())),
+        None,
+    )
+    if sep_index is None:
+        return None
+
+    def _parse_row(line: str) -> tuple[str | None, ...]:
+        stripped = line.strip().strip("|")
+        return tuple(cell.strip() or None for cell in stripped.split("|"))
+
+    rows: list[tuple[str | None, ...]] = []
+    for i, line in enumerate(lines):
+        if i == sep_index:
+            continue
+        rows.append(_parse_row(line))
+
+    return tuple(rows)
+
+
+def extract_markdown(md_path: Path, page_count: int) -> ExtractedDocument:
+    """Extract text and table blocks from a Markdown file produced by convert.py.
+
+    Page boundaries are detected via <!-- page: N --> comments. Tables are
+    detected by pipe-delimiter syntax with a separator row; malformed tables
+    fall back to TextBlock.
+
+    Args:
+        md_path:    Path to the .md file (output of convert_pdf).
+        page_count: Total page count to set on the returned ExtractedDocument.
+
+    Returns:
+        ExtractedDocument with TextBlock and TableBlock entries.
+
+    Raises:
+        FileNotFoundError: If md_path does not exist.
+    """
+    if not md_path.exists():
+        raise FileNotFoundError(f"Markdown file not found: {md_path}")
+
+    doc = ExtractedDocument(source_path=md_path, page_count=page_count)
+    current_page = 1
+    pending_text: list[str] = []
+    pending_table: list[str] = []
+    in_table = False
+
+    def _flush_text() -> None:
+        text = "\n".join(pending_text).strip()
+        if text:
+            doc.blocks.append(TextBlock(text=text, page_number=current_page))
+        pending_text.clear()
+
+    def _flush_table() -> None:
+        parsed = _parse_pipe_table(pending_table)
+        if parsed is not None:
+            doc.blocks.append(TableBlock(rows=parsed, page_number=current_page))
+        else:
+            doc.blocks.append(
+                TextBlock(text="\n".join(pending_table).strip(), page_number=current_page)
+            )
+        pending_table.clear()
+
+    content = md_path.read_text(encoding="utf-8")
+
+    for raw_line in content.splitlines():
+        page_match = _PAGE_COMMENT_RE.match(raw_line.strip())
+        if page_match:
+            if in_table:
+                _flush_table()
+                in_table = False
+            else:
+                _flush_text()
+            current_page = int(page_match.group(1))
+            continue
+
+        stripped = raw_line.strip()
+        is_pipe_line = stripped.startswith("|") and stripped.endswith("|")
+        is_header = stripped.startswith("##")
+
+        if is_pipe_line:
+            if not in_table:
+                _flush_text()
+                in_table = True
+            pending_table.append(raw_line)
+        elif is_header:
+            if in_table:
+                _flush_table()
+                in_table = False
+            else:
+                _flush_text()
+            pending_text.append(raw_line)
+        else:
+            if in_table:
+                _flush_table()
+                in_table = False
+            pending_text.append(raw_line)
+
+    if in_table:
+        _flush_table()
+    else:
+        _flush_text()
+
+    return doc
 
 
 def extract_pdf(pdf_path: Path) -> ExtractedDocument:

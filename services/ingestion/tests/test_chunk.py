@@ -382,3 +382,119 @@ class TestChunkDataclass:
         text_chunks = [c for c in chunks if not c.is_table]
         assert len(text_chunks) >= 1
         assert all(c.is_table is False for c in text_chunks)
+
+
+class TestWageScheduleChunking:
+    def _make_wage_metadata(self) -> DocumentMetadata:
+        return DocumentMetadata(
+            union_name="Sheet Metal Workers",
+            document_type="wage_schedule",
+            agreement_scope="commercial",
+            effective_date="2025-01-01",
+            expiry_date="2030-12-31",
+            title="Sheet Metal Wage Schedule 2025",
+            source_url=None,
+        )
+
+    def _make_wage_doc(self, blocks: list, page_count: int = 1) -> ClassifiedDocument:
+        from extract import ExtractedDocument
+
+        extracted = ExtractedDocument(
+            source_path=Path("wage_schedule.pdf"),
+            blocks=blocks,
+            page_count=page_count,
+        )
+        return ClassifiedDocument(extracted=extracted, metadata=self._make_wage_metadata())
+
+    def test_wage_schedule_splits_on_h2_headers(self) -> None:
+        blocks = [
+            TextBlock(
+                text="## Journeyperson Rates\n\nJourneyperson: $43.98",
+                page_number=1,
+            ),
+            TextBlock(
+                text="## Apprentice Rates\n\nApprentice 1st: $21.99",
+                page_number=1,
+            ),
+        ]
+        chunks = chunk_document(self._make_wage_doc(blocks))
+        assert len(chunks) >= 2
+
+    def test_wage_schedule_header_text_populates_article_title(self) -> None:
+        blocks = [
+            TextBlock(
+                text="## Journeyperson Rates\n\nJourneyperson: $43.98",
+                page_number=1,
+            )
+        ]
+        chunks = chunk_document(self._make_wage_doc(blocks))
+        assert len(chunks) >= 1
+        assert chunks[0].article_title == "Journeyperson Rates"
+
+    def test_wage_schedule_h3_header_populates_article_title(self) -> None:
+        blocks = [
+            TextBlock(
+                text="### Premium Pay\n\nShift differential: $2.50/hr",
+                page_number=2,
+            )
+        ]
+        chunks = chunk_document(self._make_wage_doc(blocks))
+        assert len(chunks) >= 1
+        assert chunks[0].article_title == "Premium Pay"
+
+    def test_wage_schedule_table_block_is_atomic(self) -> None:
+        rows = (
+            ("Classification", "Effective Date", "Hourly Rate"),
+            ("Journeyperson", "2025-01-01", "$43.98"),
+            ("Apprentice 1st", "2025-01-01", "$21.99"),
+        )
+        blocks = [
+            TextBlock(text="## Journeyperson Rates", page_number=1),
+            TableBlock(rows=rows, page_number=1),
+        ]
+        chunks = chunk_document(self._make_wage_doc(blocks))
+        table_chunks = [c for c in chunks if c.is_table]
+        assert len(table_chunks) == 1
+        assert "$43.98" in table_chunks[0].text
+
+    def test_wage_schedule_table_inherits_h2_header_as_title(self) -> None:
+        rows = (("Type", "Amount"), ("Shift Premium", "$2.50"))
+        blocks = [
+            TextBlock(text="## Premium Pay", page_number=2),
+            TableBlock(rows=rows, page_number=2),
+        ]
+        chunks = chunk_document(self._make_wage_doc(blocks))
+        table_chunks = [c for c in chunks if c.is_table]
+        assert len(table_chunks) == 1
+        assert table_chunks[0].article_title == "Premium Pay"
+
+    def test_wage_schedule_chunk_index_is_sequential(self) -> None:
+        rows = (("Classification", "Rate"), ("Journeyperson", "$43.98"))
+        blocks = [
+            TextBlock(text="## Section A\n\nSome text.", page_number=1),
+            TableBlock(rows=rows, page_number=1),
+            TextBlock(text="## Section B\n\nMore text.", page_number=2),
+        ]
+        chunks = chunk_document(self._make_wage_doc(blocks))
+        indices = [c.chunk_index for c in chunks]
+        assert indices == list(range(len(chunks)))
+
+    def test_primary_ca_article_regex_not_used_for_wage_schedule(self) -> None:
+        """Wage schedule docs must NOT be processed with the ARTICLE N regex."""
+        blocks = [
+            TextBlock(
+                text="## Journeyperson Rates\n\nJourneyperson: $43.98",
+                page_number=1,
+            )
+        ]
+        chunks = chunk_document(self._make_wage_doc(blocks))
+        assert all(c.article_number is None for c in chunks)
+
+    def test_primary_ca_chunking_uses_article_regex(self) -> None:
+        """CA documents must still use ARTICLE N — TITLE parsing."""
+        text = "ARTICLE 1 — SCOPE\n1.01 This agreement covers all employees."
+        ca_doc = _make_doc([TextBlock(text=text, page_number=1)])
+        chunks = chunk_document(ca_doc)
+        assert len(chunks) >= 1
+        assert chunks[0].article_number == "Article 1"
+        assert chunks[0].article_title == "SCOPE"

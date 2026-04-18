@@ -41,6 +41,9 @@ _ARTICLE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Markdown H2/H3 headers used in wage schedule documents produced by convert.py
+_MARKDOWN_HEADER_RE = re.compile(r"^#{2,3}\s+(.+)$")
+
 # Section/clause numbers at the start of a line: "1.01", "12.03", "4.02a"
 _SECTION_RE = re.compile(r"^(\d+\.\d+[a-z]?)\s")
 
@@ -278,6 +281,76 @@ def _process_article(
             )
 
 
+def _process_wage_schedule(
+    blocks: list[TextBlock | TableBlock],
+    out: list[Chunk],
+) -> None:
+    """Chunk a wage schedule document using markdown H2/H3 headers as boundaries.
+
+    Text blocks containing ## or ### headers are split at those boundaries.
+    TableBlocks are kept atomic and inherit the most recent header as article_title.
+    """
+    current_title: str | None = None
+    current_lines: list[tuple[str, int]] = []
+
+    def _flush_section() -> None:
+        text = "\n".join(line for line, _ in current_lines).strip()
+        if not text:
+            return
+        page = current_lines[0][1]
+        if _count_tokens(text) <= MAX_CHUNK_TOKENS:
+            out.append(
+                Chunk(
+                    text=text,
+                    page_number=page,
+                    is_table=False,
+                    article_number=None,
+                    section_number=None,
+                    article_title=current_title,
+                    chunk_index=0,
+                )
+            )
+        else:
+            out.extend(
+                _split_with_overlap(
+                    text=text,
+                    page_number=page,
+                    article_number=None,
+                    article_title=current_title,
+                    section_number=None,
+                )
+            )
+        current_lines.clear()
+
+    for block in blocks:
+        if isinstance(block, TableBlock):
+            _flush_section()
+            table_text = _format_table(block.rows)
+            out.append(
+                Chunk(
+                    text=table_text,
+                    page_number=block.page_number,
+                    is_table=True,
+                    article_number=None,
+                    section_number=None,
+                    article_title=current_title,
+                    chunk_index=0,
+                )
+            )
+        elif isinstance(block, TextBlock):
+            for raw_line in block.text.split("\n"):
+                header_match = _MARKDOWN_HEADER_RE.match(raw_line.strip())
+                if header_match:
+                    _flush_section()
+                    current_title = header_match.group(1).strip()
+                else:
+                    stripped = raw_line.strip()
+                    if stripped:
+                        current_lines.append((stripped, block.page_number))
+
+    _flush_section()
+
+
 # ─── Public API ───────────────────────────────────────────────────────────────
 
 
@@ -298,6 +371,21 @@ def chunk_document(doc: ClassifiedDocument) -> list[Chunk]:
         A list of Chunks in document order with sequential chunk_index values.
     """
     raw: list[Chunk] = []
+
+    if doc.metadata.document_type == "wage_schedule":
+        _process_wage_schedule(doc.extracted.blocks, raw)
+        return [
+            Chunk(
+                text=c.text,
+                page_number=c.page_number,
+                is_table=c.is_table,
+                article_number=c.article_number,
+                section_number=c.section_number,
+                article_title=c.article_title,
+                chunk_index=i,
+            )
+            for i, c in enumerate(raw)
+        ]
 
     # Running article context shared between text and table blocks
     current_article_number: str | None = None
