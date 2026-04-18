@@ -24,7 +24,7 @@ class TestConvertPdfCreatesOutput:
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF-1.4 fake pdf content")
 
-        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN):
+        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN):  # type: ignore[attr-defined]
             result = convert_pdf(pdf, tmp_path / "cache")
 
         assert result.markdown_path.exists()
@@ -37,7 +37,7 @@ class TestConvertPdfCreatesOutput:
         pdf.write_bytes(b"%PDF-1.4 fake pdf content")
         unicode_md = "## Tarifs — Journalier\n| Poste | Taux |\n|---|---|\n| Journalier | 43,98\u00a0$ |"
 
-        with patch("convert._convert_with_pymupdf4llm", return_value=unicode_md):
+        with patch("convert._convert_with_pymupdf4llm", return_value=unicode_md):  # type: ignore[attr-defined]
             result = convert_pdf(pdf, tmp_path / "cache")
 
         content = result.markdown_path.read_text(encoding="utf-8")
@@ -49,7 +49,7 @@ class TestConvertPdfCreatesOutput:
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF-1.4 fake pdf content")
 
-        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN):
+        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN):  # type: ignore[attr-defined]
             result = convert_pdf(pdf, tmp_path / "cache")
 
         sidecar = result.markdown_path.parent / (result.markdown_path.name + ".meta.json")
@@ -68,7 +68,7 @@ class TestConvertPdfCreatesOutput:
         pdf.write_bytes(content)
         expected_sha = hashlib.sha256(content).hexdigest()
 
-        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN):
+        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN):  # type: ignore[attr-defined]
             result = convert_pdf(pdf, tmp_path / "cache")
 
         assert result.source_sha256 == expected_sha
@@ -82,7 +82,7 @@ class TestConvertPdfCreatesOutput:
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF-1.4 fake pdf content")
 
-        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN):
+        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN):  # type: ignore[attr-defined]
             result = convert_pdf(pdf, tmp_path / "cache")
 
         assert result.source_path == pdf
@@ -99,7 +99,7 @@ class TestConvertPdfCaching:
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF-1.4 fake pdf content")
 
-        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN) as mock_backend:
+        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN) as mock_backend:  # type: ignore[attr-defined]
             convert_pdf(pdf, tmp_path / "cache")
             convert_pdf(pdf, tmp_path / "cache")
 
@@ -111,7 +111,7 @@ class TestConvertPdfCaching:
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF-1.4 original content")
 
-        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN) as mock_backend:
+        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN) as mock_backend:  # type: ignore[attr-defined]
             convert_pdf(pdf, tmp_path / "cache")
             pdf.write_bytes(b"%PDF-1.4 CHANGED content after edit")
             convert_pdf(pdf, tmp_path / "cache")
@@ -124,7 +124,7 @@ class TestConvertPdfCaching:
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF-1.4 fake pdf content")
 
-        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN) as mock_backend:
+        with patch("convert._convert_with_pymupdf4llm", return_value=FAKE_MARKDOWN) as mock_backend:  # type: ignore[attr-defined]
             convert_pdf(pdf, tmp_path / "cache")
             convert_pdf(pdf, tmp_path / "cache", force=True)
 
@@ -139,7 +139,7 @@ class TestConvertPdfAtomicWrite:
         pdf.write_bytes(b"%PDF-1.4 fake pdf content")
         cache_dir = tmp_path / "cache"
 
-        with patch("convert._convert_with_pymupdf4llm", side_effect=RuntimeError("crash")):
+        with patch("convert._convert_with_pymupdf4llm", side_effect=RuntimeError("crash")):  # type: ignore[attr-defined]
             with pytest.raises(RuntimeError):
                 convert_pdf(pdf, cache_dir)
 
@@ -177,7 +177,7 @@ class TestConvertPdfMarkdownContent:
             "| Journeyperson | 2025-01-01 | $43.98 |\n"
         )
 
-        with patch("convert._convert_with_pymupdf4llm", return_value=table_md):
+        with patch("convert._convert_with_pymupdf4llm", return_value=table_md):  # type: ignore[attr-defined]
             result = convert_pdf(pdf, tmp_path / "cache")
 
         assert "|" in result.markdown
