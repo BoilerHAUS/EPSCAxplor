@@ -40,6 +40,45 @@ Cross-lane PRs require explicit justification.
 
 ## Local Development Notes
 
+### Running ingestion on the VPS (outside Docker)
+
+Dokploy deploys as Docker Swarm services on `dokploy-network`. The ingestion script runs
+directly on the VPS host (not in a container), so it **cannot reach Postgres or Qdrant by
+their overlay IPs** without tunnels. Container names use Swarm suffixes (not the
+compose service names), so `docker inspect epsca-db` will fail — use `docker ps | grep postgres`.
+
+Known IPs (may change after redeployment — verify with `docker network inspect dokploy-network`):
+- Postgres: `10.0.1.233`
+- Qdrant: `10.0.1.231`
+
+Before running the ingestion pipeline from the VPS host, start both tunnels:
+
+```bash
+# Postgres tunnel
+docker run -d --rm --name pg-fwd \
+  --network dokploy-network \
+  -p 127.0.0.1:5433:5432 \
+  alpine/socat \
+  TCP-LISTEN:5432,fork,reuseaddr TCP:10.0.1.233:5432
+
+# Qdrant tunnel
+docker run -d --rm --name qdrant-fwd \
+  --network dokploy-network \
+  -p 127.0.0.1:6333:6333 \
+  alpine/socat \
+  TCP-LISTEN:6333,fork,reuseaddr TCP:10.0.1.231:6333
+
+# Run ingestion
+POSTGRES_DSN="postgresql://epsca_user:<password>@127.0.0.1:5433/epsca?sslmode=disable" \
+  INGEST_DOC_TYPE=<doc_type> \
+  python run_pipeline.py
+
+# Cleanup
+docker rm -f pg-fwd qdrant-fwd
+```
+
+`sslmode=disable` is required — the internal Postgres container has no SSL certs.
+
 ### Testing migrations locally
 
 `dokploy-network` is an **external** network — `docker compose up` will fail locally

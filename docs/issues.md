@@ -44,6 +44,9 @@ Goal: End-to-end pipeline validated against 3 unions (IBEW Generation, Sheet Met
 | [#16](https://github.com/BoilerHAUS/EPSCAxplor/issues/16) | pr | [x] | feat(rag): implement Qdrant filtered similarity search and context assembly |
 | [#17](https://github.com/BoilerHAUS/EPSCAxplor/issues/17) | pr | [x] | feat(api): implement POST /query endpoint with model routing and response structure |
 | [#18](https://github.com/BoilerHAUS/EPSCAxplor/issues/18) | no-pr | [ ] | ops: evaluate Phase 1 POC against gold question set |
+| [#55](https://github.com/BoilerHAUS/EPSCAxplor/issues/55) | pr | [ ] | fix(rag): wage schedule rate rows not retrieved — tabular data missing from Qdrant results |
+| [#56](https://github.com/BoilerHAUS/EPSCAxplor/issues/56) | pr | [ ] | fix(rag): cross-union queries retrieve single-union context only |
+| [#57](https://github.com/BoilerHAUS/EPSCAxplor/issues/57) | pr | [ ] | fix(rag): spurious citations returned on out-of-corpus refusal queries |
 | [#39](https://github.com/BoilerHAUS/EPSCAxplor/issues/39) | pr | [x] | chore(ci): extract shared validation steps into reusable workflow |
 | [#51](https://github.com/BoilerHAUS/EPSCAxplor/issues/51) | pr | [x] | feat(ingestion): add wage_schedule entries to corpus_manifest for Phase 1 POC unions |
 | [#53](https://github.com/BoilerHAUS/EPSCAxplor/issues/53) | pr | [x] | feat(ingestion): convert PDFs to markdown before chunking for accurate table extraction |
