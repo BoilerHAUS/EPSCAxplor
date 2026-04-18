@@ -111,16 +111,18 @@ class TestBuildFilter:
 
     # --- include_nuclear_pa = False (default) adds document_type condition ---
 
-    def test_no_nuclear_pa_adds_primary_ca_condition(self) -> None:
+    def test_no_nuclear_pa_excludes_nuclear_pa_via_must_not(self) -> None:
         f = build_filter(None, False, None)
         must = self._must_conditions(f)
-        # must = [expiry_guard, FieldCondition(document_type=primary_ca)]
-        assert len(must) == 2
-        doc_type_cond: FieldCondition = must[1]  # type: ignore[assignment]
+        # must = [expiry_guard] only — NPA exclusion moves to must_not
+        assert len(must) == 1
+        must_not = f.must_not or []
+        assert len(must_not) == 1
+        doc_type_cond: FieldCondition = must_not[0]  # type: ignore[assignment]
         assert isinstance(doc_type_cond, FieldCondition)
         assert doc_type_cond.key == "document_type"
         assert isinstance(doc_type_cond.match, MatchValue)
-        assert doc_type_cond.match.value == "primary_ca"
+        assert doc_type_cond.match.value == "nuclear_pa"
 
     def test_include_nuclear_pa_omits_document_type_condition(self) -> None:
         f = build_filter(None, True, None)
@@ -176,11 +178,13 @@ class TestBuildFilter:
 
     # --- combined ---
 
-    def test_all_params_set_produces_four_must_conditions(self) -> None:
+    def test_all_params_set_produces_three_must_one_must_not(self) -> None:
         f = build_filter("Sheet Metal Workers", False, "transmission")
         must = self._must_conditions(f)
-        # expiry_guard + union_name + document_type + agreement_scope = 4
-        assert len(must) == 4
+        # expiry_guard + union_name + agreement_scope = 3 (nuclear_pa exclusion in must_not)
+        assert len(must) == 3
+        must_not = f.must_not or []
+        assert len(must_not) == 1
 
     def test_transmission_scope_stored_correctly(self) -> None:
         f = build_filter(None, True, "transmission")

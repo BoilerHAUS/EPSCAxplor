@@ -104,6 +104,7 @@ def build_filter(
     )
 
     must: list[Condition] = [expiry_guard]
+    must_not: list[Condition] = []
 
     if union_filter:
         must.append(
@@ -112,10 +113,11 @@ def build_filter(
 
     if not include_nuclear_pa:
         # Exclude NPAs unless the query explicitly references nuclear context.
-        must.append(
+        # Use must_not so wage_schedule and other non-NPA types remain eligible.
+        must_not.append(
             FieldCondition(
                 key="document_type",
-                match=MatchValue(value="primary_ca"),
+                match=MatchValue(value="nuclear_pa"),
             )
         )
 
@@ -127,7 +129,7 @@ def build_filter(
             )
         )
 
-    return Filter(must=must)
+    return Filter(must=must, must_not=must_not or None)
 
 
 async def _embed(text: str, settings: Settings) -> list[float]:
