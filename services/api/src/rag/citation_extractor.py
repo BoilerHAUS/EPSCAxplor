@@ -12,7 +12,8 @@ from pydantic import BaseModel
 
 from src.rag.retrieval import ChunkResult
 
-_SOURCE_PATTERN: re.Pattern[str] = re.compile(r"\[SOURCE\s+(\d+)\]", re.IGNORECASE)
+# Matches [SOURCE N] and extended forms like [SOURCE N, Page X] or [SOURCE N, Section Y].
+_SOURCE_PATTERN: re.Pattern[str] = re.compile(r"\[SOURCE\s+(\d+)[^\]]*\]", re.IGNORECASE)
 
 
 class CitationRef(BaseModel):
