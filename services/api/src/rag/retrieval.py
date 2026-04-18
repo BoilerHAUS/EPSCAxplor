@@ -103,7 +103,19 @@ def build_filter(
         ]
     )
 
-    must: list[Condition] = [expiry_guard]
+    # Effective-date guard: exclude documents not yet in effect (e.g. 2026 wage
+    # schedules returned for a query about current/2025 rates).
+    effective_guard = Filter(
+        should=[
+            FieldCondition(key="effective_date", is_null=True),
+            FieldCondition(
+                key="effective_date",
+                range=DatetimeRange(lte=now),
+            ),
+        ]
+    )
+
+    must: list[Condition] = [expiry_guard, effective_guard]
     must_not: list[Condition] = []
 
     if union_filter:

@@ -72,6 +72,10 @@ class TestBuildFilter:
         """The first must condition is always the expiry guard."""
         return self._must_conditions(f)[0]  # type: ignore[return-value]
 
+    def _effective_guard(self, f: Filter) -> Filter:
+        """The second must condition is always the effective-date guard."""
+        return self._must_conditions(f)[1]  # type: ignore[return-value]
+
     # --- Return type ---
 
     def test_returns_filter_instance(self) -> None:
@@ -109,13 +113,40 @@ class TestBuildFilter:
         # gte should be between the timestamps bracketing the call
         assert before <= range_cond.range.gte <= after  # type: ignore[operator]
 
+    # --- effective-date guard (always second must condition) ---
+
+    def test_effective_guard_is_second_must_condition(self) -> None:
+        f = build_filter(None, True, None)
+        guard = self._effective_guard(f)
+        assert isinstance(guard, Filter)
+        assert len(guard.should) == 2  # type: ignore[arg-type]
+
+    def test_effective_guard_first_should_is_is_null(self) -> None:
+        f = build_filter(None, True, None)
+        guard = self._effective_guard(f)
+        null_cond: FieldCondition = guard.should[0]  # type: ignore[index]
+        assert isinstance(null_cond, FieldCondition)
+        assert null_cond.key == "effective_date"
+        assert null_cond.is_null is True
+
+    def test_effective_guard_second_should_is_lte_now(self) -> None:
+        before = datetime.now(UTC)
+        f = build_filter(None, True, None)
+        after = datetime.now(UTC)
+        guard = self._effective_guard(f)
+        range_cond: FieldCondition = guard.should[1]  # type: ignore[index]
+        assert isinstance(range_cond, FieldCondition)
+        assert range_cond.key == "effective_date"
+        assert isinstance(range_cond.range, DatetimeRange)
+        assert before <= range_cond.range.lte <= after  # type: ignore[operator]
+
     # --- include_nuclear_pa = False (default) adds document_type condition ---
 
     def test_no_nuclear_pa_excludes_nuclear_pa_via_must_not(self) -> None:
         f = build_filter(None, False, None)
         must = self._must_conditions(f)
-        # must = [expiry_guard] only — NPA exclusion moves to must_not
-        assert len(must) == 1
+        # must = [expiry_guard, effective_guard] — NPA exclusion in must_not
+        assert len(must) == 2
         must_not = f.must_not or []
         assert len(must_not) == 1
         doc_type_cond: FieldCondition = must_not[0]  # type: ignore[assignment]
@@ -127,17 +158,17 @@ class TestBuildFilter:
     def test_include_nuclear_pa_omits_document_type_condition(self) -> None:
         f = build_filter(None, True, None)
         must = self._must_conditions(f)
-        # must = [expiry_guard] only
-        assert len(must) == 1
+        # must = [expiry_guard, effective_guard] only
+        assert len(must) == 2
 
     # --- union_filter ---
 
     def test_union_filter_adds_union_name_condition(self) -> None:
         f = build_filter("IBEW", True, None)
         must = self._must_conditions(f)
-        # must = [expiry_guard, FieldCondition(union_name=IBEW)]
-        assert len(must) == 2
-        union_cond: FieldCondition = must[1]  # type: ignore[assignment]
+        # must = [expiry_guard, effective_guard, FieldCondition(union_name=IBEW)]
+        assert len(must) == 3
+        union_cond: FieldCondition = must[2]  # type: ignore[assignment]
         assert isinstance(union_cond, FieldCondition)
         assert union_cond.key == "union_name"
         assert isinstance(union_cond.match, MatchValue)
@@ -158,9 +189,9 @@ class TestBuildFilter:
     def test_agreement_scope_adds_scope_condition(self) -> None:
         f = build_filter(None, True, "generation")
         must = self._must_conditions(f)
-        # must = [expiry_guard, FieldCondition(agreement_scope=generation)]
-        assert len(must) == 2
-        scope_cond: FieldCondition = must[1]  # type: ignore[assignment]
+        # must = [expiry_guard, effective_guard, FieldCondition(agreement_scope=generation)]
+        assert len(must) == 3
+        scope_cond: FieldCondition = must[2]  # type: ignore[assignment]
         assert isinstance(scope_cond, FieldCondition)
         assert scope_cond.key == "agreement_scope"
         assert isinstance(scope_cond.match, MatchValue)
@@ -178,11 +209,11 @@ class TestBuildFilter:
 
     # --- combined ---
 
-    def test_all_params_set_produces_three_must_one_must_not(self) -> None:
+    def test_all_params_set_produces_four_must_one_must_not(self) -> None:
         f = build_filter("Sheet Metal Workers", False, "transmission")
         must = self._must_conditions(f)
-        # expiry_guard + union_name + agreement_scope = 3 (nuclear_pa exclusion in must_not)
-        assert len(must) == 3
+        # expiry_guard + effective_guard + union_name + agreement_scope = 4 (nuclear_pa in must_not)
+        assert len(must) == 4
         must_not = f.must_not or []
         assert len(must_not) == 1
 
