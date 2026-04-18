@@ -132,6 +132,7 @@ def extract_markdown(md_path: Path, page_count: int) -> ExtractedDocument:
         pending_table.clear()
 
     content = md_path.read_text(encoding="utf-8")
+    content = content.replace("<br>", "\n")
 
     for raw_line in content.splitlines():
         page_match = _PAGE_COMMENT_RE.match(raw_line.strip())

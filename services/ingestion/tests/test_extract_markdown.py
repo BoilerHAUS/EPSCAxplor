@@ -66,6 +66,15 @@ MULTI_TABLE_MD = """\
 | 2nd Year | $26.39 |
 """
 
+# Pathological IBEW-style: all rate rows crammed into one cell via <br> tags.
+IBEW_BR_TABLE_MD = """\
+## Wage Schedule
+
+| Classification | Effective May 1, 2025 |
+|---|---|
+| Journeyperson: $52.34/hr<br>Apprentice 1st Period: $26.17/hr<br>Apprentice 2nd Period: $31.40/hr<br>Apprentice 3rd Period: $36.64/hr | IBEW Local 353 |
+"""
+
 
 class TestExtractMarkdownBasic:
     def test_returns_extracted_document(self, tmp_path: Path) -> None:
@@ -194,6 +203,36 @@ class TestExtractMarkdownEdgeCases:
 
         with pytest.raises(FileNotFoundError):
             extract_markdown(tmp_path / "nonexistent.md", page_count=1)
+
+    def test_br_tags_expanded_before_parsing(self, tmp_path: Path) -> None:
+        """IBEW PDFs produce <br>-delimited cells; expansion must surface rate rows."""
+        from extract import extract_markdown
+
+        md_file = tmp_path / "ibew_wage.md"
+        md_file.write_text(IBEW_BR_TABLE_MD, encoding="utf-8")
+        doc = extract_markdown(md_file, page_count=1)
+
+        all_text = " ".join(
+            b.text if isinstance(b, TextBlock) else " ".join(c for row in b.rows for c in row)
+            for b in doc.blocks
+        )
+        assert "$52.34" in all_text
+        assert "$26.17" in all_text
+        assert "$31.40" in all_text
+        assert "$36.64" in all_text
+
+    def test_br_tags_not_present_in_output(self, tmp_path: Path) -> None:
+        from extract import extract_markdown
+
+        md_file = tmp_path / "ibew_wage.md"
+        md_file.write_text(IBEW_BR_TABLE_MD, encoding="utf-8")
+        doc = extract_markdown(md_file, page_count=1)
+
+        all_text = " ".join(
+            b.text if isinstance(b, TextBlock) else " ".join(c for row in b.rows for c in row)
+            for b in doc.blocks
+        )
+        assert "<br>" not in all_text
 
     def test_table_block_is_frozen(self, tmp_path: Path) -> None:
         from extract import extract_markdown
