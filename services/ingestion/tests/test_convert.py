@@ -35,7 +35,9 @@ class TestConvertPdfCreatesOutput:
 
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF-1.4 fake pdf content")
-        unicode_md = "## Tarifs — Journalier\n| Poste | Taux |\n|---|---|\n| Journalier | 43,98\u00a0$ |"
+        unicode_md = (
+            "## Tarifs — Journalier\n| Poste | Taux |\n|---|---|\n| Journalier | 43,98\u00a0$ |"
+        )
 
         with patch("convert._convert_with_pymupdf4llm", return_value=unicode_md):  # type: ignore[attr-defined]
             result = convert_pdf(pdf, tmp_path / "cache")

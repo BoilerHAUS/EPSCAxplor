@@ -88,7 +88,9 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
 
         if conversion_engine != "none":
             converted = convert_pdf(pdf_path, MD_CACHE_DIR, engine=conversion_engine)
-            logger.info("  convert: %s (%s)", "cached" if converted.markdown_path.stat().st_mtime < time.monotonic() - 1 else "converted", conversion_engine)
+            age = time.monotonic() - converted.markdown_path.stat().st_mtime
+            status = "cached" if age > 1 else "converted"
+            logger.info("  convert: %s (%s)", status, conversion_engine)
             extracted = extract_markdown(converted.markdown_path, page_count=converted.page_count)
         else:
             extracted = extract_pdf(pdf_path)
