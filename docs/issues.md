@@ -45,7 +45,8 @@ Goal: End-to-end pipeline validated against 3 unions (IBEW Generation, Sheet Met
 | [#17](https://github.com/BoilerHAUS/EPSCAxplor/issues/17) | pr | [x] | feat(api): implement POST /query endpoint with model routing and response structure |
 | [#18](https://github.com/BoilerHAUS/EPSCAxplor/issues/18) | no-pr | [ ] | ops: evaluate Phase 1 POC against gold question set |
 | [#39](https://github.com/BoilerHAUS/EPSCAxplor/issues/39) | pr | [x] | chore(ci): extract shared validation steps into reusable workflow |
-| [#51](https://github.com/BoilerHAUS/EPSCAxplor/issues/51) | pr | [ ] | feat(ingestion): add wage_schedule entries to corpus_manifest for Phase 1 POC unions |
+| [#51](https://github.com/BoilerHAUS/EPSCAxplor/issues/51) | pr | [x] | feat(ingestion): add wage_schedule entries to corpus_manifest for Phase 1 POC unions |
+| [#53](https://github.com/BoilerHAUS/EPSCAxplor/issues/53) | pr | [x] | feat(ingestion): convert PDFs to markdown before chunking for accurate table extraction |
 
 ---
 
