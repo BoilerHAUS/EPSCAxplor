@@ -92,6 +92,7 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
             status = "cached" if age > 1 else "converted"
             logger.info("  convert: %s (%s)", status, conversion_engine)
             extracted = extract_markdown(converted.markdown_path, page_count=converted.page_count)
+            extracted.source_path = pdf_path  # classify needs the PDF path for manifest lookup
         else:
             extracted = extract_pdf(pdf_path)
 
