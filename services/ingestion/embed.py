@@ -57,7 +57,7 @@ async def embed_chunks(
             batch = texts[i : i + batch_size]
             response = await client.post(
                 "/api/embed",
-                json={"model": EMBED_MODEL, "input": batch},
+                json={"model": EMBED_MODEL, "input": batch, "options": {"num_ctx": 8192}},
             )
             response.raise_for_status()
             data = response.json()
