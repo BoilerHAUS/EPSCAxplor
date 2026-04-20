@@ -31,12 +31,18 @@ before the legacy `convert.py` → `extract.py` → `chunk.py` sequence.
 
 ## Artifacts And Metadata
 
-Artifacts are written under `services/ingestion/corpus_table_artifacts/<pdf-stem>/`:
+Artifacts are written under `services/ingestion/corpus_table_artifacts/<pdf-stem>--<source-hash>/`:
 
+- `manifest.json`
 - `docling.document.json`
 - `docling.tables.json`
 - `tpds.tables.json`
 - `tpds.chunks.json`
+
+`manifest.json` is the index file for a wage-table run. It records the source
+document id/path, document metadata, row-group settings, artifact file paths,
+table counts, chunk-type counts, and a per-table summary of titles, captions,
+pages, and emitted TPDS chunk counts.
 
 Stored chunk payloads now carry wage-table-specific metadata such as:
 
@@ -48,6 +54,10 @@ Stored chunk payloads now carry wage-table-specific metadata such as:
 - `page_numbers`
 - `row_indexes`
 - `trade_name`
+- `source_document_id`
+- `source_document_filename`
+- `artifact_manifest_path`
+- `raw_docling_document_path`
 - artifact paths for normalized tables and TPDS chunk output
 
 ## First-Pass Limits
