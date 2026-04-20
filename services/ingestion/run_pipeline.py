@@ -90,18 +90,24 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
         logger.info("--- %s ---", source_filename)
         t_doc = time.monotonic()
 
-        def _run_legacy_path() -> tuple[ClassifiedDocument, list[Chunk]]:
-            conversion_engine = entry.get("conversion_engine", "none")
+        def _run_legacy_path(
+            manifest_entry: dict[str, object],
+            source_pdf_path: Path,
+        ) -> tuple[ClassifiedDocument, list[Chunk]]:
+            conversion_engine = manifest_entry.get("conversion_engine", "none")
 
             if conversion_engine != "none":
-                converted = convert_pdf(pdf_path, MD_CACHE_DIR, engine=conversion_engine)
+                converted = convert_pdf(source_pdf_path, MD_CACHE_DIR, engine=conversion_engine)
                 age = time.monotonic() - converted.markdown_path.stat().st_mtime
                 status = "cached" if age > 1 else "converted"
                 logger.info("  convert: %s (%s)", status, conversion_engine)
-                extracted_doc = extract_markdown(converted.markdown_path, page_count=converted.page_count)
-                extracted_doc.source_path = pdf_path
+                extracted_doc = extract_markdown(
+                    converted.markdown_path,
+                    page_count=converted.page_count,
+                )
+                extracted_doc.source_path = source_pdf_path
             else:
-                extracted_doc = extract_pdf(pdf_path)
+                extracted_doc = extract_pdf(source_pdf_path)
 
             logger.info(
                 "  extract: %d blocks, %d pages",
@@ -142,9 +148,9 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
                     raise
                 logger.warning("  wage-table branch failed: %s", exc)
                 logger.warning("  falling back to legacy extraction path")
-                classified, chunks = _run_legacy_path()
+                classified, chunks = _run_legacy_path(entry, pdf_path)
         else:
-            classified, chunks = _run_legacy_path()
+            classified, chunks = _run_legacy_path(entry, pdf_path)
 
         total_chunks += len(chunks)
 

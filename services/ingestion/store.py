@@ -25,10 +25,9 @@ import hashlib
 import logging
 import os
 import uuid
+from chunk import Chunk
 from pathlib import Path
 from typing import Any
-
-from chunk import Chunk
 
 import asyncpg
 from qdrant_client import AsyncQdrantClient

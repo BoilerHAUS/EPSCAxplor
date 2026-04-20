@@ -12,7 +12,6 @@ from wage_tables import (
     should_use_wage_table_pipeline,
 )
 
-
 _FIXTURE_DIR = Path(__file__).parent / "fixtures"
 _FIXTURE_PATH = _FIXTURE_DIR / "epsca_wage_schedule_docling.json"
 
@@ -27,17 +26,18 @@ def test_should_route_only_when_enabled() -> None:
         "title": "IBEW Generation Wage Schedule E-1-C LU 773 Windsor",
         "source_filename": "E-1-C LU 773 Windsor - May 1, 2025.pdf",
     }
+    ignored_artifact_dir = Path("tests/fixtures/ignored-artifacts")
 
     disabled = WageTableConfig(
         enabled=False,
         fallback_enabled=True,
-        artifact_dir=Path("/tmp/ignored"),
+        artifact_dir=ignored_artifact_dir,
         row_group_size=5,
     )
     enabled = WageTableConfig(
         enabled=True,
         fallback_enabled=True,
-        artifact_dir=Path("/tmp/ignored"),
+        artifact_dir=ignored_artifact_dir,
         row_group_size=5,
     )
 

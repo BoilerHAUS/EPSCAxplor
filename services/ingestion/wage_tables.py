@@ -5,12 +5,13 @@ from __future__ import annotations
 import json
 import logging
 import os
+import shutil
 import subprocess
+from chunk import Chunk
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from chunk import Chunk
 from classify import ClassifiedDocument, classify
 from extract import ExtractedDocument
 
@@ -36,7 +37,7 @@ class WageTableConfig:
     row_group_size: int
 
     @classmethod
-    def from_env(cls) -> "WageTableConfig":
+    def from_env(cls) -> WageTableConfig:
         artifact_root = Path(
             os.getenv("INGEST_WAGE_TABLE_ARTIFACT_DIR", str(_DEFAULT_ARTIFACT_DIR))
         )
@@ -133,6 +134,13 @@ def _run_tpds_bridge(
     pdf_path: Path,
     config: WageTableConfig,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    node_executable = shutil.which("node")
+    if not node_executable:
+        raise RuntimeError(
+            "Node.js is required for the TPDS bridge. Install Node 18+ and run npm install "
+            "in services/ingestion."
+        )
+
     bridge_payload = {
         "tables": [
             {
@@ -156,8 +164,8 @@ def _run_tpds_bridge(
     }
 
     try:
-        completed = subprocess.run(
-            ["node", str(_TPDS_BRIDGE_PATH)],
+        completed = subprocess.run(  # noqa: S603
+            [node_executable, str(_TPDS_BRIDGE_PATH)],
             cwd=_HERE,
             input=json.dumps(bridge_payload),
             capture_output=True,
