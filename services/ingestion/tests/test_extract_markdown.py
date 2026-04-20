@@ -72,7 +72,9 @@ IBEW_BR_TABLE_MD = """\
 
 | Classification | Effective May 1, 2025 |
 |---|---|
-| Journeyperson: $52.34/hr<br>Apprentice 1st Period: $26.17/hr<br>Apprentice 2nd Period: $31.40/hr<br>Apprentice 3rd Period: $36.64/hr | IBEW Local 353 |
+| Journeyperson: $52.34/hr<br>Apprentice 1st Period: $26.17/hr<br> \
+Apprentice 2nd Period: $31.40/hr<br>Apprentice 3rd Period: $36.64/hr | \
+IBEW Local 353 |
 """
 
 

@@ -212,6 +212,46 @@ class TestStoreDocumentPostgres:
         assert "IBEW" in all_args
 
     @pytest.mark.asyncio
+    async def test_qdrant_payload_includes_chunk_metadata(self, tmp_path: Path) -> None:
+        doc = _make_doc(tmp_path)
+        chunks = [
+            Chunk(
+                text="journeyperson row chunk",
+                page_number=1,
+                is_table=True,
+                article_number=None,
+                section_number=None,
+                article_title="IBEW Generation Wage Schedule",
+                chunk_index=0,
+                metadata={
+                    "table_pipeline": "docling_tpds",
+                    "table_id": "table-1",
+                    "row_indexes": [1],
+                    "normalized_table_json_path": tmp_path / "tables.json",
+                },
+            )
+        ]
+        embeddings = [_fake_embedding()]
+        conn = _make_pg_conn()
+        pool = _make_pg_pool(conn)
+        qdrant = _make_qdrant_client()
+
+        with (
+            patch("store.asyncpg.create_pool", return_value=pool),
+            patch("store.AsyncQdrantClient", return_value=qdrant),
+        ):
+            await store_document(doc, chunks, embeddings, postgres_dsn=_TEST_DSN)
+
+        points = qdrant.upsert.call_args.kwargs["points"]
+        payload = points[0].payload
+        assert payload["title"] == doc.metadata.title
+        assert payload["source_path"] == str(doc.extracted.source_path)
+        assert payload["table_pipeline"] == "docling_tpds"
+        assert payload["table_id"] == "table-1"
+        assert payload["row_indexes"] == [1]
+        assert payload["normalized_table_json_path"] == str(tmp_path / "tables.json")
+
+    @pytest.mark.asyncio
     async def test_postgres_receives_chunk_count(self, tmp_path: Path) -> None:
         doc = _make_doc(tmp_path)
         n = 3

@@ -50,16 +50,21 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
     Download stage is skipped here (run it separately via --stage download).
     Remaining stages operate on every PDF already present in corpus/.
     """
-    from chunk import chunk_document
+    from chunk import Chunk, chunk_document
 
     import yaml
 
-    from classify import classify
+    from classify import ClassifiedDocument, classify
     from convert import convert_pdf
     from download import CORPUS_DIR, CORPUS_MANIFEST, resolve_corpus_path
     from embed import embed_chunks
     from extract import extract_markdown, extract_pdf
     from store import store_document
+    from wage_tables import (
+        WageTableConfig,
+        process_wage_schedule_pdf,
+        should_use_wage_table_pipeline,
+    )
 
     with CORPUS_MANIFEST.open() as f:
         manifest_data = yaml.safe_load(f) or {}
@@ -72,6 +77,7 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
     doc_count = 0
     total_chunks = 0
     t_start = time.monotonic()
+    wage_table_config = WageTableConfig.from_env()
 
     for entry in entries:
         pdf_path = resolve_corpus_path(entry, CORPUS_DIR)
@@ -84,31 +90,68 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
         logger.info("--- %s ---", source_filename)
         t_doc = time.monotonic()
 
-        conversion_engine = entry.get("conversion_engine", "none")
+        def _run_legacy_path(
+            manifest_entry: dict[str, object],
+            source_pdf_path: Path,
+        ) -> tuple[ClassifiedDocument, list[Chunk]]:
+            conversion_engine = manifest_entry.get("conversion_engine", "none")
 
-        if conversion_engine != "none":
-            converted = convert_pdf(pdf_path, MD_CACHE_DIR, engine=conversion_engine)
-            age = time.monotonic() - converted.markdown_path.stat().st_mtime
-            status = "cached" if age > 1 else "converted"
-            logger.info("  convert: %s (%s)", status, conversion_engine)
-            extracted = extract_markdown(converted.markdown_path, page_count=converted.page_count)
-            extracted.source_path = pdf_path  # classify needs the PDF path for manifest lookup
+            if conversion_engine != "none":
+                converted = convert_pdf(source_pdf_path, MD_CACHE_DIR, engine=conversion_engine)
+                age = time.monotonic() - converted.markdown_path.stat().st_mtime
+                status = "cached" if age > 1 else "converted"
+                logger.info("  convert: %s (%s)", status, conversion_engine)
+                extracted_doc = extract_markdown(
+                    converted.markdown_path,
+                    page_count=converted.page_count,
+                )
+                extracted_doc.source_path = source_pdf_path
+            else:
+                extracted_doc = extract_pdf(source_pdf_path)
+
+            logger.info(
+                "  extract: %d blocks, %d pages",
+                len(extracted_doc.blocks),
+                extracted_doc.page_count,
+            )
+
+            classified_doc = classify(extracted_doc)
+            logger.info(
+                "  classify: %s / %s",
+                classified_doc.metadata.union_name,
+                classified_doc.metadata.document_type,
+            )
+
+            legacy_chunks = chunk_document(classified_doc)
+            logger.info("  chunk: %d chunks", len(legacy_chunks))
+            return classified_doc, legacy_chunks
+
+        if should_use_wage_table_pipeline(entry, wage_table_config):
+            try:
+                table_result = process_wage_schedule_pdf(pdf_path, wage_table_config)
+                classified = table_result.classified
+                chunks = table_result.chunks
+                logger.info(
+                    "  extract: %d Docling tables, %d pages",
+                    table_result.table_count,
+                    table_result.page_count,
+                )
+                logger.info(
+                    "  classify: %s / %s",
+                    classified.metadata.union_name,
+                    classified.metadata.document_type,
+                )
+                logger.info("  chunk: %d chunks (docling_tpds)", len(chunks))
+                logger.info("  artifacts: %s", table_result.artifacts.artifact_dir)
+            except Exception as exc:
+                if not wage_table_config.fallback_enabled:
+                    raise
+                logger.warning("  wage-table branch failed: %s", exc)
+                logger.warning("  falling back to legacy extraction path")
+                classified, chunks = _run_legacy_path(entry, pdf_path)
         else:
-            extracted = extract_pdf(pdf_path)
+            classified, chunks = _run_legacy_path(entry, pdf_path)
 
-        logger.info("  extract: %d blocks, %d pages", len(extracted.blocks), extracted.page_count)
-
-        # Stage 3: Classify
-        classified = classify(extracted)
-        logger.info(
-            "  classify: %s / %s",
-            classified.metadata.union_name,
-            classified.metadata.document_type,
-        )
-
-        # Stage 4: Chunk
-        chunks = chunk_document(classified)
-        logger.info("  chunk: %d chunks", len(chunks))
         total_chunks += len(chunks)
 
         # Stage 5: Embed

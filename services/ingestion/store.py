@@ -27,6 +27,7 @@ import os
 import uuid
 from chunk import Chunk
 from pathlib import Path
+from typing import Any
 
 import asyncpg
 from qdrant_client import AsyncQdrantClient
@@ -58,6 +59,19 @@ def _compute_sha256(path: Path) -> str:
 def _make_point_id(document_id: uuid.UUID, chunk_index: int) -> str:
     """Return a deterministic UUID string for a Qdrant point."""
     return str(uuid.uuid5(uuid.NAMESPACE_URL, f"{document_id}:{chunk_index}"))
+
+
+def _coerce_payload_value(value: Any) -> Any:
+    """Convert payload metadata to Qdrant/JSON-friendly primitives."""
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, dict):
+        return {str(k): _coerce_payload_value(v) for k, v in value.items()}
+    if isinstance(value, tuple):
+        return [_coerce_payload_value(v) for v in value]
+    if isinstance(value, list):
+        return [_coerce_payload_value(v) for v in value]
+    return value
 
 
 async def _upsert_document_row(
@@ -138,29 +152,39 @@ def _build_points(
 ) -> list[PointStruct]:
     """Build Qdrant PointStructs with full metadata payload."""
     source_filename = doc.extracted.source_path.name
-    return [
-        PointStruct(
-            id=_make_point_id(document_id, chunk.chunk_index),
-            vector=embeddings[i],
-            payload={
-                "document_id": str(document_id),
-                "source_filename": source_filename,
-                "union_name": doc.metadata.union_name,
-                "document_type": doc.metadata.document_type,
-                "agreement_scope": doc.metadata.agreement_scope,
-                "effective_date": doc.metadata.effective_date,
-                "expiry_date": doc.metadata.expiry_date,
-                "chunk_index": chunk.chunk_index,
-                "article_number": chunk.article_number,
-                "article_title": chunk.article_title,
-                "section_number": chunk.section_number,
-                "page_number": chunk.page_number,
-                "is_table": chunk.is_table,
-                "text": chunk.text,
-            },
+    points: list[PointStruct] = []
+    for i, chunk in enumerate(chunks):
+        payload = {
+            "document_id": str(document_id),
+            "source_filename": source_filename,
+            "source_path": str(doc.extracted.source_path),
+            "title": doc.metadata.title,
+            "union_name": doc.metadata.union_name,
+            "document_type": doc.metadata.document_type,
+            "agreement_scope": doc.metadata.agreement_scope,
+            "effective_date": doc.metadata.effective_date,
+            "expiry_date": doc.metadata.expiry_date,
+            "chunk_index": chunk.chunk_index,
+            "article_number": chunk.article_number,
+            "article_title": chunk.article_title,
+            "section_number": chunk.section_number,
+            "page_number": chunk.page_number,
+            "is_table": chunk.is_table,
+            "text": chunk.text,
+        }
+        if chunk.metadata:
+            payload.update(
+                {key: _coerce_payload_value(value) for key, value in chunk.metadata.items()}
+            )
+
+        points.append(
+            PointStruct(
+                id=_make_point_id(document_id, chunk.chunk_index),
+                vector=embeddings[i],
+                payload=payload,
+            )
         )
-        for i, chunk in enumerate(chunks)
-    ]
+    return points
 
 
 # ─── Public API ───────────────────────────────────────────────────────────────
