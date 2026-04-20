@@ -28,6 +28,7 @@ from src.rag.retrieval import (
     COLLECTION,
     TOP_K,
     ChunkResult,
+    _merge_union_results,
     _point_to_chunk,
     build_filter,
     retrieve,
@@ -348,6 +349,99 @@ def _make_query_response(hits: list[ScoredPoint]) -> QueryResponse:
     return QueryResponse(points=hits)
 
 
+def _union_filter_value(filt: Filter) -> str | None:
+    for condition in filt.must or []:
+        if isinstance(condition, FieldCondition) and condition.key == "union_name":
+            return str(condition.match.value)  # type: ignore[union-attr]
+    return None
+
+
+class TestMergeUnionResults:
+    def test_interleaves_union_results_round_robin(self) -> None:
+        ibew_results = [
+            ChunkResult(
+                point_id="ibew-1",
+                score=0.95,
+                document_id="doc-1",
+                source_filename="ibew-1.pdf",
+                union_name="IBEW",
+                document_type="primary_ca",
+                agreement_scope=None,
+                effective_date=None,
+                expiry_date=None,
+                article_number=None,
+                article_title=None,
+                section_number=None,
+                page_number=None,
+                is_table=False,
+                text="IBEW first",
+            ),
+            ChunkResult(
+                point_id="ibew-2",
+                score=0.9,
+                document_id="doc-2",
+                source_filename="ibew-2.pdf",
+                union_name="IBEW",
+                document_type="primary_ca",
+                agreement_scope=None,
+                effective_date=None,
+                expiry_date=None,
+                article_number=None,
+                article_title=None,
+                section_number=None,
+                page_number=None,
+                is_table=False,
+                text="IBEW second",
+            ),
+        ]
+        sheet_metal_results = [
+            ChunkResult(
+                point_id="sm-1",
+                score=0.93,
+                document_id="doc-3",
+                source_filename="sm-1.pdf",
+                union_name="Sheet Metal Workers",
+                document_type="primary_ca",
+                agreement_scope=None,
+                effective_date=None,
+                expiry_date=None,
+                article_number=None,
+                article_title=None,
+                section_number=None,
+                page_number=None,
+                is_table=False,
+                text="Sheet Metal first",
+            )
+        ]
+
+        merged = _merge_union_results([ibew_results, sheet_metal_results], limit=3)
+
+        assert [chunk.point_id for chunk in merged] == ["ibew-1", "sm-1", "ibew-2"]
+
+    def test_dedupes_duplicate_point_ids(self) -> None:
+        duplicate = ChunkResult(
+            point_id="dup-1",
+            score=0.95,
+            document_id="doc-1",
+            source_filename="dup.pdf",
+            union_name="IBEW",
+            document_type="primary_ca",
+            agreement_scope=None,
+            effective_date=None,
+            expiry_date=None,
+            article_number=None,
+            article_title=None,
+            section_number=None,
+            page_number=None,
+            is_table=False,
+            text="duplicate",
+        )
+
+        merged = _merge_union_results([[duplicate], [duplicate]], limit=5)
+
+        assert [chunk.point_id for chunk in merged] == ["dup-1"]
+
+
 class TestRetrieve:
     """retrieve calls Ollama (embed) then Qdrant (search); both are mocked."""
 
@@ -472,3 +566,64 @@ class TestRetrieve:
             await retrieve("overtime rates", settings=settings)
 
         mock_qdrant_cls.assert_called_once_with(url=settings.qdrant_url)
+
+    @pytest.mark.asyncio
+    async def test_single_union_filter_still_uses_one_qdrant_query(
+        self, settings: Settings
+    ) -> None:
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "IBEW overtime rates",
+                union_filters=["IBEW"],
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 1
+        query_filter = mock_qdrant.query_points.await_args.kwargs["query_filter"]
+        assert _union_filter_value(query_filter) == "IBEW"
+
+    @pytest.mark.asyncio
+    async def test_multi_union_queries_fan_out_and_merge_results(
+        self, settings: Settings
+    ) -> None:
+        ibew_hits = [self._make_hit("IBEW"), self._make_hit("IBEW")]
+        sheet_metal_hits = [self._make_hit("Sheet Metal Workers")]
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response(ibew_hits),
+                    _make_query_response(sheet_metal_hits),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "Compare IBEW and Sheet Metal overtime rules",
+                union_filters=["IBEW", "Sheet Metal Workers"],
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 2
+        first_filter = mock_qdrant.query_points.await_args_list[0].kwargs["query_filter"]
+        second_filter = mock_qdrant.query_points.await_args_list[1].kwargs["query_filter"]
+        assert _union_filter_value(first_filter) == "IBEW"
+        assert _union_filter_value(second_filter) == "Sheet Metal Workers"
+        assert [chunk.union_name for chunk in results] == [
+            "IBEW",
+            "Sheet Metal Workers",
+            "IBEW",
+        ]

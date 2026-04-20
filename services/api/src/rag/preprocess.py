@@ -51,10 +51,17 @@ _CROSS_UNION_PHRASES: list[str] = [
 class QueryContext(BaseModel):
     """Structured output of query pre-processing."""
 
-    union_filter: str | None
+    union_filters: list[str]
     include_nuclear_pa: bool
     agreement_scope: str | None
     is_cross_union: bool
+
+    @property
+    def union_filter(self) -> str | None:
+        """Return the single detected union, if and only if exactly one exists."""
+        if len(self.union_filters) == 1:
+            return self.union_filters[0]
+        return None
 
 
 def detect_nuclear(query: str) -> bool:
@@ -67,6 +74,25 @@ def detect_nuclear(query: str) -> bool:
     return any(p.search(query) is not None for p in _NUCLEAR_PATTERNS)
 
 
+def detect_unions(query: str, known_unions: list[str]) -> list[str]:
+    """Return every known union mentioned in the query, ordered by appearance.
+
+    Matching remains case-insensitive substring search to preserve the current
+    detection semantics, but all matches are retained instead of collapsing to
+    the first union in ``known_unions`` order.
+    """
+    lower = query.lower()
+    matches: list[tuple[int, int, str]] = []
+
+    for index, union in enumerate(known_unions):
+        position = lower.find(union.lower())
+        if position != -1:
+            matches.append((position, index, union))
+
+    matches.sort(key=lambda item: (item[0], item[1]))
+    return [union for _, _, union in matches]
+
+
 def detect_union(query: str, known_unions: list[str]) -> str | None:
     """Return the verbatim name of the first union found in the query.
 
@@ -74,11 +100,8 @@ def detect_union(query: str, known_unions: list[str]) -> str | None:
     (case-insensitively) as a substring of *query*. Returns None when no
     match is found.
     """
-    lower = query.lower()
-    for union in known_unions:
-        if union.lower() in lower:
-            return union
-    return None
+    unions = detect_unions(query, known_unions)
+    return unions[0] if unions else None
 
 
 def detect_scope(query: str) -> str | None:
@@ -119,9 +142,11 @@ def preprocess(query: str, known_unions: list[str]) -> QueryContext:
     Returns:
         A QueryContext describing retrieval filters and model routing.
     """
+    detected_unions = detect_unions(query, known_unions)
+
     return QueryContext(
-        union_filter=detect_union(query, known_unions),
+        union_filters=detected_unions,
         include_nuclear_pa=detect_nuclear(query),
         agreement_scope=detect_scope(query),
-        is_cross_union=classify_complexity(query),
+        is_cross_union=classify_complexity(query) or len(detected_unions) > 1,
     )

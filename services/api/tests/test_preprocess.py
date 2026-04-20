@@ -5,6 +5,7 @@ from src.rag.preprocess import (
     detect_nuclear,
     detect_scope,
     detect_union,
+    detect_unions,
     preprocess,
 )
 
@@ -117,6 +118,24 @@ class TestDetectUnion:
         assert detect_union("general overtime rules for all workers", KNOWN_UNIONS) is None
 
 
+class TestDetectUnions:
+    def test_empty_query_returns_empty_list(self) -> None:
+        assert detect_unions("", KNOWN_UNIONS) == []
+
+    def test_empty_known_unions_returns_empty_list(self) -> None:
+        assert detect_unions("IBEW and Labourers overtime", []) == []
+
+    def test_returns_all_detected_unions_in_query_order(self) -> None:
+        result = detect_unions(
+            "Compare Sheet Metal Workers and IBEW overtime rules",
+            KNOWN_UNIONS,
+        )
+        assert result == ["Sheet Metal Workers", "IBEW"]
+
+    def test_returns_empty_list_when_query_has_no_union(self) -> None:
+        assert detect_unions("general overtime rules for all workers", KNOWN_UNIONS) == []
+
+
 class TestDetectScope:
     def test_no_scope_returns_none(self) -> None:
         assert detect_scope("What is the overtime rate?") is None
@@ -180,11 +199,12 @@ class TestClassifyComplexity:
 class TestQueryContext:
     def test_default_values(self) -> None:
         ctx = QueryContext(
-            union_filter=None,
+            union_filters=[],
             include_nuclear_pa=False,
             agreement_scope=None,
             is_cross_union=False,
         )
+        assert ctx.union_filters == []
         assert ctx.union_filter is None
         assert ctx.include_nuclear_pa is False
         assert ctx.agreement_scope is None
@@ -192,11 +212,12 @@ class TestQueryContext:
 
     def test_all_fields_set(self) -> None:
         ctx = QueryContext(
-            union_filter="IBEW",
+            union_filters=["IBEW"],
             include_nuclear_pa=True,
             agreement_scope="generation",
             is_cross_union=True,
         )
+        assert ctx.union_filters == ["IBEW"]
         assert ctx.union_filter == "IBEW"
         assert ctx.include_nuclear_pa is True
         assert ctx.agreement_scope == "generation"
@@ -206,6 +227,7 @@ class TestQueryContext:
 class TestPreprocess:
     def test_simple_query_returns_all_defaults(self) -> None:
         ctx = preprocess("What is the overtime rate?", KNOWN_UNIONS)
+        assert ctx.union_filters == []
         assert ctx.union_filter is None
         assert ctx.include_nuclear_pa is False
         assert ctx.agreement_scope is None
@@ -217,6 +239,7 @@ class TestPreprocess:
 
     def test_union_query_sets_union_filter(self) -> None:
         ctx = preprocess("What does IBEW say about overtime?", KNOWN_UNIONS)
+        assert ctx.union_filters == ["IBEW"]
         assert ctx.union_filter == "IBEW"
 
     def test_scope_query_sets_agreement_scope(self) -> None:
@@ -229,6 +252,7 @@ class TestPreprocess:
 
     def test_combined_nuclear_and_union(self) -> None:
         ctx = preprocess("IBEW Darlington refurbishment wage rates", KNOWN_UNIONS)
+        assert ctx.union_filters == ["IBEW"]
         assert ctx.union_filter == "IBEW"
         assert ctx.include_nuclear_pa is True
 
@@ -238,6 +262,20 @@ class TestPreprocess:
         )
         assert ctx.include_nuclear_pa is True
         assert ctx.agreement_scope == "generation"
+        assert ctx.is_cross_union is True
+
+    def test_multi_union_query_retains_all_detected_unions(self) -> None:
+        ctx = preprocess(
+            "Compare the overtime rules for IBEW Generation and Sheet Metal Workers",
+            KNOWN_UNIONS,
+        )
+        assert ctx.union_filters == ["IBEW", "Sheet Metal Workers"]
+        assert ctx.union_filter is None
+        assert ctx.is_cross_union is True
+
+    def test_multiple_detected_unions_trigger_cross_union_without_keyword(self) -> None:
+        ctx = preprocess("IBEW and Labourers overtime rules", KNOWN_UNIONS)
+        assert ctx.union_filters == ["IBEW", "Labourers"]
         assert ctx.is_cross_union is True
 
     def test_returns_query_context_type(self) -> None:

@@ -144,7 +144,7 @@ async def query_handler(
     # Step 2 — retrieve
     chunks: list[ChunkResult] = await retrieve(
         body.query,
-        union_filter=ctx.union_filter,
+        union_filters=ctx.union_filters,
         include_nuclear_pa=ctx.include_nuclear_pa,
         agreement_scope=ctx.agreement_scope,
         settings=settings,
@@ -167,7 +167,7 @@ async def query_handler(
     citations = extract_citations(result.answer, chunks, title_map=title_map)
 
     # Step 6 — log query (best-effort)
-    union_filter_list = [ctx.union_filter] if ctx.union_filter else None
+    union_filter_list = ctx.union_filters or None
     doc_type_filter_list = None if ctx.include_nuclear_pa else ["primary_ca"]
     total_latency_ms = int((time.monotonic() - pipeline_start) * 1000)
 
