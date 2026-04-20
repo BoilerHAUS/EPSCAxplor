@@ -15,9 +15,12 @@ before the legacy `convert.py` → `extract.py` → `chunk.py` sequence.
 2. Run Docling against the PDF and capture:
    - full Docling document JSON
    - raw Docling table JSON
-3. Send each Docling table to the TPDS bridge (`tpds_bridge.mjs`), which calls:
-   - `normalizeFromDocling`
-   - `buildTableChunks`
+3. Send Docling tables to the TPDS bridge (`tpds_bridge.mjs`), which:
+   - calls `normalizeFromDocling`
+   - groups adjacent page fragments for the same logical wage table
+   - marks repeated continuation headers before merge when Docling emits them as rows
+   - merges logical multi-page tables
+   - rebuilds TPDS row and row-group chunks from the merged table
 4. Persist TPDS normalized tables and chunk manifests as local artifacts.
 5. Convert TPDS chunks into the existing ingestion `Chunk` model with extra metadata.
 6. Reuse the existing `embed.py` and `store.py` stages unchanged apart from payload enrichment.
@@ -60,8 +63,7 @@ Stored chunk payloads now carry wage-table-specific metadata such as:
 - `raw_docling_document_path`
 - artifact paths for normalized tables and TPDS chunk output
 
-## First-Pass Limits
+## Current Limits
 
-- Multi-page logical table merging is not implemented yet.
-- Repeated continuation headers depend on Docling output quality and still need real-PDF validation.
-- Merged-cell and grouped-header preservation needs broader EPSCA corpus verification, especially for wide schedules.
+- Grouped-header and merged-cell preservation now has fixture coverage, but it still needs broader EPSCA corpus verification on wide schedules and less regular layouts.
+- Summary chunks still inherit TPDS's generic column labels when Docling does not expose enough column-label metadata directly.
