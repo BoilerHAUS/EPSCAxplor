@@ -1,0 +1,92 @@
+{
+  "pages": {
+    "1": {
+      "page_no": 1
+    }
+  },
+  "tables": [
+    {
+      "caption": "IBEW Generation Wage Schedule",
+      "prov": [
+        {
+          "page_no": 1
+        }
+      ],
+      "data": {
+        "num_cols": 4,
+        "grid": [
+          [
+            {
+              "text": "Classification",
+              "column_header": true,
+              "start_row_offset_idx": 0,
+              "start_col_offset_idx": 0
+            },
+            {
+              "text": "Base Rate",
+              "column_header": true,
+              "start_row_offset_idx": 0,
+              "start_col_offset_idx": 1
+            },
+            {
+              "text": "Foreperson Differential",
+              "column_header": true,
+              "start_row_offset_idx": 0,
+              "start_col_offset_idx": 2
+            },
+            {
+              "text": "Effective Date",
+              "column_header": true,
+              "start_row_offset_idx": 0,
+              "start_col_offset_idx": 3
+            }
+          ],
+          [
+            {
+              "text": "Journeyperson",
+              "start_row_offset_idx": 1,
+              "start_col_offset_idx": 0
+            },
+            {
+              "text": "$44.96",
+              "start_row_offset_idx": 1,
+              "start_col_offset_idx": 1
+            },
+            {
+              "text": "12%",
+              "start_row_offset_idx": 1,
+              "start_col_offset_idx": 2
+            },
+            {
+              "text": "2025-05-01",
+              "start_row_offset_idx": 1,
+              "start_col_offset_idx": 3
+            }
+          ],
+          [
+            {
+              "text": "Foreperson",
+              "start_row_offset_idx": 2,
+              "start_col_offset_idx": 0
+            },
+            {
+              "text": "$50.35",
+              "start_row_offset_idx": 2,
+              "start_col_offset_idx": 1
+            },
+            {
+              "text": "15%",
+              "start_row_offset_idx": 2,
+              "start_col_offset_idx": 2
+            },
+            {
+              "text": "2025-05-01",
+              "start_row_offset_idx": 2,
+              "start_col_offset_idx": 3
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

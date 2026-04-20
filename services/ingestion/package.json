@@ -1,0 +1,14 @@
+{
+  "name": "epscaxplor-ingestion-bridge",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "tpds-bridge": "node tpds_bridge.mjs"
+  },
+  "dependencies": {
+    "table-preserving-doc-standard": "^0.1.0"
+  }
+}

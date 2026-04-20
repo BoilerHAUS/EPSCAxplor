@@ -18,7 +18,7 @@ store stages.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from classify import ClassifiedDocument
 from extract import TableBlock, TableRows, TextBlock
@@ -64,6 +64,7 @@ class Chunk:
     section_number: str | None
     article_title: str | None
     chunk_index: int
+    metadata: dict[str, object] | None = None
 
 
 # ─── Internal helpers ─────────────────────────────────────────────────────────
@@ -374,18 +375,7 @@ def chunk_document(doc: ClassifiedDocument) -> list[Chunk]:
 
     if doc.metadata.document_type == "wage_schedule":
         _process_wage_schedule(doc.extracted.blocks, raw)
-        return [
-            Chunk(
-                text=c.text,
-                page_number=c.page_number,
-                is_table=c.is_table,
-                article_number=c.article_number,
-                section_number=c.section_number,
-                article_title=c.article_title,
-                chunk_index=i,
-            )
-            for i, c in enumerate(raw)
-        ]
+        return [replace(c, chunk_index=i) for i, c in enumerate(raw)]
 
     # Running article context shared between text and table blocks
     current_article_number: str | None = None
@@ -439,15 +429,4 @@ def chunk_document(doc: ClassifiedDocument) -> list[Chunk]:
     _flush()
 
     # Assign sequential chunk_index values (Chunk is frozen, so rebuild)
-    return [
-        Chunk(
-            text=c.text,
-            page_number=c.page_number,
-            is_table=c.is_table,
-            article_number=c.article_number,
-            section_number=c.section_number,
-            article_title=c.article_title,
-            chunk_index=i,
-        )
-        for i, c in enumerate(raw)
-    ]
+    return [replace(c, chunk_index=i) for i, c in enumerate(raw)]
