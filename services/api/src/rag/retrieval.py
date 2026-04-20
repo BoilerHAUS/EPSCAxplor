@@ -144,6 +144,61 @@ def build_filter(
     return Filter(must=must, must_not=must_not or None)
 
 
+async def _query_qdrant(
+    qdrant: AsyncQdrantClient,
+    *,
+    vector: list[float],
+    union_filter: str | None,
+    include_nuclear_pa: bool,
+    agreement_scope: str | None,
+    limit: int = TOP_K,
+) -> list[ChunkResult]:
+    """Run a single filtered Qdrant query and map the points to chunks."""
+    response = await qdrant.query_points(
+        collection_name=COLLECTION,
+        query=vector,
+        query_filter=build_filter(union_filter, include_nuclear_pa, agreement_scope),
+        limit=limit,
+        with_payload=True,
+    )
+    return [_point_to_chunk(hit) for hit in response.points]
+
+
+def _merge_union_results(
+    result_sets: list[list[ChunkResult]],
+    *,
+    limit: int = TOP_K,
+) -> list[ChunkResult]:
+    """Interleave per-union result sets, preserving per-union ranking.
+
+    Each list in ``result_sets`` is assumed to already be ordered by descending
+    similarity score. The merge walks those lists in rounds so multi-union
+    queries keep representation from each detected union instead of letting one
+    union monopolize the context window. Duplicate point IDs are removed while
+    preserving the first occurrence.
+    """
+    merged: list[ChunkResult] = []
+    seen_point_ids: set[str] = set()
+    max_results = max((len(results) for results in result_sets), default=0)
+
+    for index in range(max_results):
+        for results in result_sets:
+            if index >= len(results):
+                continue
+
+            chunk = results[index]
+            if chunk.point_id in seen_point_ids:
+                continue
+
+            merged.append(chunk)
+            seen_point_ids.add(chunk.point_id)
+
+            if len(merged) >= limit:
+                return merged
+
+    return merged
+
+
 async def _embed(text: str, settings: Settings) -> list[float]:
     """Return a 768-dim embedding for *text* via the Ollama embeddings API."""
     async with httpx.AsyncClient() as client:
@@ -182,7 +237,7 @@ def _point_to_chunk(point: ScoredPoint) -> ChunkResult:
 async def retrieve(
     query: str,
     *,
-    union_filter: str | None = None,
+    union_filters: list[str] | None = None,
     include_nuclear_pa: bool = False,
     agreement_scope: str | None = None,
     settings: Settings,
@@ -191,7 +246,10 @@ async def retrieve(
 
     Args:
         query: The raw user question to embed and search against.
-        union_filter: When set, restrict retrieval to a single union by name.
+        union_filters: When set, restrict retrieval to the given unions. A
+            single detected union behaves like the previous single-filter path.
+            Multiple detected unions trigger one filtered retrieval per union,
+            then a deterministic merged result list.
         include_nuclear_pa: Include Nuclear Project Agreement chunks when
             ``True``.  Defaults to ``False``; set to ``True`` when the query
             contains nuclear-site context (see ``preprocess.detect_nuclear``).
@@ -201,17 +259,31 @@ async def retrieve(
 
     Returns:
         Up to ``TOP_K`` ``ChunkResult`` objects ordered by descending cosine
-        similarity score.
+        similarity score for single-union queries, or a deterministic
+        interleaving of per-union top results for multi-union queries.
     """
     vector = await _embed(query, settings)
-    filt = build_filter(union_filter, include_nuclear_pa, agreement_scope)
-
     qdrant = AsyncQdrantClient(url=settings.qdrant_url)
-    response = await qdrant.query_points(
-        collection_name=COLLECTION,
-        query=vector,
-        query_filter=filt,
-        limit=TOP_K,
-        with_payload=True,
+
+    unique_union_filters = list(dict.fromkeys(union_filters or []))
+    if len(unique_union_filters) > 1:
+        result_sets = [
+            await _query_qdrant(
+                qdrant,
+                vector=vector,
+                union_filter=union_filter,
+                include_nuclear_pa=include_nuclear_pa,
+                agreement_scope=agreement_scope,
+            )
+            for union_filter in unique_union_filters
+        ]
+        return _merge_union_results(result_sets)
+
+    union_filter = unique_union_filters[0] if unique_union_filters else None
+    return await _query_qdrant(
+        qdrant,
+        vector=vector,
+        union_filter=union_filter,
+        include_nuclear_pa=include_nuclear_pa,
+        agreement_scope=agreement_scope,
     )
-    return [_point_to_chunk(hit) for hit in response.points]

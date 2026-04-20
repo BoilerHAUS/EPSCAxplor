@@ -246,6 +246,59 @@ def test_cross_union_routes_to_sonnet(test_settings: Settings, stub_user: Curren
     assert call_kwargs["is_cross_union"] is True
 
 
+def test_cross_union_query_passes_all_detected_unions_to_retrieval(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    chunks = [
+        make_chunk(union_name="IBEW", text="IBEW overtime"),
+        make_chunk(union_name="Sheet Metal Workers", text="Sheet Metal overtime"),
+    ]
+    gen_result = make_generator_result(
+        answer="Compare [SOURCE 1] [SOURCE 2]",
+        model="claude-sonnet-4-6",
+    )
+
+    app.dependency_overrides[get_settings] = lambda: test_settings
+    app.dependency_overrides[get_current_user] = lambda: stub_user
+
+    mock_retrieve = AsyncMock(return_value=chunks)
+
+    with patch("src.main.get_settings", return_value=test_settings):
+        with TestClient(app) as client:
+            with patch(
+                "src.routes.query._get_known_unions",
+                new=AsyncMock(return_value=["IBEW", "Sheet Metal Workers"]),
+            ), patch("src.routes.query.retrieve", new=mock_retrieve), patch(
+                "src.routes.query._get_title_map",
+                new=AsyncMock(
+                    return_value={
+                        "doc-001": "IBEW Generation 2025-2030 Collective Agreement"
+                    }
+                ),
+            ), patch(
+                "src.routes.query.generate",
+                new=AsyncMock(return_value=gen_result),
+            ), patch(
+                "src.routes.query._write_query_log",
+                new=AsyncMock(return_value=None),
+            ):
+                response = client.post(
+                    "/query",
+                    json={
+                        "query": (
+                            "Compare the overtime rules for IBEW Generation "
+                            "and Sheet Metal Workers"
+                        )
+                    },
+                )
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    call_kwargs = mock_retrieve.call_args.kwargs
+    assert call_kwargs["union_filters"] == ["IBEW", "Sheet Metal Workers"]
+
+
 def test_missing_query_field_returns_422(test_settings: Settings, stub_user: CurrentUser) -> None:
     app.dependency_overrides[get_settings] = lambda: test_settings
     app.dependency_overrides[get_current_user] = lambda: stub_user
