@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from wage_tables import (
     WageTableConfig,
+    _prepare_artifact_paths,
     process_wage_schedule_pdf,
     should_use_wage_table_pipeline,
 )
@@ -140,18 +141,66 @@ def test_process_wage_schedule_pdf_writes_artifacts_and_tpds_chunks(tmp_path: Pa
     assert row_chunk.metadata["row_indexes"] == [1]
     assert row_chunk.metadata["page_numbers"] == [1]
     assert row_chunk.metadata["trade_name"] == "IBEW Generation"
+    assert row_chunk.metadata["source_document_path"] == str(pdf_path)
+    assert row_chunk.metadata["source_document_filename"] == pdf_path.name
     assert row_chunk.metadata["wage_schedule"] is True
     assert "Journeyperson" in row_chunk.text
     assert "$44.96" in row_chunk.text
 
+    manifest = json.loads(result.artifacts.manifest_path.read_text(encoding="utf-8"))
     raw_tables = json.loads(result.artifacts.raw_tables_path.read_text(encoding="utf-8"))
     normalized = json.loads(result.artifacts.normalized_tables_path.read_text(encoding="utf-8"))
     chunk_manifest = json.loads(result.artifacts.chunk_manifest_path.read_text(encoding="utf-8"))
 
+    assert result.artifacts.artifact_dir.name.startswith(
+        "E-1-C LU 773 Windsor - May 1, 2025--"
+    )
+    assert result.artifacts.manifest_path.exists()
     assert result.artifacts.raw_docling_path.exists()
     assert result.artifacts.raw_tables_path.exists()
     assert result.artifacts.normalized_tables_path.exists()
     assert result.artifacts.chunk_manifest_path.exists()
+    assert manifest["schema_version"] == 1
+    assert manifest["pipeline"] == "docling_tpds"
+    assert manifest["source_document"]["path"] == str(pdf_path)
+    assert manifest["source_document"]["filename"] == pdf_path.name
+    assert manifest["source_document"]["title"] == result.classified.metadata.title
+    assert manifest["source_document"]["trade_name"] == "IBEW Generation"
+    assert manifest["counts"]["page_count"] == 1
+    assert manifest["counts"]["docling_table_count"] == 1
+    assert manifest["counts"]["tpds_table_count"] == 1
+    assert manifest["counts"]["tpds_chunk_count"] == 3
+    assert manifest["counts"]["chunk_types"] == {"summary": 1, "row": 1, "row-group": 1}
+    assert manifest["artifacts"]["manifest_path"] == str(result.artifacts.manifest_path)
+    assert manifest["tables"] == [
+        {
+            "table_id": "E-1-C LU 773 Windsor - May 1, 2025-table-1",
+            "title": "IBEW Generation Wage Schedule",
+            "caption": "IBEW Generation Wage Schedule",
+            "pages": [1],
+            "chunk_count": 3,
+            "chunk_types": {"summary": 1, "row": 1, "row-group": 1},
+        }
+    ]
     assert len(raw_tables) == 1
     assert normalized[0]["tableId"] == "E-1-C LU 773 Windsor - May 1, 2025-table-1"
     assert chunk_manifest[1]["chunkType"] == "row"
+
+
+def test_prepare_artifact_paths_namespaces_same_filename_paths(tmp_path: Path) -> None:
+    config = WageTableConfig(
+        enabled=True,
+        fallback_enabled=True,
+        artifact_dir=tmp_path / "artifacts",
+        row_group_size=3,
+    )
+
+    first_pdf = tmp_path / "set-a" / "wage.pdf"
+    second_pdf = tmp_path / "set-b" / "wage.pdf"
+
+    first_artifacts = _prepare_artifact_paths(first_pdf, config)
+    second_artifacts = _prepare_artifact_paths(second_pdf, config)
+
+    assert first_artifacts.artifact_dir != second_artifacts.artifact_dir
+    assert first_artifacts.artifact_dir.name.startswith("wage--")
+    assert second_artifacts.artifact_dir.name.startswith("wage--")

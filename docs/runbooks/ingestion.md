@@ -46,10 +46,17 @@ When `INGEST_WAGE_TABLE_PIPELINE=1` is set, manifest entries already marked as
 `document_type: wage_schedule` are routed through:
 
 1. Docling table extraction
-2. raw Docling table artifact capture under `services/ingestion/corpus_table_artifacts/`
+2. artifact capture under `services/ingestion/corpus_table_artifacts/<pdf-stem>--<source-hash>/`
+   including `manifest.json`, `docling.document.json`, `docling.tables.json`,
+   `tpds.tables.json`, and `tpds.chunks.json`
 3. TPDS normalization (`normalizeFromDocling`)
 4. TPDS chunk generation (`buildTableChunks`)
 5. normal embed/store stages using the TPDS-derived chunk text and metadata
+
+The artifact `manifest.json` is the first place to inspect when a wage-table
+run looks wrong. It indexes the artifact files and records the source document
+id/path, manifest metadata, row-group setting, table counts, and TPDS chunk
+counts by type.
 
 If that branch fails and `INGEST_WAGE_TABLE_FALLBACK` is not set to `0`, the
 pipeline falls back to the existing Markdown/pdfplumber path.

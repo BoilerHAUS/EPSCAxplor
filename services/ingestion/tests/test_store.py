@@ -212,7 +212,9 @@ class TestStoreDocumentPostgres:
         assert "IBEW" in all_args
 
     @pytest.mark.asyncio
-    async def test_qdrant_payload_includes_chunk_metadata(self, tmp_path: Path) -> None:
+    async def test_qdrant_payload_includes_wage_table_retrieval_metadata(
+        self, tmp_path: Path
+    ) -> None:
         doc = _make_doc(tmp_path)
         chunks = [
             Chunk(
@@ -224,10 +226,24 @@ class TestStoreDocumentPostgres:
                 article_title="IBEW Generation Wage Schedule",
                 chunk_index=0,
                 metadata={
+                    "document_title": doc.metadata.title,
+                    "trade_name": "IBEW Generation",
                     "table_pipeline": "docling_tpds",
+                    "table_chunk_type": "row",
                     "table_id": "table-1",
+                    "table_title": "IBEW Generation Wage Schedule",
+                    "table_caption": "IBEW Generation Wage Schedule",
+                    "page_numbers": [1],
                     "row_indexes": [1],
+                    "source_document_id": "doc-1",
+                    "source_document_filename": doc.extracted.source_path.name,
+                    "source_document_path": doc.extracted.source_path,
+                    "artifact_manifest_path": tmp_path / "manifest.json",
+                    "table_artifact_dir": tmp_path / "artifacts",
+                    "raw_docling_document_path": tmp_path / "docling.document.json",
+                    "raw_docling_tables_path": tmp_path / "docling.tables.json",
                     "normalized_table_json_path": tmp_path / "tables.json",
+                    "tpds_chunk_manifest_path": tmp_path / "tpds.chunks.json",
                 },
             )
         ]
@@ -245,11 +261,27 @@ class TestStoreDocumentPostgres:
         points = qdrant.upsert.call_args.kwargs["points"]
         payload = points[0].payload
         assert payload["title"] == doc.metadata.title
+        assert payload["effective_date"] == doc.metadata.effective_date
+        assert payload["union_name"] == doc.metadata.union_name
+        assert payload["document_title"] == doc.metadata.title
+        assert payload["trade_name"] == "IBEW Generation"
         assert payload["source_path"] == str(doc.extracted.source_path)
+        assert payload["source_document_path"] == str(doc.extracted.source_path)
+        assert payload["source_document_filename"] == doc.extracted.source_path.name
+        assert payload["source_document_id"] == "doc-1"
         assert payload["table_pipeline"] == "docling_tpds"
+        assert payload["table_chunk_type"] == "row"
         assert payload["table_id"] == "table-1"
+        assert payload["table_title"] == "IBEW Generation Wage Schedule"
+        assert payload["table_caption"] == "IBEW Generation Wage Schedule"
+        assert payload["page_numbers"] == [1]
         assert payload["row_indexes"] == [1]
+        assert payload["artifact_manifest_path"] == str(tmp_path / "manifest.json")
+        assert payload["table_artifact_dir"] == str(tmp_path / "artifacts")
+        assert payload["raw_docling_document_path"] == str(tmp_path / "docling.document.json")
+        assert payload["raw_docling_tables_path"] == str(tmp_path / "docling.tables.json")
         assert payload["normalized_table_json_path"] == str(tmp_path / "tables.json")
+        assert payload["tpds_chunk_manifest_path"] == str(tmp_path / "tpds.chunks.json")
 
     @pytest.mark.asyncio
     async def test_postgres_receives_chunk_count(self, tmp_path: Path) -> None:
