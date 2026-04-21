@@ -1,72 +1,78 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
-from fastapi.testclient import TestClient
+from fastapi import Response
 
-from src.routes.health import _check_database, _check_ollama, _check_qdrant
+from src.config import Settings
+from src.routes.health import _check_database, _check_ollama, _check_qdrant, health
 
 
 class TestHealthEndpoint:
-    def test_all_dependencies_ok_returns_200(self, client: TestClient) -> None:
+    async def test_all_dependencies_ok_returns_200(self, test_settings: Settings) -> None:
         with (
             patch("src.routes.health._check_database", new=AsyncMock(return_value="ok")),
             patch("src.routes.health._check_qdrant", new=AsyncMock(return_value="ok")),
             patch("src.routes.health._check_ollama", new=AsyncMock(return_value="ok")),
         ):
-            response = client.get("/health")
-        assert response.status_code == 200
-        assert response.json() == {
+            response_state = Response()
+            payload = await health(response_state, settings=test_settings)
+        assert response_state.status_code == 200
+        assert payload.model_dump() == {
             "status": "ok",
             "dependencies": {"database": "ok", "qdrant": "ok", "ollama": "ok"},
         }
 
-    def test_database_down_returns_503(self, client: TestClient) -> None:
+    async def test_database_down_returns_503(self, test_settings: Settings) -> None:
         with (
             patch("src.routes.health._check_database", new=AsyncMock(return_value="error")),
             patch("src.routes.health._check_qdrant", new=AsyncMock(return_value="ok")),
             patch("src.routes.health._check_ollama", new=AsyncMock(return_value="ok")),
         ):
-            response = client.get("/health")
-        assert response.status_code == 503
-        data = response.json()
+            response_state = Response()
+            payload = await health(response_state, settings=test_settings)
+        assert response_state.status_code == 503
+        data = payload.model_dump()
         assert data["status"] == "error"
         assert data["dependencies"]["database"] == "error"
         assert data["dependencies"]["qdrant"] == "ok"
         assert data["dependencies"]["ollama"] == "ok"
 
-    def test_qdrant_down_returns_503(self, client: TestClient) -> None:
+    async def test_qdrant_down_returns_503(self, test_settings: Settings) -> None:
         with (
             patch("src.routes.health._check_database", new=AsyncMock(return_value="ok")),
             patch("src.routes.health._check_qdrant", new=AsyncMock(return_value="error")),
             patch("src.routes.health._check_ollama", new=AsyncMock(return_value="ok")),
         ):
-            response = client.get("/health")
-        assert response.status_code == 503
-        data = response.json()
+            response_state = Response()
+            payload = await health(response_state, settings=test_settings)
+        assert response_state.status_code == 503
+        data = payload.model_dump()
         assert data["status"] == "error"
         assert data["dependencies"]["qdrant"] == "error"
 
-    def test_ollama_down_returns_503(self, client: TestClient) -> None:
+    async def test_ollama_down_returns_503(self, test_settings: Settings) -> None:
         with (
             patch("src.routes.health._check_database", new=AsyncMock(return_value="ok")),
             patch("src.routes.health._check_qdrant", new=AsyncMock(return_value="ok")),
             patch("src.routes.health._check_ollama", new=AsyncMock(return_value="error")),
         ):
-            response = client.get("/health")
-        assert response.status_code == 503
-        data = response.json()
+            response_state = Response()
+            payload = await health(response_state, settings=test_settings)
+        assert response_state.status_code == 503
+        data = payload.model_dump()
         assert data["status"] == "error"
         assert data["dependencies"]["ollama"] == "error"
 
-    def test_all_dependencies_down_returns_503(self, client: TestClient) -> None:
+    async def test_all_dependencies_down_returns_503(self, test_settings: Settings) -> None:
         with (
             patch("src.routes.health._check_database", new=AsyncMock(return_value="error")),
             patch("src.routes.health._check_qdrant", new=AsyncMock(return_value="error")),
             patch("src.routes.health._check_ollama", new=AsyncMock(return_value="error")),
         ):
-            response = client.get("/health")
-        assert response.status_code == 503
-        data = response.json()
+            response_state = Response()
+            payload = await health(response_state, settings=test_settings)
+        assert response_state.status_code == 503
+        data = payload.model_dump()
         assert data["status"] == "error"
         assert all(v == "error" for v in data["dependencies"].values())
 

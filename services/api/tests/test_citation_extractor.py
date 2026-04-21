@@ -148,6 +148,14 @@ def test_no_source_markers_returns_empty() -> None:
     assert extract_citations("No sources cited here.", [make_chunk()]) == []
 
 
+def test_refusal_answer_without_source_markers_returns_empty() -> None:
+    answer = (
+        "The provided documents do not contain information about pension benefits "
+        "for retired Boilermakers under EPSCA agreements."
+    )
+    assert extract_citations(answer, [make_chunk()]) == []
+
+
 def test_optional_fields_none() -> None:
     chunk = make_chunk(article_number=None, section_number=None, article_title=None, page_number=None)
     result = extract_citations("[SOURCE 1]", [chunk])
