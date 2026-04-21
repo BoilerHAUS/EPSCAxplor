@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 import uuid
 from typing import Annotated, Any
@@ -32,6 +33,12 @@ from src.rag.retrieval import ChunkResult, retrieve
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+_OUT_OF_CORPUS_REFUSAL_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"^\s*the provided documents do not contain information about\b", re.IGNORECASE),
+    re.compile(r"^\s*i cannot answer this question because\b", re.IGNORECASE),
+    re.compile(r"^\s*i don't have information about\b", re.IGNORECASE),
+)
 
 
 class QueryRequest(BaseModel):
@@ -128,6 +135,30 @@ async def _write_query_log(
         return None
 
 
+def _is_out_of_corpus_refusal(answer: str) -> bool:
+    """Return True when the answer opens with a clean refusal phrase."""
+    return any(pattern.search(answer) for pattern in _OUT_OF_CORPUS_REFUSAL_PATTERNS)
+
+
+def _should_strip_citations_for_refusal(
+    answer: str,
+    ctx: QueryContext,
+    citations: list[CitationRef],
+) -> bool:
+    """Return True when a refusal answer should suppress citation payloads.
+
+    Keep this guard deliberately narrow:
+    - only answers with extracted citations are candidates
+    - cross-union answers are excluded
+    - same-union answers keep citations even when they explain that a specific
+      rate or table is missing from the corpus
+    """
+    if not citations or ctx.is_cross_union or ctx.union_filters:
+        return False
+
+    return _is_out_of_corpus_refusal(answer)
+
+
 @router.post("/query", response_model=QueryResponse)
 async def query_handler(
     body: QueryRequest,
@@ -165,6 +196,8 @@ async def query_handler(
 
     # Step 5 — extract citations
     citations = extract_citations(result.answer, chunks, title_map=title_map)
+    if _should_strip_citations_for_refusal(result.answer, ctx, citations):
+        citations = []
 
     # Step 6 — log query (best-effort)
     union_filter_list = ctx.union_filters or None
