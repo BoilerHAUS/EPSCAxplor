@@ -103,8 +103,8 @@ def build_filter(
         ]
     )
 
-    # Effective-date guard: exclude documents not yet in effect (e.g. 2026 wage
-    # schedules returned for a query about current/2025 rates).
+    # Effective-date guard: exclude documents not yet in effect.
+    # wage_schedule is exempt — multi-year tables are always retrieval-eligible.
     effective_guard = Filter(
         should=[
             FieldCondition(key="effective_date", is_null=True),
@@ -112,6 +112,7 @@ def build_filter(
                 key="effective_date",
                 range=DatetimeRange(lte=now),
             ),
+            FieldCondition(key="document_type", match=MatchValue(value="wage_schedule")),
         ]
     )
 
