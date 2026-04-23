@@ -120,7 +120,16 @@ class TestBuildFilter:
         f = build_filter(None, True, None)
         guard = self._effective_guard(f)
         assert isinstance(guard, Filter)
-        assert len(guard.should) == 2  # type: ignore[arg-type]
+        assert len(guard.should) == 3  # null + lte_now + wage_schedule bypass
+
+    def test_effective_guard_third_should_bypasses_wage_schedule(self) -> None:
+        f = build_filter(None, True, None)
+        guard = self._effective_guard(f)
+        bypass_cond: FieldCondition = guard.should[2]  # type: ignore[index]
+        assert isinstance(bypass_cond, FieldCondition)
+        assert bypass_cond.key == "document_type"
+        assert isinstance(bypass_cond.match, MatchValue)
+        assert bypass_cond.match.value == "wage_schedule"
 
     def test_effective_guard_first_should_is_is_null(self) -> None:
         f = build_filter(None, True, None)
