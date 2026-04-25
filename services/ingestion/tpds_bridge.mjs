@@ -176,6 +176,39 @@ function markRepeatedHeaderRows(table, repeatedSignatures) {
   };
 }
 
+function propagateClassificationCells(table) {
+  const bodyRows = sortRows(table.rows).filter(
+    (row) => row.rowType !== "header" && row.rowType !== "footer" && row.rowType !== "note"
+  );
+  if (bodyRows.length === 0) return table;
+
+  const lastSeenByCol = new Map();
+  const cellFills = new Map();
+
+  for (const row of bodyRows) {
+    for (const cell of cellsForRow(table, row)) {
+      const text = normalizeText(cell.textNormalized || cell.textRaw || "");
+      if (text) {
+        lastSeenByCol.set(cell.colIndex, text);
+      } else if (lastSeenByCol.has(cell.colIndex)) {
+        cellFills.set(cell.cellId, lastSeenByCol.get(cell.colIndex));
+      }
+    }
+  }
+
+  if (cellFills.size === 0) return table;
+
+  return {
+    ...table,
+    cells: table.cells.map((cell) =>
+      cellFills.has(cell.cellId)
+        ? { ...cell, textNormalized: cellFills.get(cell.cellId), classificationFilled: true }
+        : cell
+    ),
+    fidelityWarnings: appendWarnings(table, ["classification-propagated"]),
+  };
+}
+
 function withContinuity(table, groupId, indexInGroup, groupSize) {
   return {
     ...table,
@@ -280,7 +313,9 @@ const normalizedTables = input.tables.map((entry, index) => {
   return normalizeFromDocling(entry.tableItem, options);
 });
 
-const preparedTables = prepareTablesForChunking(normalizedTables);
+const preparedTables = prepareTablesForChunking(
+  normalizedTables.map(propagateClassificationCells)
+);
 
 const tableChunks = preparedTables.flatMap((table) =>
   buildTableChunks(table, chunkOptions)
