@@ -178,6 +178,7 @@ async def query_handler(
         union_filters=ctx.union_filters,
         include_nuclear_pa=ctx.include_nuclear_pa,
         agreement_scope=ctx.agreement_scope,
+        is_wage_query=ctx.is_wage_query,
         settings=settings,
     )
 

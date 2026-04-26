@@ -235,12 +235,65 @@ def _point_to_chunk(point: ScoredPoint) -> ChunkResult:
     )
 
 
+async def _query_wage_schedules(
+    qdrant: AsyncQdrantClient,
+    *,
+    vector: list[float],
+    union_filter: str | None,
+    limit: int = 5,
+) -> list[ChunkResult]:
+    """Return top wage_schedule chunks regardless of general similarity rank.
+
+    Wage schedule chunks are tabular (sparse text, mostly codes and numbers)
+    and consistently score below CA narrative text in semantic search.  This
+    secondary pass guarantees wage data appears in context for rate queries.
+    """
+    must: list[Condition] = [
+        FieldCondition(key="document_type", match=MatchValue(value="wage_schedule")),
+    ]
+    if union_filter:
+        must.append(
+            FieldCondition(key="union_name", match=MatchValue(value=union_filter))
+        )
+    response = await qdrant.query_points(
+        collection_name=COLLECTION,
+        query=vector,
+        query_filter=Filter(must=must),
+        limit=limit,
+        with_payload=True,
+    )
+    return [_point_to_chunk(hit) for hit in response.points]
+
+
+def _merge_with_wage_priority(
+    primary: list[ChunkResult],
+    wage: list[ChunkResult],
+    *,
+    limit: int = TOP_K,
+) -> list[ChunkResult]:
+    """Combine primary and wage results, deduplicating by point_id.
+
+    Wage chunks lead so they are always present in the context window.
+    Remaining slots are filled from the primary results.
+    """
+    seen: set[str] = set()
+    merged: list[ChunkResult] = []
+    for chunk in [*wage, *primary]:
+        if chunk.point_id not in seen:
+            seen.add(chunk.point_id)
+            merged.append(chunk)
+        if len(merged) >= limit:
+            break
+    return merged
+
+
 async def retrieve(
     query: str,
     *,
     union_filters: list[str] | None = None,
     include_nuclear_pa: bool = False,
     agreement_scope: str | None = None,
+    is_wage_query: bool = False,
     settings: Settings,
 ) -> list[ChunkResult]:
     """Embed *query* and retrieve the top-k matching chunks from Qdrant.
@@ -256,6 +309,9 @@ async def retrieve(
             contains nuclear-site context (see ``preprocess.detect_nuclear``).
         agreement_scope: Restrict to ``"generation"`` or ``"transmission"``
             for IBEW / Labourers queries.
+        is_wage_query: When ``True``, run a secondary wage_schedule-focused
+            retrieval pass and prepend those chunks so tabular rate data is
+            guaranteed to appear in the context window.
         settings: Application settings providing Qdrant and Ollama URLs.
 
     Returns:
@@ -278,13 +334,24 @@ async def retrieve(
             )
             for union_filter in unique_union_filters
         ]
-        return _merge_union_results(result_sets)
+        primary = _merge_union_results(result_sets)
+    else:
+        union_filter = unique_union_filters[0] if unique_union_filters else None
+        primary = await _query_qdrant(
+            qdrant,
+            vector=vector,
+            union_filter=union_filter,
+            include_nuclear_pa=include_nuclear_pa,
+            agreement_scope=agreement_scope,
+        )
 
-    union_filter = unique_union_filters[0] if unique_union_filters else None
-    return await _query_qdrant(
+    if not is_wage_query:
+        return primary
+
+    union_filter = unique_union_filters[0] if len(unique_union_filters) == 1 else None
+    wage_chunks = await _query_wage_schedules(
         qdrant,
         vector=vector,
         union_filter=union_filter,
-        include_nuclear_pa=include_nuclear_pa,
-        agreement_scope=agreement_scope,
     )
+    return _merge_with_wage_priority(primary, wage_chunks)

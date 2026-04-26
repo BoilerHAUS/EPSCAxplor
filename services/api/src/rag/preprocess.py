@@ -47,6 +47,22 @@ _CROSS_UNION_PHRASES: list[str] = [
     "across trades",
 ]
 
+_WAGE_KEYWORDS: list[str] = [
+    "rate",
+    "wage",
+    "pay",
+    "hourly",
+    "salary",
+    "earn",
+    "journeyperson",
+    "journeyman",
+    "apprentice",
+    "compensation",
+    "base rate",
+    "base pay",
+    "total package",
+]
+
 
 class QueryContext(BaseModel):
     """Structured output of query pre-processing."""
@@ -55,6 +71,7 @@ class QueryContext(BaseModel):
     include_nuclear_pa: bool
     agreement_scope: str | None
     is_cross_union: bool
+    is_wage_query: bool
 
     @property
     def union_filter(self) -> str | None:
@@ -131,6 +148,17 @@ def classify_complexity(query: str) -> bool:
     return any(phrase in lower for phrase in _CROSS_UNION_PHRASES)
 
 
+def detect_wage_query(query: str) -> bool:
+    """Return True if the query is asking about wages, rates, or pay.
+
+    Triggers a secondary wage_schedule-focused retrieval pass to ensure
+    tabular wage data is included in context even when CA narrative text
+    scores higher in the primary similarity search.
+    """
+    lower = query.lower()
+    return any(kw in lower for kw in _WAGE_KEYWORDS)
+
+
 def preprocess(query: str, known_unions: list[str]) -> QueryContext:
     """Analyse *query* and return a populated QueryContext.
 
@@ -149,4 +177,5 @@ def preprocess(query: str, known_unions: list[str]) -> QueryContext:
         include_nuclear_pa=detect_nuclear(query),
         agreement_scope=detect_scope(query),
         is_cross_union=classify_complexity(query) or len(detected_unions) > 1,
+        is_wage_query=detect_wage_query(query),
     )
