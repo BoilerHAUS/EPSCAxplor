@@ -29,6 +29,7 @@ from src.rag.retrieval import (
     TOP_K,
     ChunkResult,
     _merge_union_results,
+    _merge_with_wage_priority,
     _point_to_chunk,
     build_filter,
     retrieve,
@@ -636,3 +637,138 @@ class TestRetrieve:
             "Sheet Metal Workers",
             "IBEW",
         ]
+
+
+def _make_chunk(point_id: str, document_type: str = "primary_ca") -> ChunkResult:
+    return ChunkResult(
+        point_id=point_id,
+        score=0.9,
+        document_id="doc-1",
+        source_filename="test.pdf",
+        union_name="IBEW",
+        document_type=document_type,
+        agreement_scope=None,
+        effective_date=None,
+        expiry_date=None,
+        article_number=None,
+        article_title=None,
+        section_number=None,
+        page_number=None,
+        is_table=document_type == "wage_schedule",
+        text="text",
+    )
+
+
+class TestMergeWithWagePriority:
+    def test_wage_chunks_lead_in_output(self) -> None:
+        primary = [_make_chunk("ca-1"), _make_chunk("ca-2")]
+        wage = [_make_chunk("ws-1", "wage_schedule"), _make_chunk("ws-2", "wage_schedule")]
+        result = _merge_with_wage_priority(primary, wage)
+        assert result[0].point_id == "ws-1"
+        assert result[1].point_id == "ws-2"
+
+    def test_primary_chunks_fill_remaining_slots(self) -> None:
+        primary = [_make_chunk("ca-1"), _make_chunk("ca-2")]
+        wage = [_make_chunk("ws-1", "wage_schedule")]
+        result = _merge_with_wage_priority(primary, wage)
+        assert result[1].point_id == "ca-1"
+        assert result[2].point_id == "ca-2"
+
+    def test_deduplicates_by_point_id(self) -> None:
+        shared = _make_chunk("shared-1", "wage_schedule")
+        primary = [shared, _make_chunk("ca-1")]
+        wage = [shared, _make_chunk("ws-1", "wage_schedule")]
+        result = _merge_with_wage_priority(primary, wage)
+        ids = [c.point_id for c in result]
+        assert ids.count("shared-1") == 1
+
+    def test_respects_limit(self) -> None:
+        primary = [_make_chunk(f"ca-{i}") for i in range(8)]
+        wage = [_make_chunk(f"ws-{i}", "wage_schedule") for i in range(5)]
+        result = _merge_with_wage_priority(primary, wage, limit=10)
+        assert len(result) == 10
+
+    def test_empty_wage_returns_primary(self) -> None:
+        primary = [_make_chunk("ca-1"), _make_chunk("ca-2")]
+        result = _merge_with_wage_priority(primary, [])
+        assert [c.point_id for c in result] == ["ca-1", "ca-2"]
+
+    def test_empty_primary_returns_wage(self) -> None:
+        wage = [_make_chunk("ws-1", "wage_schedule")]
+        result = _merge_with_wage_priority([], wage)
+        assert result[0].point_id == "ws-1"
+
+
+class TestRetrieveWageQuery:
+    def _make_hit(self, point_id: str, document_type: str = "primary_ca") -> ScoredPoint:
+        hit = MagicMock(spec=ScoredPoint)
+        hit.id = point_id
+        hit.score = 0.85
+        hit.payload = {
+            "document_id": str(uuid.uuid4()),
+            "source_filename": "test.pdf",
+            "union_name": "IBEW",
+            "document_type": document_type,
+            "agreement_scope": None,
+            "effective_date": "2025-05-01",
+            "expiry_date": None,
+            "article_number": None,
+            "article_title": None,
+            "section_number": None,
+            "page_number": None,
+            "is_table": document_type == "wage_schedule",
+            "text": "text",
+        }
+        return hit
+
+    @pytest.mark.asyncio
+    async def test_wage_query_triggers_second_qdrant_call(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+        wage_hit = self._make_hit("ws-1", "wage_schedule")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([wage_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "journeyperson hourly rate for IBEW",
+                union_filters=["IBEW"],
+                is_wage_query=True,
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 2
+        assert results[0].point_id == "ws-1"
+        assert results[1].point_id == "ca-1"
+
+    @pytest.mark.asyncio
+    async def test_non_wage_query_uses_single_qdrant_call(
+        self, settings: Settings
+    ) -> None:
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "What are the layoff notice requirements?",
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 1

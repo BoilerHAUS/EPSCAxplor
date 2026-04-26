@@ -6,6 +6,7 @@ from src.rag.preprocess import (
     detect_scope,
     detect_union,
     detect_unions,
+    detect_wage_query,
     preprocess,
 )
 
@@ -196,6 +197,35 @@ class TestClassifyComplexity:
         assert classify_complexity("DIFFERENCE BETWEEN IBEW and UA") is True
 
 
+class TestDetectWageQuery:
+    def test_empty_query_returns_false(self) -> None:
+        assert detect_wage_query("") is False
+
+    def test_no_wage_keywords_returns_false(self) -> None:
+        assert detect_wage_query("What are the layoff notice requirements?") is False
+
+    def test_detects_rate(self) -> None:
+        assert detect_wage_query("What is the overtime rate for IBEW?") is True
+
+    def test_detects_wage(self) -> None:
+        assert detect_wage_query("IBEW wage schedule 2025") is True
+
+    def test_detects_hourly(self) -> None:
+        assert detect_wage_query("What is the hourly rate for electricians?") is True
+
+    def test_detects_journeyperson(self) -> None:
+        assert detect_wage_query("journeyperson pay for Sheet Metal Workers") is True
+
+    def test_detects_apprentice(self) -> None:
+        assert detect_wage_query("apprentice rate first period") is True
+
+    def test_case_insensitive(self) -> None:
+        assert detect_wage_query("HOURLY RATE for welders") is True
+
+    def test_non_wage_query_returns_false(self) -> None:
+        assert detect_wage_query("vacation entitlement after 5 years") is False
+
+
 class TestQueryContext:
     def test_default_values(self) -> None:
         ctx = QueryContext(
@@ -203,12 +233,14 @@ class TestQueryContext:
             include_nuclear_pa=False,
             agreement_scope=None,
             is_cross_union=False,
+            is_wage_query=False,
         )
         assert ctx.union_filters == []
         assert ctx.union_filter is None
         assert ctx.include_nuclear_pa is False
         assert ctx.agreement_scope is None
         assert ctx.is_cross_union is False
+        assert ctx.is_wage_query is False
 
     def test_all_fields_set(self) -> None:
         ctx = QueryContext(
@@ -216,22 +248,33 @@ class TestQueryContext:
             include_nuclear_pa=True,
             agreement_scope="generation",
             is_cross_union=True,
+            is_wage_query=True,
         )
         assert ctx.union_filters == ["IBEW"]
         assert ctx.union_filter == "IBEW"
         assert ctx.include_nuclear_pa is True
         assert ctx.agreement_scope == "generation"
         assert ctx.is_cross_union is True
+        assert ctx.is_wage_query is True
 
 
 class TestPreprocess:
     def test_simple_query_returns_all_defaults(self) -> None:
-        ctx = preprocess("What is the overtime rate?", KNOWN_UNIONS)
+        ctx = preprocess("What are the layoff notice requirements?", KNOWN_UNIONS)
         assert ctx.union_filters == []
         assert ctx.union_filter is None
         assert ctx.include_nuclear_pa is False
         assert ctx.agreement_scope is None
         assert ctx.is_cross_union is False
+        assert ctx.is_wage_query is False
+
+    def test_wage_query_sets_is_wage_query(self) -> None:
+        ctx = preprocess("What is the journeyperson hourly rate for IBEW?", KNOWN_UNIONS)
+        assert ctx.is_wage_query is True
+
+    def test_non_wage_query_does_not_set_is_wage_query(self) -> None:
+        ctx = preprocess("How many vacation days after 5 years?", KNOWN_UNIONS)
+        assert ctx.is_wage_query is False
 
     def test_nuclear_query_sets_include_nuclear_pa(self) -> None:
         ctx = preprocess("OPG site badge requirements", KNOWN_UNIONS)
