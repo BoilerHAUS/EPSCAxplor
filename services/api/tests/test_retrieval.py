@@ -671,8 +671,8 @@ class TestMergeWithWagePriority:
         primary = [_make_chunk("ca-1"), _make_chunk("ca-2")]
         wage = [_make_chunk("ws-1", "wage_schedule")]
         result = _merge_with_wage_priority(primary, wage)
-        assert result[2].point_id == "ca-1"
-        assert result[3].point_id == "ca-2"
+        assert result[1].point_id == "ca-1"
+        assert result[2].point_id == "ca-2"
 
     def test_deduplicates_by_point_id(self) -> None:
         shared = _make_chunk("shared-1", "wage_schedule")
