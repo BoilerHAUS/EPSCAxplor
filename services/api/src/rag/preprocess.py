@@ -47,6 +47,23 @@ _CROSS_UNION_PHRASES: list[str] = [
     "across trades",
 ]
 
+# Word-boundary aliases for union names that users rarely spell out in full.
+# Keyed by the canonical union_name stored in PostgreSQL / Qdrant payloads.
+_UNION_ALIASES: dict[str, list[re.Pattern[str]]] = {
+    "United Association": [
+        re.compile(r"\bUA\b", re.IGNORECASE),
+        re.compile(r"\bplumbers?\b", re.IGNORECASE),
+        re.compile(r"\bpipefitters?\b", re.IGNORECASE),
+        re.compile(r"\bsteamfitters?\b", re.IGNORECASE),
+    ],
+    "IBEW": [
+        re.compile(r"\belectrical workers\b", re.IGNORECASE),
+    ],
+    "Sheet Metal": [
+        re.compile(r"\bsheet metal\b", re.IGNORECASE),
+    ],
+}
+
 _WAGE_KEYWORDS: list[str] = [
     "rate",
     "wage",
@@ -94,15 +111,21 @@ def detect_nuclear(query: str) -> bool:
 def detect_unions(query: str, known_unions: list[str]) -> list[str]:
     """Return every known union mentioned in the query, ordered by appearance.
 
-    Matching remains case-insensitive substring search to preserve the current
-    detection semantics, but all matches are retained instead of collapsing to
-    the first union in ``known_unions`` order.
+    Matching is case-insensitive substring search on the canonical union name,
+    plus word-boundary alias patterns (e.g. "UA" or "plumber" for United
+    Association) so trade shorthand still restricts retrieval correctly.
     """
     lower = query.lower()
     matches: list[tuple[int, int, str]] = []
 
     for index, union in enumerate(known_unions):
         position = lower.find(union.lower())
+        if position == -1:
+            for pattern in _UNION_ALIASES.get(union, []):
+                alias_match = pattern.search(query)
+                if alias_match:
+                    position = alias_match.start()
+                    break
         if position != -1:
             matches.append((position, index, union))
 

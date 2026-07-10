@@ -24,7 +24,7 @@ Design notes
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import cast
+from typing import Any, cast
 
 import httpx
 from pydantic import BaseModel
@@ -235,18 +235,69 @@ def _point_to_chunk(point: ScoredPoint) -> ChunkResult:
     )
 
 
+# Classification aliases: maps a term found in the chunk's classification
+# names to the query phrasings that should select it.  Wage chunk cosine
+# scores cluster within ~0.02 of each other (hundreds of near-identical rate
+# tables), so exact classification/location matches must dominate ranking.
+_CLASSIFICATION_ALIASES: dict[str, tuple[str, ...]] = {
+    "journeyman": ("journeyperson", "journeyman", "journey person"),
+    "foreman": ("foreman", "foreperson", "forewoman"),
+    "subforeman": ("subforeman", "sub-foreman", "subforeperson", "sub foreman"),
+    "apprentice": ("apprentice",),
+    "welder": ("welder", "pipewelder"),
+    "probationary": ("probationary",),
+    "material handler": ("material handler",),
+}
+_CLASSIFICATION_BOOST = 0.15
+_LOCATION_BOOST = 0.10
+# Large enough to cover a full union's wage chunks (~200 for Sheet Metal) so
+# the deterministic re-rank sees every candidate, not just the cosine top few.
+_WAGE_CANDIDATE_POOL = 250
+
+
+def _wage_rank_boost(query_lower: str, payload: dict[str, Any]) -> float:
+    """Deterministic ranking boost for wage chunks matching the query terms.
+
+    Adds a classification boost when the query names a classification that
+    appears in the chunk's classification_names metadata (epsca_form chunks),
+    and a location boost when the chunk's city or local number appears in the
+    query.  Boosts exceed the cosine-score spread between wage chunks, so an
+    exact match reliably outranks a lexically similar but wrong table.
+    """
+    boost = 0.0
+
+    names = payload.get("classification_names") or []
+    if isinstance(names, list):
+        names_lower = " ".join(str(name) for name in names).lower()
+        for term, aliases in _CLASSIFICATION_ALIASES.items():
+            if term in names_lower and any(alias in query_lower for alias in aliases):
+                boost += _CLASSIFICATION_BOOST
+                break
+
+    city = str(payload.get("city") or "").lower()
+    local = str(payload.get("local") or "").lower()  # e.g. "local 105"
+    if (city and city in query_lower) or (local and local in query_lower):
+        boost += _LOCATION_BOOST
+
+    return boost
+
+
 async def _query_wage_schedules(
     qdrant: AsyncQdrantClient,
     *,
     vector: list[float],
+    query: str,
     union_filter: str | None,
     limit: int = 5,
 ) -> list[ChunkResult]:
     """Return top wage_schedule chunks regardless of general similarity rank.
 
-    Wage schedule chunks are tabular (sparse text, mostly codes and numbers)
-    and consistently score below CA narrative text in semantic search.  This
-    secondary pass guarantees wage data appears in context for rate queries.
+    Wage schedule chunks are tabular and consistently score below CA narrative
+    text in semantic search, so this secondary pass guarantees wage data
+    appears in context for rate queries.  Candidates are fetched by vector
+    similarity, then re-ranked with deterministic classification/location
+    boosts (see _wage_rank_boost) because embedding similarity alone cannot
+    distinguish e.g. a JOURNEYMAN table from an APPRENTICE table.
     """
     must: list[Condition] = [
         FieldCondition(key="document_type", match=MatchValue(value="wage_schedule")),
@@ -259,10 +310,17 @@ async def _query_wage_schedules(
         collection_name=COLLECTION,
         query=vector,
         query_filter=Filter(must=must),
-        limit=limit,
+        limit=_WAGE_CANDIDATE_POOL,
         with_payload=True,
     )
-    return [_point_to_chunk(hit) for hit in response.points]
+
+    query_lower = query.lower()
+    ranked = sorted(
+        response.points,
+        key=lambda hit: hit.score + _wage_rank_boost(query_lower, hit.payload or {}),
+        reverse=True,
+    )
+    return [_point_to_chunk(hit) for hit in ranked[:limit]]
 
 
 def _merge_with_wage_priority(
@@ -352,6 +410,7 @@ async def retrieve(
     wage_chunks = await _query_wage_schedules(
         qdrant,
         vector=vector,
+        query=query,
         union_filter=union_filter,
     )
     return _merge_with_wage_priority(primary, wage_chunks)

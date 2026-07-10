@@ -118,6 +118,22 @@ class TestDetectUnion:
     def test_query_with_no_union_returns_none(self) -> None:
         assert detect_union("general overtime rules for all workers", KNOWN_UNIONS) is None
 
+    def test_alias_ua_detects_united_association(self) -> None:
+        result = detect_union("What does a UA apprentice make in Toronto?", KNOWN_UNIONS)
+        assert result == "United Association"
+
+    def test_alias_plumber_detects_united_association(self) -> None:
+        result = detect_union("plumber journeyperson rate in Toronto", KNOWN_UNIONS)
+        assert result == "United Association"
+
+    def test_alias_requires_word_boundary(self) -> None:
+        # "ua" inside another word must not match United Association.
+        assert detect_union("guarantee of overtime hours", KNOWN_UNIONS) is None
+
+    def test_alias_electrical_workers_detects_ibew(self) -> None:
+        result = detect_union("electrical workers wage schedule", KNOWN_UNIONS)
+        assert result == "IBEW"
+
 
 class TestDetectUnions:
     def test_empty_query_returns_empty_list(self) -> None:
