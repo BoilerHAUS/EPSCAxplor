@@ -58,10 +58,16 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
     from convert import convert_pdf
     from download import CORPUS_DIR, CORPUS_MANIFEST, resolve_corpus_path
     from embed import embed_chunks
-    from extract import extract_markdown, extract_pdf
+    from epsca_wage_parser import (
+        build_wage_chunks,
+        epsca_wage_parser_enabled,
+        parse_wage_schedule_pdf,
+    )
+    from extract import ExtractedDocument, extract_markdown, extract_pdf
     from store import store_document
     from wage_tables import (
         WageTableConfig,
+        is_wage_schedule_entry,
         process_wage_schedule_pdf,
         should_use_wage_table_pipeline,
     )
@@ -126,7 +132,43 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
             logger.info("  chunk: %d chunks", len(legacy_chunks))
             return classified_doc, legacy_chunks
 
-        if should_use_wage_table_pipeline(entry, wage_table_config):
+        def _run_epsca_wage_path(
+            source_pdf_path: Path,
+        ) -> tuple[ClassifiedDocument, list[Chunk]]:
+            pages = parse_wage_schedule_pdf(source_pdf_path)
+            page_count = max(page.pdf_page_number for page in pages)
+            classified_doc = classify(
+                ExtractedDocument(source_path=source_pdf_path, blocks=[], page_count=page_count)
+            )
+            epsca_chunks = build_wage_chunks(pages, classified_doc.metadata.union_name)
+            if not epsca_chunks:
+                raise ValueError(f"EPSCA wage parser produced no chunks for {source_pdf_path.name}")
+            rate_pages = sum(1 for page in pages if page.groups)
+            logger.info(
+                "  extract: %d wage pages (%d with rate tables), %d locals",
+                len(pages),
+                rate_pages,
+                len({(page.map_code, page.local, page.city) for page in pages}),
+            )
+            logger.info(
+                "  classify: %s / %s",
+                classified_doc.metadata.union_name,
+                classified_doc.metadata.document_type,
+            )
+            logger.info("  chunk: %d chunks (epsca_form)", len(epsca_chunks))
+            return classified_doc, epsca_chunks
+
+        classified_and_chunks: tuple[ClassifiedDocument, list[Chunk]] | None = None
+        if is_wage_schedule_entry(entry) and epsca_wage_parser_enabled():
+            try:
+                classified_and_chunks = _run_epsca_wage_path(pdf_path)
+            except Exception as exc:  # noqa: BLE001 — any parse failure falls back
+                logger.warning("  epsca-form wage parser failed: %s", exc)
+                logger.warning("  falling back to Docling/legacy extraction path")
+
+        if classified_and_chunks is not None:
+            classified, chunks = classified_and_chunks
+        elif should_use_wage_table_pipeline(entry, wage_table_config):
             try:
                 table_result = process_wage_schedule_pdf(pdf_path, wage_table_config)
                 classified = table_result.classified
