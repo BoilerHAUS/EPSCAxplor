@@ -363,6 +363,34 @@ class TestStoreDocumentQdrant:
         qdrant.upsert.assert_called_once()
 
     @pytest.mark.asyncio
+    async def test_qdrant_deletes_stale_points_before_upsert(self, tmp_path: Path) -> None:
+        """Re-ingesting with fewer chunks must not leave old points behind."""
+        doc = _make_doc(tmp_path)
+        chunks = [_make_chunk(0)]
+        embeddings = [_fake_embedding()]
+        doc_id = uuid.uuid4()
+        conn = _make_pg_conn(document_id=doc_id)
+        pool = _make_pg_pool(conn)
+        qdrant = _make_qdrant_client()
+        call_order: list[str] = []
+        qdrant.delete.side_effect = lambda **_: call_order.append("delete")
+        qdrant.upsert.side_effect = lambda **_: call_order.append("upsert")
+
+        with (
+            patch("store.asyncpg.create_pool", return_value=pool),
+            patch("store.AsyncQdrantClient", return_value=qdrant),
+        ):
+            await store_document(doc, chunks, embeddings, postgres_dsn=_TEST_DSN)
+
+        assert call_order == ["delete", "upsert"]
+        delete_kwargs = qdrant.delete.call_args.kwargs
+        assert delete_kwargs["collection_name"] == QDRANT_COLLECTION
+        selector_filter = delete_kwargs["points_selector"].filter
+        condition = selector_filter.must[0]
+        assert condition.key == "document_id"
+        assert condition.match.value == str(doc_id)
+
+    @pytest.mark.asyncio
     async def test_qdrant_upserts_to_correct_collection(self, tmp_path: Path) -> None:
         doc = _make_doc(tmp_path)
         chunks = [_make_chunk(0)]

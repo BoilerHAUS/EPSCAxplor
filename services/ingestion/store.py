@@ -31,7 +31,13 @@ from typing import Any
 
 import asyncpg
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.models import PointStruct
+from qdrant_client.models import (
+    FieldCondition,
+    Filter,
+    FilterSelector,
+    MatchValue,
+    PointStruct,
+)
 
 from classify import ClassifiedDocument
 
@@ -247,6 +253,23 @@ async def store_document(
     points = _build_points(document_id, doc, chunks, embeddings)
     qdrant = AsyncQdrantClient(url=qdrant_url)
     try:
+        # Point IDs are deterministic on (document_id, chunk_index), so a
+        # re-ingest that produces fewer chunks would otherwise leave stale
+        # higher-index points behind.  Delete the document's existing points
+        # first so the upsert fully replaces the previous ingest.
+        await qdrant.delete(
+            collection_name=QDRANT_COLLECTION,
+            points_selector=FilterSelector(
+                filter=Filter(
+                    must=[
+                        FieldCondition(
+                            key="document_id",
+                            match=MatchValue(value=str(document_id)),
+                        )
+                    ]
+                )
+            ),
+        )
         await qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
         logger.info(
             "Upserted %d points to Qdrant collection '%s'",
