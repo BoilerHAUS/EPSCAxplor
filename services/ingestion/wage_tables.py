@@ -70,14 +70,8 @@ class WageTableProcessingResult:
     artifacts: WageTableArtifacts
 
 
-def should_use_wage_table_pipeline(
-    entry: dict[str, Any],
-    config: WageTableConfig,
-) -> bool:
-    """Route manifest-marked wage schedules into the Docling + TPDS branch."""
-    if not config.enabled:
-        return False
-
+def is_wage_schedule_entry(entry: dict[str, Any]) -> bool:
+    """True when a manifest entry describes a wage schedule document."""
     document_type = str(entry.get("document_type", "")).strip().lower()
     if document_type == "wage_schedule":
         return True
@@ -85,6 +79,14 @@ def should_use_wage_table_pipeline(
     title = str(entry.get("title", "")).lower()
     source_filename = str(entry.get("source_filename", "")).lower()
     return "wage schedule" in title or "wage schedule" in source_filename
+
+
+def should_use_wage_table_pipeline(
+    entry: dict[str, Any],
+    config: WageTableConfig,
+) -> bool:
+    """Route manifest-marked wage schedules into the Docling + TPDS branch."""
+    return config.enabled and is_wage_schedule_entry(entry)
 
 
 def _write_json(path: Path, payload: Any) -> None:

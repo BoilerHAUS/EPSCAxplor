@@ -31,10 +31,10 @@ from src.rag.retrieval import (
     _merge_union_results,
     _merge_with_wage_priority,
     _point_to_chunk,
+    _wage_rank_boost,
     build_filter,
     retrieve,
 )
-
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -697,6 +697,59 @@ class TestMergeWithWagePriority:
         wage = [_make_chunk("ws-1", "wage_schedule")]
         result = _merge_with_wage_priority([], wage)
         assert result[0].point_id == "ws-1"
+
+
+class TestWageRankBoost:
+    """Deterministic re-ranking of wage chunks by classification/location."""
+
+    def _payload(
+        self,
+        names: list[str] | None = None,
+        city: str = "Hamilton",
+        local: str = "Local 105",
+    ) -> dict[str, Any]:
+        return {
+            "classification_names": names or [],
+            "city": city,
+            "local": local,
+        }
+
+    def test_journeyperson_query_boosts_journeyman_chunk(self) -> None:
+        query = "what is the journeyperson hourly rate for ibew electricians?"
+        boost = _wage_rank_boost(query, self._payload(["JOURNEYMAN", "WELDER"]))
+        assert boost == pytest.approx(0.15)
+
+    def test_journeyperson_query_does_not_boost_apprentice_chunk(self) -> None:
+        query = "what is the journeyperson hourly rate for ibew electricians?"
+        boost = _wage_rank_boost(query, self._payload(["ELECTRICIAN APPRENTICE"]))
+        assert boost == 0.0
+
+    def test_foreman_query_boosts_foreman_chunk(self) -> None:
+        query = "what is the foreman wage premium?"
+        boost = _wage_rank_boost(query, self._payload(["ELECTRICIAN", "FOREMAN"]))
+        assert boost == pytest.approx(0.15)
+
+    def test_city_match_adds_location_boost(self) -> None:
+        query = "sheet metal journeyperson rate in hamilton"
+        boost = _wage_rank_boost(query, self._payload(["JOURNEYMAN AND WELDER"]))
+        assert boost == pytest.approx(0.25)
+
+    def test_local_number_match_adds_location_boost(self) -> None:
+        query = "apprentice rates for local 105"
+        boost = _wage_rank_boost(query, self._payload(["ELECTRICIAN APPRENTICE", "1st Period"]))
+        assert boost == pytest.approx(0.25)
+
+    def test_chunk_without_metadata_gets_no_boost(self) -> None:
+        query = "journeyperson hourly rate"
+        assert _wage_rank_boost(query, {}) == 0.0
+
+    def test_classification_boost_applied_once(self) -> None:
+        # A chunk matching two classification aliases still gets one boost.
+        query = "journeyperson and welder rates"
+        boost = _wage_rank_boost(
+            query, self._payload(["JOURNEYMAN AND WELDER"], city="", local="")
+        )
+        assert boost == pytest.approx(0.15)
 
 
 class TestRetrieveWageQuery:
