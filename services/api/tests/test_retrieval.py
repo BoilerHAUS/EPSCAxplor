@@ -28,9 +28,11 @@ from src.rag.retrieval import (
     COLLECTION,
     TOP_K,
     ChunkResult,
+    _chunk_classification,
     _merge_union_results,
     _merge_with_wage_priority,
     _point_to_chunk,
+    _reserve_baseline_slots,
     _wage_rank_boost,
     build_filter,
     retrieve,
@@ -751,27 +753,87 @@ class TestWageRankBoost:
         )
         assert boost == pytest.approx(0.15)
 
-    def test_premium_query_boosts_journeyman_baseline(self) -> None:
-        # "foreman premium" needs the journeyperson rate in context to
-        # compute the difference — journeyman ranks just below foreman.
-        query = "what is the foreman wage premium for ibew electricians?"
-        foreman = _wage_rank_boost(query, self._payload(["FOREMAN"], city="", local=""))
-        journeyman = _wage_rank_boost(
-            query, self._payload(["JOURNEYMAN"], city="", local="")
+    def test_apprentice_label_mentioning_journeyman_not_boosted(self) -> None:
+        # UA/SM apprentice labels embed "of Journeyman Rate"; the chunk's
+        # primary classification is still apprentice, so a journeyperson
+        # query must not boost it.
+        query = "which union has the higher journeyperson base rate?"
+        boost = _wage_rank_boost(
+            query,
+            self._payload(
+                ["APPRENTICE", "1st Period - 40 % of Journeyman Rate"],
+                city="",
+                local="",
+            ),
         )
-        apprentice = _wage_rank_boost(
-            query, self._payload(["ELECTRICIAN APPRENTICE"], city="", local="")
-        )
-        assert foreman == pytest.approx(0.15)
-        assert journeyman == pytest.approx(0.12)
-        assert apprentice == 0.0
+        assert boost == 0.0
 
-    def test_premium_baseline_not_applied_without_premium_terms(self) -> None:
-        query = "what is the foreman rate?"
-        journeyman = _wage_rank_boost(
-            query, self._payload(["JOURNEYMAN"], city="", local="")
+    def test_journeyman_and_welder_classified_as_journeyman(self) -> None:
+        query = "journeyperson hourly rate"
+        boost = _wage_rank_boost(
+            query, self._payload(["JOURNEYMAN AND WELDER"], city="", local="")
         )
-        assert journeyman == 0.0
+        assert boost == pytest.approx(0.15)
+
+    def test_chunk_classification_priority(self) -> None:
+        assert (
+            _chunk_classification(
+                {"classification_names": ["APPRENTICE", "3rd Period - 60% of Journeyman Rate"]}
+            )
+            == "apprentice"
+        )
+        assert (
+            _chunk_classification({"classification_names": ["SUBFOREMAN"]})
+            == "subforeman"
+        )
+        assert (
+            _chunk_classification({"classification_names": ["ELECTRICIAN", "FOREMAN"]})
+            == "foreman"
+        )
+        assert _chunk_classification({"classification_names": []}) is None
+
+
+class TestReserveBaselineSlots:
+    """Premium queries must include journeyperson baseline chunks."""
+
+    def _hit(self, point_id: str, names: list[str], local: str, score: float) -> Any:
+        hit = MagicMock(spec=ScoredPoint)
+        hit.id = point_id
+        hit.score = score
+        hit.payload = {
+            "classification_names": names,
+            "local": local,
+            "city": local.split()[-1],
+        }
+        return hit
+
+    def test_baseline_replaces_tail_and_prefers_same_local(self) -> None:
+        foremen = [
+            self._hit(f"f{i}", ["FOREMAN"], f"Local {i}", 0.80 - i * 0.01)
+            for i in range(5)
+        ]
+        same_local_journeyman = self._hit("j-same", ["JOURNEYMAN"], "Local 0", 0.60)
+        other_journeyman = self._hit("j-other", ["JOURNEYMAN"], "Local 99", 0.70)
+        ranked = [*foremen, other_journeyman, same_local_journeyman]
+
+        result = _reserve_baseline_slots(ranked, foremen[:5], limit=5)
+
+        ids = [hit.id for hit in result]
+        assert len(ids) == 5
+        # Same-local baseline outranks the higher-scoring other-local one.
+        assert ids[3] == "j-same"
+        assert ids[4] == "j-other"
+
+    def test_no_change_when_baseline_already_selected(self) -> None:
+        selected = [
+            self._hit("f1", ["FOREMAN"], "Local 1", 0.8),
+            self._hit("j1", ["JOURNEYMAN"], "Local 1", 0.7),
+        ]
+        assert _reserve_baseline_slots(selected, selected, limit=5) == selected
+
+    def test_no_change_when_no_baseline_exists(self) -> None:
+        selected = [self._hit("f1", ["FOREMAN"], "Local 1", 0.8)]
+        assert _reserve_baseline_slots(selected, selected, limit=5) == selected
 
 
 class TestRetrieveWageQuery:
