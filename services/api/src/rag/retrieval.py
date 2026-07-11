@@ -256,39 +256,56 @@ _LOCATION_BOOST = 0.10
 # chunks alone can crowd out a smaller pool.
 _WAGE_CANDIDATE_POOL = 1000
 # Queries about a premium/differential need the journeyperson baseline in
-# context alongside the boosted classification to compute the difference.
+# context alongside the named classification to compute the difference.
 _PREMIUM_TERMS = ("premium", "differential", "how much more", "uplift")
-_PREMIUM_BASELINE_BOOST = 0.12
+_PREMIUM_BASELINE_SLOTS = 2
+
+# A chunk's primary classification is the FIRST of these found in its
+# classification names.  Order matters twice: apprentice/probationary labels
+# often embed "of Journeyman Rate" (e.g. "1st Period - 40 % of Journeyman
+# Rate"), so they must be checked before journeyman; and "subforeman" is a
+# substring superset of "foreman".
+_CLASS_PRIORITY = (
+    "apprentice",
+    "probationary",
+    "material handler",
+    "subforeman",
+    "journeyman",
+    "foreman",
+    "welder",
+)
+
+
+def _chunk_classification(payload: dict[str, Any]) -> str | None:
+    """Return the chunk's primary classification per _CLASS_PRIORITY."""
+    names = payload.get("classification_names") or []
+    if not isinstance(names, list):
+        return None
+    names_lower = " ".join(str(name) for name in names).lower()
+    for term in _CLASS_PRIORITY:
+        if term in names_lower:
+            return term
+    return None
 
 
 def _wage_rank_boost(query_lower: str, payload: dict[str, Any]) -> float:
     """Deterministic ranking boost for wage chunks matching the query terms.
 
-    Adds a classification boost when the query names a classification that
-    appears in the chunk's classification_names metadata (epsca_form chunks),
-    and a location boost when the chunk's city or local number appears in the
-    query.  Boosts exceed the cosine-score spread between wage chunks, so an
-    exact match reliably outranks a lexically similar but wrong table.
+    Adds a classification boost when the query names the chunk's PRIMARY
+    classification (an apprentice table whose label reads "40 % of Journeyman
+    Rate" is still an apprentice table), and a location boost when the
+    chunk's city or local number appears in the query.  Boosts exceed the
+    cosine-score spread between wage chunks, so an exact match reliably
+    outranks a lexically similar but wrong table.
     """
     boost = 0.0
 
-    names = payload.get("classification_names") or []
-    if isinstance(names, list):
-        names_lower = " ".join(str(name) for name in names).lower()
-        for term, aliases in _CLASSIFICATION_ALIASES.items():
-            if term in names_lower and any(alias in query_lower for alias in aliases):
-                boost += _CLASSIFICATION_BOOST
-                break
-
-    # Premium/differential questions need the journeyperson baseline rate in
-    # context to compare against; rank it just below the named classification.
-    if (
-        boost == 0.0
-        and isinstance(names, list)
-        and any(term in query_lower for term in _PREMIUM_TERMS)
-        and "journeyman" in " ".join(str(name) for name in names).lower()
+    classification = _chunk_classification(payload)
+    if classification is not None and any(
+        alias in query_lower
+        for alias in _CLASSIFICATION_ALIASES.get(classification, ())
     ):
-        boost += _PREMIUM_BASELINE_BOOST
+        boost += _CLASSIFICATION_BOOST
 
     city = str(payload.get("city") or "").lower()
     local = str(payload.get("local") or "").lower()  # e.g. "local 105"
@@ -296,6 +313,47 @@ def _wage_rank_boost(query_lower: str, payload: dict[str, Any]) -> float:
         boost += _LOCATION_BOOST
 
     return boost
+
+
+def _reserve_baseline_slots(
+    ranked: list[ScoredPoint],
+    selected: list[ScoredPoint],
+    *,
+    limit: int,
+) -> list[ScoredPoint]:
+    """Guarantee journeyperson baseline chunks in premium-query results.
+
+    Foreman chunks exist for every local, so on a premium query they fill
+    every wage slot and the baseline needed to compute the differential
+    never appears.  Reserve the last slots for the best journeyman chunks,
+    preferring ones from the same locals as the already-selected chunks so
+    the model can compare rates within a single schedule.
+    """
+    if any(_chunk_classification(hit.payload or {}) == "journeyman" for hit in selected):
+        return selected
+
+    selected_ids = {hit.id for hit in selected}
+    selected_locals = {
+        ((hit.payload or {}).get("local"), (hit.payload or {}).get("city"))
+        for hit in selected
+    }
+    baselines = [
+        hit
+        for hit in ranked
+        if hit.id not in selected_ids
+        and _chunk_classification(hit.payload or {}) == "journeyman"
+    ]
+    baselines.sort(
+        key=lambda hit: (
+            ((hit.payload or {}).get("local"), (hit.payload or {}).get("city"))
+            not in selected_locals,
+            -hit.score,
+        )
+    )
+    take = baselines[:_PREMIUM_BASELINE_SLOTS]
+    if not take:
+        return selected
+    return [*selected[: limit - len(take)], *take]
 
 
 async def _query_wage_schedules(
@@ -336,7 +394,10 @@ async def _query_wage_schedules(
         key=lambda hit: hit.score + _wage_rank_boost(query_lower, hit.payload or {}),
         reverse=True,
     )
-    return [_point_to_chunk(hit) for hit in ranked[:limit]]
+    selected = ranked[:limit]
+    if any(term in query_lower for term in _PREMIUM_TERMS):
+        selected = _reserve_baseline_slots(ranked, selected, limit=limit)
+    return [_point_to_chunk(hit) for hit in selected]
 
 
 def _merge_with_wage_priority(
