@@ -751,6 +751,28 @@ class TestWageRankBoost:
         )
         assert boost == pytest.approx(0.15)
 
+    def test_premium_query_boosts_journeyman_baseline(self) -> None:
+        # "foreman premium" needs the journeyperson rate in context to
+        # compute the difference — journeyman ranks just below foreman.
+        query = "what is the foreman wage premium for ibew electricians?"
+        foreman = _wage_rank_boost(query, self._payload(["FOREMAN"], city="", local=""))
+        journeyman = _wage_rank_boost(
+            query, self._payload(["JOURNEYMAN"], city="", local="")
+        )
+        apprentice = _wage_rank_boost(
+            query, self._payload(["ELECTRICIAN APPRENTICE"], city="", local="")
+        )
+        assert foreman == pytest.approx(0.15)
+        assert journeyman == pytest.approx(0.12)
+        assert apprentice == 0.0
+
+    def test_premium_baseline_not_applied_without_premium_terms(self) -> None:
+        query = "what is the foreman rate?"
+        journeyman = _wage_rank_boost(
+            query, self._payload(["JOURNEYMAN"], city="", local="")
+        )
+        assert journeyman == 0.0
+
 
 class TestRetrieveWageQuery:
     def _make_hit(self, point_id: str, document_type: str = "primary_ca") -> ScoredPoint:
@@ -805,6 +827,50 @@ class TestRetrieveWageQuery:
         assert mock_qdrant.query_points.await_count == 2
         assert results[0].point_id == "ws-1"
         assert results[1].point_id == "ca-1"
+
+    @pytest.mark.asyncio
+    async def test_cross_union_wage_query_fans_out_per_union(
+        self, settings: Settings
+    ) -> None:
+        """Multi-union rate queries run one wage pass per union so both
+        unions' wage chunks appear, instead of one unfiltered pass."""
+        ibew_ca = self._make_hit("ibew-ca")
+        ua_ca = self._make_hit("ua-ca")
+        ibew_wage = self._make_hit("ibew-ws", "wage_schedule")
+        ua_wage = self._make_hit("ua-ws", "wage_schedule")
+        ua_wage.payload["union_name"] = "United Association"
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ibew_ca]),   # primary IBEW
+                    _make_query_response([ua_ca]),     # primary UA
+                    _make_query_response([ibew_wage]),  # wage IBEW
+                    _make_query_response([ua_wage]),    # wage UA
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "Which union has the higher journeyperson base rate?",
+                union_filters=["IBEW", "United Association"],
+                is_wage_query=True,
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 4
+        wage_calls = mock_qdrant.query_points.await_args_list[2:]
+        wage_unions = [
+            _union_filter_value(call.kwargs["query_filter"]) for call in wage_calls
+        ]
+        assert wage_unions == ["IBEW", "United Association"]
+        # Wage chunks from both unions lead the merged results.
+        assert [c.point_id for c in results[:2]] == ["ibew-ws", "ua-ws"]
 
     @pytest.mark.asyncio
     async def test_non_wage_query_uses_single_qdrant_call(
