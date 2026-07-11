@@ -252,7 +252,13 @@ _CLASSIFICATION_BOOST = 0.15
 _LOCATION_BOOST = 0.10
 # Large enough to cover a full union's wage chunks (~200 for Sheet Metal) so
 # the deterministic re-rank sees every candidate, not just the cosine top few.
-_WAGE_CANDIDATE_POOL = 250
+# Union-less wage queries search the whole corpus, where high-cosine apprentice
+# chunks alone can crowd out a smaller pool.
+_WAGE_CANDIDATE_POOL = 1000
+# Queries about a premium/differential need the journeyperson baseline in
+# context alongside the boosted classification to compute the difference.
+_PREMIUM_TERMS = ("premium", "differential", "how much more", "uplift")
+_PREMIUM_BASELINE_BOOST = 0.12
 
 
 def _wage_rank_boost(query_lower: str, payload: dict[str, Any]) -> float:
@@ -273,6 +279,16 @@ def _wage_rank_boost(query_lower: str, payload: dict[str, Any]) -> float:
             if term in names_lower and any(alias in query_lower for alias in aliases):
                 boost += _CLASSIFICATION_BOOST
                 break
+
+    # Premium/differential questions need the journeyperson baseline rate in
+    # context to compare against; rank it just below the named classification.
+    if (
+        boost == 0.0
+        and isinstance(names, list)
+        and any(term in query_lower for term in _PREMIUM_TERMS)
+        and "journeyman" in " ".join(str(name) for name in names).lower()
+    ):
+        boost += _PREMIUM_BASELINE_BOOST
 
     city = str(payload.get("city") or "").lower()
     local = str(payload.get("local") or "").lower()  # e.g. "local 105"
@@ -406,11 +422,27 @@ async def retrieve(
     if not is_wage_query:
         return primary
 
-    union_filter = unique_union_filters[0] if len(unique_union_filters) == 1 else None
-    wage_chunks = await _query_wage_schedules(
-        qdrant,
-        vector=vector,
-        query=query,
-        union_filter=union_filter,
-    )
+    if len(unique_union_filters) > 1:
+        # Cross-union rate queries: fan out per union (mirroring the primary
+        # pass) so each union's re-ranked wage chunks are represented instead
+        # of one union's high-cosine tables monopolizing the wage slots.
+        wage_sets = [
+            await _query_wage_schedules(
+                qdrant,
+                vector=vector,
+                query=query,
+                union_filter=union_filter,
+                limit=3,
+            )
+            for union_filter in unique_union_filters
+        ]
+        wage_chunks = _merge_union_results(wage_sets, limit=6)
+    else:
+        union_filter = unique_union_filters[0] if unique_union_filters else None
+        wage_chunks = await _query_wage_schedules(
+            qdrant,
+            vector=vector,
+            query=query,
+            union_filter=union_filter,
+        )
     return _merge_with_wage_priority(primary, wage_chunks)
