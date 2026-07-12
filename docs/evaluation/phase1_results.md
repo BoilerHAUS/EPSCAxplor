@@ -4,18 +4,19 @@
 **Questions:** 30  
 **API errors:** 0  
 
-> **Note:** Correctness and citation accuracy scores require manual review against
-> the source PDFs. Fill in the `Correct?` and `Citations valid?` columns below.
+> **Manual review completed 2026-07-11** against the source PDFs (wage schedules and
+> the six CA/NPA documents). Remaining failures are narrative-retrieval issues, not
+> wage issues; each is noted per-question and tracked as a GitHub issue.
 
 ## Acceptance Criteria
 
 | Criterion | Threshold | Result |
 |-----------|-----------|--------|
-| Correctness | ≥ 85% | _pending review_ |
-| Citation accuracy | 100% | _pending review_ |
-| Zero hallucinated facts on refusal questions | 0 | _pending review_ |
-| Cross-union comparison valid | Pass/Fail | _pending review_ |
-| Nuclear context includes NPA chunks | Pass/Fail | _pending review_ |
+| Correctness | ≥ 85% | **86.7%** (24 Yes + 4 Partial x 0.5 / 30; strict 80%) — marginal pass |
+| Citation accuracy | 100% | **90%** (27/30) — FAIL: section mislabels on O01/O04, wrong citation on O07 |
+| Zero hallucinated facts on refusal questions | 0 | **0** — pass (R01/R02 clean, no citations) |
+| Cross-union comparison valid | Pass/Fail | **Partial** — C02 pass; C01 fail (agreement_scope filter excluded Sheet Metal; fix identified) |
+| Nuclear context includes NPA chunks | Pass/Fail | **Pass** — N03/N05 cite NPA sources |
 
 ---
 
@@ -72,7 +73,7 @@ The total wage packages (including vacation, statutory holiday pay, welfare, pen
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | Rates verified against wage schedule PDFs (e.g. LU 105 Hamilton $46.65). |
 
 ---
 
@@ -114,7 +115,7 @@ To determine the exact foreman wage premium structure, you would need to consult
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Partial** | **Yes** | Same-local foreman/journeyman rates verified; computed $5.84 difference = the 12% premium. But CA §600 F (12%/6% differential rule) exists and was not retrieved; answer wrongly states the CA lacks premium details. |
 
 ---
 
@@ -164,7 +165,7 @@ If you are looking for a monetary tool allowance or tool replacement/damage comp
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | Tool list (p.50), gang tools, 60-day reimbursement all verified in CA. |
 
 ---
 
@@ -212,7 +213,7 @@ The classification is "Journeyman and Welder" (occupation code 445535; grade/ste
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | All five local rates verified (e.g. LU 235 Windsor $48.16). |
 
 ---
 
@@ -268,7 +269,7 @@ Note: Rates vary by local jurisdiction. The collective agreement confirms these 
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | Rates verified (e.g. LU 269 Kingston 1st period $22.26 base / $34.46 package). |
 
 ---
 
@@ -313,7 +314,7 @@ The specific rate applicable to any worker depends on which local union's jurisd
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | Foreman rates verified (e.g. LU 397 Thunder Bay 2026 $59.79 / $78.37). Note: SM schedules have no separate GENERAL FOREMAN classification; answer correctly presents FOREMAN. |
 
 ---
 
@@ -357,7 +358,7 @@ If you need the total wage package (which includes vacation, statutory holiday p
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | All five local rates verified (e.g. LU 663 Sarnia $50.94, LU 628 Thunder Bay $48.98). |
 
 ---
 
@@ -407,7 +408,7 @@ For comparison, the Subforeman classification carries a **7.5% premium** above j
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | 15% annotation verified in UA wage schedules; consistent across locals. |
 
 ---
 
@@ -457,7 +458,7 @@ The agreement also contemplates other shift arrangements (one, two, or three-shi
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **No** | Quotes verbatim, but rest periods are CA §801 B/C — cited as 802 (§802 is Reporting Pay). |
 
 ---
 
@@ -494,7 +495,7 @@ This provision applies regardless of whether the employee is working on an eight
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | Verbatim from §806. |
 
 ---
 
@@ -538,7 +539,7 @@ The agreement specifies that "the weekly hours of work Monday to Friday inclusiv
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | §800 A/B verified (40-hr week; 3-shift 8/7.5/7 hours). |
 
 ---
 
@@ -594,7 +595,7 @@ Hours of work may be varied by mutual agreement between EPSCA and the Union. [SO
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **No** | 22.1/22.4/22.6 verified. The 10-hr/14-day-cycle provision is misattributed to §48.1 (48.1 is Duration; the text is in an appendix Hours of Work clause). |
 
 ---
 
@@ -637,7 +638,7 @@ There is no difference in the Sunday overtime rate between regular scheduled wor
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | §23.1 verbatim + corroborating wage schedule notes. |
 
 ---
 
@@ -688,7 +689,7 @@ If an employee is required to work two (2) hours of overtime, they are entitled 
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | §23.1 (both schedules, >10h/>12h) and §24.2 verbatim. |
 
 ---
 
@@ -720,7 +721,7 @@ To obtain information about any general double-time rate provision in the United
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **No** | **No** | UA Article 24.1 Overtime Rates defines the double-time provisions (>10h/>12h daily, weekends/holidays 2x); retrieval missed it and the answer wrongly claims the docs lack it. The §9.1 citation is Forepeople relations, not shift premiums. |
 
 ---
 
@@ -760,7 +761,7 @@ Additionally, the agreement permits crews to have staggered start times within t
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | §23.2 continuation verbatim (6-9 AM nuclear / 8 AM ±1h elsewhere). |
 
 ---
 
@@ -804,7 +805,7 @@ To find the exact subsistence allowance amounts, you would need to review the co
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | Article 1101 A(i) options and 1100 A travel rates ($33.14-$54.50) verified. |
 
 ---
 
@@ -848,7 +849,7 @@ The contract also defines an employee's "Regular Residence" as "the place where 
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | 110 road-driven km threshold and regular-residence definition verbatim. |
 
 ---
 
@@ -894,7 +895,7 @@ The collective agreement states rates "as set out below for each day worked or r
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Partial** | **Yes** | Eligibility conditions all verified, but the subsistence rate tables DO exist in CA §26.2(b) ($135 North / $120 South, 2025) — the table chunk was not retrieved. |
 
 ---
 
@@ -978,7 +979,7 @@ Rates increase annually through 2029 [SOURCE 3, 27.1; SOURCE 4, 26.1].
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | Zone structure, rates table, Google Maps measurement, $60 provision, and 26.3 disqualification verified. (Non-Ontario recruitment '29.3' label likely corresponds to §28.x in the CA.) |
 
 ---
 
@@ -1045,7 +1046,7 @@ Straight-time travel pay up to 8 hours maximum, calculated at one hour's pay for
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | §28.6 travel-time table and 30.x/31.x recruitment provisions verbatim (35 cents/km, 1hr per 96 km, 8hr max). |
 
 ---
 
@@ -1100,7 +1101,7 @@ All overtime must be worked on a voluntary basis and distributed as equally as p
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | §806 verified including the unapproved-absence / Nuclear Project Committee clause. |
 
 ---
 
@@ -1139,7 +1140,7 @@ To answer your question comprehensively, I would need access to:
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Partial** | **Yes** | Honest and mostly right, but the IBEW NPA contains a Darlington-specific LOU (1992 Darlington Settlement on Blues, administrative) that was not retrieved. |
 
 ---
 
@@ -1198,7 +1199,7 @@ Employers may standoff employees (without pay) for up to ten consecutive working
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | All six conditions verified against the SM NPA (NQW referral incl. 2-year rule, displacement, transfers, composite crews, 10-day standoff). |
 
 ---
 
@@ -1240,7 +1241,7 @@ The agreement also includes radiation exposure protections:
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | $20.00/day radiation plastic-suit premium effective May 1, 2025 verified (Article 41). |
 
 ---
 
@@ -1285,7 +1286,7 @@ However, the sources do not clarify whether the primary Collective Agreement's t
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Partial** | **Yes** | CA travel articles (1100/1101/1102) correctly summarized; the NPA's standoff clause (no travel allowance during standoff) was not mentioned. |
 
 ---
 
@@ -1419,7 +1420,7 @@ To complete this comparison, the Sheet Metal Workers 2025–2030 Collective Agre
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **No** | **Yes** | Retrieval failure: 'Generation' in the query sets agreement_scope=generation, which excludes all (unscoped) Sheet Metal chunks — only IBEW context was assembled. The IBEW half is fully accurate and verbatim. Root cause identified; retrieval fix pending. |
 
 ---
 
@@ -1498,7 +1499,7 @@ The **United Association has the higher journeyperson base rate in most local-to
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | Journeyperson base rates for both unions verified against wage PDFs; honest caveats about local coverage. |
 
 ---
 
@@ -1534,7 +1535,7 @@ _No citations returned._
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | Correct refusal, zero citations, no hallucinated facts. |
 
 ---
 
@@ -1566,7 +1567,7 @@ _No citations returned._
 
 | Correct? | Citations valid? | Notes |
 |----------|-----------------|-------|
-| ☐ Yes / ☐ No / ☐ Partial | ☐ Yes / ☐ No | |
+| **Yes** | **Yes** | Correct refusal, zero citations, no hallucinated facts. |
 
 ---
 
@@ -1576,33 +1577,33 @@ Fill in after reviewing all answers:
 
 | ID | Category | Union | Correct? | Citations valid? | Notes |
 |----|----------|-------|----------|-----------------|-------|
-| W01 | Wages & Rates | IBEW | | | |
-| W02 | Wages & Rates | IBEW | | | |
-| W03 | Wages & Rates | IBEW | | | |
-| W04 | Wages & Rates | Sheet Metal | | | |
-| W05 | Wages & Rates | Sheet Metal | | | |
-| W06 | Wages & Rates | Sheet Metal | | | |
-| W07 | Wages & Rates | United Association | | | |
-| W08 | Wages & Rates | United Association | | | |
-| O01 | Overtime & Hours | IBEW | | | |
-| O02 | Overtime & Hours | IBEW | | | |
-| O03 | Overtime & Hours | IBEW | | | |
-| O04 | Overtime & Hours | Sheet Metal | | | |
-| O05 | Overtime & Hours | Sheet Metal | | | |
-| O06 | Overtime & Hours | Sheet Metal | | | |
-| O07 | Overtime & Hours | United Association | | | |
-| O08 | Overtime & Hours | United Association | | | |
-| T01 | Travel & Board | IBEW | | | |
-| T02 | Travel & Board | IBEW | | | |
-| T03 | Travel & Board | Sheet Metal | | | |
-| T04 | Travel & Board | Sheet Metal | | | |
-| T05 | Travel & Board | United Association | | | |
-| N01 | Nuclear Project Specific | IBEW | | | |
-| N02 | Nuclear Project Specific | IBEW | | | |
-| N03 | Nuclear Project Specific | Sheet Metal | | | |
-| N04 | Nuclear Project Specific | United Association | | | |
-| N05 | Nuclear Project Specific | IBEW | | | |
-| C01 | Cross-Union Comparison | IBEW / Sheet Metal | | | |
-| C02 | Cross-Union Comparison | IBEW / United Association | | | |
-| R01 | Refusal | N/A (out of corpus) | | | |
-| R02 | Refusal | N/A (out of corpus) | | | |
+| W01 | Wages & Rates | IBEW | Yes | Yes | Rates verified against wage schedule PDFs (e. |
+| W02 | Wages & Rates | IBEW | Partial | Yes | Same-local foreman/journeyman rates verified; computed $5. |
+| W03 | Wages & Rates | IBEW | Yes | Yes | Tool list (p. |
+| W04 | Wages & Rates | Sheet Metal | Yes | Yes | All five local rates verified (e. |
+| W05 | Wages & Rates | Sheet Metal | Yes | Yes | Rates verified (e. |
+| W06 | Wages & Rates | Sheet Metal | Yes | Yes | Foreman rates verified (e. |
+| W07 | Wages & Rates | United Association | Yes | Yes | All five local rates verified (e. |
+| W08 | Wages & Rates | United Association | Yes | Yes | 15% annotation verified in UA wage schedules; consistent across locals. |
+| O01 | Overtime & Hours | IBEW | Yes | No | Quotes verbatim, but rest periods are CA §801 B/C — cited as 802 (§802 is Reporting Pay). |
+| O02 | Overtime & Hours | IBEW | Yes | Yes | Verbatim from §806. |
+| O03 | Overtime & Hours | IBEW | Yes | Yes | §800 A/B verified (40-hr week; 3-shift 8/7. |
+| O04 | Overtime & Hours | Sheet Metal | Yes | No | 22. |
+| O05 | Overtime & Hours | Sheet Metal | Yes | Yes | §23. |
+| O06 | Overtime & Hours | Sheet Metal | Yes | Yes | §23. |
+| O07 | Overtime & Hours | United Association | No | No | UA Article 24. |
+| O08 | Overtime & Hours | United Association | Yes | Yes | §23. |
+| T01 | Travel & Board | IBEW | Yes | Yes | Article 1101 A(i) options and 1100 A travel rates ($33. |
+| T02 | Travel & Board | IBEW | Yes | Yes | 110 road-driven km threshold and regular-residence definition verbatim. |
+| T03 | Travel & Board | Sheet Metal | Partial | Yes | Eligibility conditions all verified, but the subsistence rate tables DO exist in CA §26. |
+| T04 | Travel & Board | Sheet Metal | Yes | Yes | Zone structure, rates table, Google Maps measurement, $60 provision, and 26. |
+| T05 | Travel & Board | United Association | Yes | Yes | §28. |
+| N01 | Nuclear Project Specific | IBEW | Yes | Yes | §806 verified including the unapproved-absence / Nuclear Project Committee clause. |
+| N02 | Nuclear Project Specific | IBEW | Partial | Yes | Honest and mostly right, but the IBEW NPA contains a Darlington-specific LOU (1992 Darlington Settlement on Blues, administrative) that was not retrieved. |
+| N03 | Nuclear Project Specific | Sheet Metal | Yes | Yes | All six conditions verified against the SM NPA (NQW referral incl. |
+| N04 | Nuclear Project Specific | United Association | Yes | Yes | $20. |
+| N05 | Nuclear Project Specific | IBEW | Partial | Yes | CA travel articles (1100/1101/1102) correctly summarized; the NPA's standoff clause (no travel allowance during standoff) was not mentioned. |
+| C01 | Cross-Union Comparison | IBEW / Sheet Metal | No | Yes | Retrieval failure: 'Generation' in the query sets agreement_scope=generation, which excludes all (unscoped) Sheet Metal chunks — only IBEW context was assembled. |
+| C02 | Cross-Union Comparison | IBEW / United Association | Yes | Yes | Journeyperson base rates for both unions verified against wage PDFs; honest caveats about local coverage. |
+| R01 | Refusal | N/A (out of corpus) | Yes | Yes | Correct refusal, zero citations, no hallucinated facts. |
+| R02 | Refusal | N/A (out of corpus) | Yes | Yes | Correct refusal, zero citations, no hallucinated facts. |

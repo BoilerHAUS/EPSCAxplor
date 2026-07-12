@@ -43,15 +43,22 @@ Goal: End-to-end pipeline validated against 3 unions (IBEW Generation, Sheet Met
 | [#15](https://github.com/BoilerHAUS/EPSCAxplor/issues/15) | pr | [x] | feat(rag): implement query pre-processing (nuclear detection, union/scope detection) |
 | [#16](https://github.com/BoilerHAUS/EPSCAxplor/issues/16) | pr | [x] | feat(rag): implement Qdrant filtered similarity search and context assembly |
 | [#17](https://github.com/BoilerHAUS/EPSCAxplor/issues/17) | pr | [x] | feat(api): implement POST /query endpoint with model routing and response structure |
-| [#58](https://github.com/BoilerHAUS/EPSCAxplor/issues/58) | pr | [ ] | feat(ingestion): enable Docling + TPDS wage schedule branch behind explicit config |
-| [#61](https://github.com/BoilerHAUS/EPSCAxplor/issues/61) | pr | [ ] | feat(ingestion): persist Docling and TPDS wage-table artifacts plus retrieval metadata |
-| [#60](https://github.com/BoilerHAUS/EPSCAxplor/issues/60) | pr | [ ] | fix(ingestion): handle multi-page wage tables and repeated headers in Docling + TPDS path |
+| [#58](https://github.com/BoilerHAUS/EPSCAxplor/issues/58) | pr | [x] | feat(ingestion): enable Docling + TPDS wage schedule branch behind explicit config (superseded by epsca_form parser) |
+| [#61](https://github.com/BoilerHAUS/EPSCAxplor/issues/61) | pr | [x] | feat(ingestion): persist Docling and TPDS wage-table artifacts plus retrieval metadata (superseded by epsca_form parser) |
+| [#60](https://github.com/BoilerHAUS/EPSCAxplor/issues/60) | pr | [x] | fix(ingestion): handle multi-page wage tables and repeated headers in Docling + TPDS path (superseded by epsca_form parser) |
 | [#59](https://github.com/BoilerHAUS/EPSCAxplor/issues/59) | no-pr | [x] | ops(eval): reingest wage schedules and rerun Phase 1 evaluation after Docling + TPDS rollout |
 | [#18](https://github.com/BoilerHAUS/EPSCAxplor/issues/18) | no-pr | [ ] | ops: evaluate Phase 1 POC against gold question set |
 | [#55](https://github.com/BoilerHAUS/EPSCAxplor/issues/55) | pr | [x] | fix(rag): wage schedule rate rows not retrieved — tabular data missing from Qdrant results |
-| [#56](https://github.com/BoilerHAUS/EPSCAxplor/issues/56) | pr | [ ] | fix(rag): cross-union queries retrieve single-union context only |
-| [#57](https://github.com/BoilerHAUS/EPSCAxplor/issues/57) | pr | [ ] | fix(rag): spurious citations returned on out-of-corpus refusal queries |
+| [#56](https://github.com/BoilerHAUS/EPSCAxplor/issues/56) | pr | [x] | fix(rag): cross-union queries retrieve single-union context only |
+| [#57](https://github.com/BoilerHAUS/EPSCAxplor/issues/57) | pr | [x] | fix(rag): spurious citations returned on out-of-corpus refusal queries |
+| [#75](https://github.com/BoilerHAUS/EPSCAxplor/issues/75) | pr | [ ] | chore(ci): harden Dokploy deploys — pin GIT_SHA images and verify deployment status |
+| [#76](https://github.com/BoilerHAUS/EPSCAxplor/issues/76) | no-pr | [ ] | ops: rotate Dokploy GHCR token before Oct 9, 2026 |
+| [#77](https://github.com/BoilerHAUS/EPSCAxplor/issues/77) | pr | [ ] | fix(rag): agreement_scope filter excludes unscoped unions in cross-union queries (C01) |
+| [#78](https://github.com/BoilerHAUS/EPSCAxplor/issues/78) | pr | [ ] | fix(rag): specific-provision narrative chunks not retrieved — recall gaps (O07/W02/T03/N02) |
+| [#79](https://github.com/BoilerHAUS/EPSCAxplor/issues/79) | pr | [ ] | fix(ingestion): CA chunks missing section metadata — model mislabels section numbers (O01/O04) |
 | [#39](https://github.com/BoilerHAUS/EPSCAxplor/issues/39) | pr | [x] | chore(ci): extract shared validation steps into reusable workflow |
+| [#49](https://github.com/BoilerHAUS/EPSCAxplor/issues/49) | pr | [x] | feat(ingestion): ingest Phase 1 wage schedule PDFs into corpus |
+| [#68](https://github.com/BoilerHAUS/EPSCAxplor/issues/68) | pr | [x] | fix(ingestion): propagate classification labels across date sub-rows in wage schedule chunks |
 | [#51](https://github.com/BoilerHAUS/EPSCAxplor/issues/51) | pr | [x] | feat(ingestion): add wage_schedule entries to corpus_manifest for Phase 1 POC unions |
 | [#53](https://github.com/BoilerHAUS/EPSCAxplor/issues/53) | pr | [x] | feat(ingestion): convert PDFs to markdown before chunking for accurate table extraction |
 
