@@ -512,7 +512,7 @@ class TestRetrieve:
 
         mock_post.assert_called_once_with(
             f"{settings.ollama_url}/api/embeddings",
-            json={"model": settings.ollama_embed_model, "prompt": "overtime rates for IBEW"},
+            json={"model": settings.ollama_embed_model, "prompt": "search_query: overtime rates for IBEW"},
             timeout=30.0,
         )
 
