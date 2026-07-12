@@ -46,9 +46,9 @@ Goal: End-to-end pipeline validated against 3 unions (IBEW Generation, Sheet Met
 | [#58](https://github.com/BoilerHAUS/EPSCAxplor/issues/58) | pr | [ ] | feat(ingestion): enable Docling + TPDS wage schedule branch behind explicit config |
 | [#61](https://github.com/BoilerHAUS/EPSCAxplor/issues/61) | pr | [ ] | feat(ingestion): persist Docling and TPDS wage-table artifacts plus retrieval metadata |
 | [#60](https://github.com/BoilerHAUS/EPSCAxplor/issues/60) | pr | [ ] | fix(ingestion): handle multi-page wage tables and repeated headers in Docling + TPDS path |
-| [#59](https://github.com/BoilerHAUS/EPSCAxplor/issues/59) | no-pr | [ ] | ops(eval): reingest wage schedules and rerun Phase 1 evaluation after Docling + TPDS rollout |
+| [#59](https://github.com/BoilerHAUS/EPSCAxplor/issues/59) | no-pr | [x] | ops(eval): reingest wage schedules and rerun Phase 1 evaluation after Docling + TPDS rollout |
 | [#18](https://github.com/BoilerHAUS/EPSCAxplor/issues/18) | no-pr | [ ] | ops: evaluate Phase 1 POC against gold question set |
-| [#55](https://github.com/BoilerHAUS/EPSCAxplor/issues/55) | pr | [ ] | fix(rag): wage schedule rate rows not retrieved — tabular data missing from Qdrant results |
+| [#55](https://github.com/BoilerHAUS/EPSCAxplor/issues/55) | pr | [x] | fix(rag): wage schedule rate rows not retrieved — tabular data missing from Qdrant results |
 | [#56](https://github.com/BoilerHAUS/EPSCAxplor/issues/56) | pr | [ ] | fix(rag): cross-union queries retrieve single-union context only |
 | [#57](https://github.com/BoilerHAUS/EPSCAxplor/issues/57) | pr | [ ] | fix(rag): spurious citations returned on out-of-corpus refusal queries |
 | [#39](https://github.com/BoilerHAUS/EPSCAxplor/issues/39) | pr | [x] | chore(ci): extract shared validation steps into reusable workflow |
