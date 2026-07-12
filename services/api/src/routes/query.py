@@ -22,7 +22,7 @@ import asyncpg
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, field_validator
 
-from src.auth import CurrentUser, get_current_user
+from src.auth import CurrentUser, enforce_rate_limit, get_current_user
 from src.config import Settings, get_settings
 from src.rag.citation_extractor import CitationRef, extract_citations
 from src.rag.context import assemble_context
@@ -159,7 +159,7 @@ def _should_strip_citations_for_refusal(
     return _is_out_of_corpus_refusal(answer)
 
 
-@router.post("/query", response_model=QueryResponse)
+@router.post("/query", response_model=QueryResponse, dependencies=[Depends(enforce_rate_limit)])
 async def query_handler(
     body: QueryRequest,
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
