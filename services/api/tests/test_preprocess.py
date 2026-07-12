@@ -147,6 +147,14 @@ class TestDetectUnion:
         assert detect_union("rodman wage rate", unions) == "Rodmen"
         assert detect_union("rodme nonsense", unions) is None
 
+    def test_alias_terrazzo_detects_tile_union(self) -> None:
+        unions = [*KNOWN_UNIONS, "Tile and Terrazzo"]
+        assert (
+            detect_union("working foreman rate for Marble/Tile/Terrazzo workers", unions)
+            == "Tile and Terrazzo"
+        )
+        assert detect_union("terrazzo journeyperson rate", unions) == "Tile and Terrazzo"
+
     def test_alias_bacu_detects_brick_union(self) -> None:
         unions = [*KNOWN_UNIONS, "Brick and Allied Craft Union"]
         assert detect_union("BACU journeyperson rate", unions) == "Brick and Allied Craft Union"

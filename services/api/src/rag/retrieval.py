@@ -376,6 +376,7 @@ async def _query_wage_schedules(
     vector: list[float],
     query: str,
     union_filter: str | None,
+    agreement_scope: str | None = None,
     limit: int = 5,
 ) -> list[ChunkResult]:
     """Return top wage_schedule chunks regardless of general similarity rank.
@@ -393,6 +394,20 @@ async def _query_wage_schedules(
     if union_filter:
         must.append(
             FieldCondition(key="union_name", match=MatchValue(value=union_filter))
+        )
+    if agreement_scope:
+        # Null-tolerant, mirroring build_filter: "generation project" queries
+        # must not surface the same local's TRANSMISSION schedule (W15), but
+        # unscoped unions stay eligible.
+        must.append(
+            Filter(
+                should=[
+                    FieldCondition(key="agreement_scope", is_null=True),
+                    FieldCondition(
+                        key="agreement_scope", match=MatchValue(value=agreement_scope)
+                    ),
+                ]
+            )
         )
     response = await qdrant.query_points(
         collection_name=COLLECTION,
@@ -507,6 +522,7 @@ async def retrieve(
                 vector=vector,
                 query=query,
                 union_filter=union_filter,
+                agreement_scope=agreement_scope,
                 limit=3,
             )
             for union_filter in unique_union_filters
@@ -519,5 +535,6 @@ async def retrieve(
             vector=vector,
             query=query,
             union_filter=union_filter,
+            agreement_scope=agreement_scope,
         )
     return _merge_with_wage_priority(primary, wage_chunks)

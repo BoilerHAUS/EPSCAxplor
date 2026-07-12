@@ -77,6 +77,10 @@ _UNION_ALIASES: dict[str, list[re.Pattern[str]]] = {
     "Operating Engineers": [
         re.compile(r"\bIUOE\b", re.IGNORECASE),
     ],
+    "Tile and Terrazzo": [
+        re.compile(r"\bterrazzo\b", re.IGNORECASE),
+        re.compile(r"\bmarble/tile\b", re.IGNORECASE),
+    ],
 }
 
 
