@@ -199,26 +199,29 @@ class TestBuildFilter:
 
     # --- agreement_scope ---
 
-    def test_agreement_scope_adds_scope_condition(self) -> None:
+    def test_agreement_scope_adds_null_tolerant_guard(self) -> None:
         f = build_filter(None, True, "generation")
         must = self._must_conditions(f)
-        # must = [expiry_guard, effective_guard, FieldCondition(agreement_scope=generation)]
+        # must = [expiry_guard, effective_guard, scope_guard]
         assert len(must) == 3
-        scope_cond: FieldCondition = must[2]  # type: ignore[assignment]
-        assert isinstance(scope_cond, FieldCondition)
-        assert scope_cond.key == "agreement_scope"
-        assert isinstance(scope_cond.match, MatchValue)
-        assert scope_cond.match.value == "generation"
+        scope_guard: Filter = must[2]  # type: ignore[assignment]
+        assert isinstance(scope_guard, Filter)
+        should = scope_guard.should or []
+        assert len(should) == 2
+        null_cond, match_cond = should
+        assert isinstance(null_cond, FieldCondition)
+        assert null_cond.key == "agreement_scope"
+        assert null_cond.is_null is True
+        assert isinstance(match_cond, FieldCondition)
+        assert match_cond.key == "agreement_scope"
+        assert isinstance(match_cond.match, MatchValue)
+        assert match_cond.match.value == "generation"
 
     def test_no_agreement_scope_omits_scope_condition(self) -> None:
         f = build_filter(None, True, None)
         must = self._must_conditions(f)
-        scope_conds = [
-            c
-            for c in must
-            if isinstance(c, FieldCondition) and c.key == "agreement_scope"
-        ]
-        assert len(scope_conds) == 0
+        # only the two date guards remain
+        assert len(must) == 2
 
     # --- combined ---
 
@@ -232,11 +235,9 @@ class TestBuildFilter:
 
     def test_transmission_scope_stored_correctly(self) -> None:
         f = build_filter(None, True, "transmission")
-        must = self._must_conditions(f)
-        scope_cond = next(
-            c for c in must if isinstance(c, FieldCondition) and c.key == "agreement_scope"
-        )
-        assert scope_cond.match.value == "transmission"  # type: ignore[union-attr]
+        scope_guard: Filter = self._must_conditions(f)[2]  # type: ignore[assignment]
+        match_cond = scope_guard.should[1]  # type: ignore[index]
+        assert match_cond.match.value == "transmission"  # type: ignore[union-attr]
 
 
 # ─── _point_to_chunk ──────────────────────────────────────────────────────────
