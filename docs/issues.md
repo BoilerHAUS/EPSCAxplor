@@ -70,9 +70,9 @@ Goal: All 58 documents ingested and queryable. Completion gate: full gold questi
 
 | # | type | status | title |
 |---|------|--------|-------|
-| [#19](https://github.com/BoilerHAUS/EPSCAxplor/issues/19) | pr | [ ] | feat(ingestion): expand corpus_manifest.yaml for all 18 unions |
-| [#20](https://github.com/BoilerHAUS/EPSCAxplor/issues/20) | no-pr | [ ] | ops: run full corpus ingestion (all 58 documents) |
-| [#21](https://github.com/BoilerHAUS/EPSCAxplor/issues/21) | pr | [ ] | feat(ingestion): validate and refine chunking for wage schedule table extraction |
+| [#19](https://github.com/BoilerHAUS/EPSCAxplor/issues/19) | pr | [x] | feat(ingestion): expand corpus_manifest.yaml for all 18 unions |
+| [#20](https://github.com/BoilerHAUS/EPSCAxplor/issues/20) | no-pr | [x] | ops: run full corpus ingestion (all 58 documents) |
+| [#21](https://github.com/BoilerHAUS/EPSCAxplor/issues/21) | pr | [x] | feat(ingestion): validate and refine chunking for wage schedule table extraction |
 | [#22](https://github.com/BoilerHAUS/EPSCAxplor/issues/22) | no-pr | [ ] | ops: evaluate full corpus against complete gold question set |
 
 ---
