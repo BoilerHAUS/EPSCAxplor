@@ -208,6 +208,108 @@ def test_ibew_lu353_north_rrsp_variant():
     assert row_2024.sum_valid and row_2025.sum_valid
 
 
+# ─── Phase 2 layout variants ──────────────────────────────────────────────────
+
+
+def test_ironworkers_uppercase_local():
+    """I-1: 'LOCAL 700' in caps; apprentice periods are '1st 1000 hrs'."""
+    page = parse_wage_schedule_text(
+        _load("epsca_wage_ironworkers_lu700_page1.txt"), pdf_page_number=1
+    )
+    assert page is not None
+    assert page.local == "Local 700"
+    assert page.city == "Windsor"
+    group = _group_by_name(page, "JOURNEYMAN IRONWORKER")
+    row = next(r for r in group.rows if r.effective_date == "2025-05-01")
+    assert row.values[0] == pytest.approx(48.33)
+    assert row.sum_valid
+    second_period = _group_by_name(page, "2nd 1000 hrs")
+    assert any("APPRENTICE" in n for n in second_period.names)
+
+
+def test_cement_masons_three_component_layout():
+    """CM-1: base + vacation + union funds = total (no welfare/pension)."""
+    page = parse_wage_schedule_text(
+        _load("epsca_wage_cm_lu598_page1.txt"), pdf_page_number=1
+    )
+    assert page is not None
+    group = _group_by_name(page, "FOREMAN")
+    row = next(r for r in group.rows if r.effective_date == "2025-05-01")
+    assert row.values[0] == pytest.approx(43.96)
+    assert row.columns[2] == "union funds"
+    assert row.columns[3] == "total wage package"
+    assert row.sum_valid
+
+
+def test_labourers_zone_line_header():
+    """L-10B: 'Zone 2 - Transmission' line precedes the trade name."""
+    page = parse_wage_schedule_text(
+        _load("epsca_wage_labourers_lu183_page1.txt"), pdf_page_number=1
+    )
+    assert page is not None
+    assert page.local == "Local 183"
+    assert page.city == "Barrie"
+    assert page.trade == "LABOURERS"
+    assert page.groups
+
+
+def test_teamsters_province_wide_no_local():
+    """Teamsters: no local; printed columns do not sum to the total."""
+    page = parse_wage_schedule_text(
+        _load("epsca_wage_teamsters_page1.txt"), pdf_page_number=1
+    )
+    assert page is not None
+    assert page.local == ""
+    assert page.city == "Province of Ontario"
+    assert page.groups
+    row = page.groups[0].rows[0]
+    # Header-positional naming: BASE / VACATION / TOTAL / EPSCA.
+    assert row.columns[0] == "base hourly rate"
+    assert "total wage package" in row.columns
+    assert not row.sum_valid  # unprinted benefit columns
+
+
+def test_millwrights_multi_local_header():
+    """Millwrights: 'LOCALS 1151,' with continuation lines, province-wide."""
+    page = parse_wage_schedule_text(
+        _load("epsca_wage_millwrights_page1.txt"), pdf_page_number=1
+    )
+    assert page is not None
+    assert page.local.startswith("Locals 1151")
+    assert page.city == "Province of Ontario"
+    group = _group_by_name(page, "FOREMAN")
+    row = next(r for r in group.rows if r.effective_date == "2025-05-01")
+    assert row.values[0] == pytest.approx(57.66)
+    assert row.sum_valid
+    assert "benefits stabilization fund" in row.columns
+
+
+def test_tile_two_line_trade_name():
+    """M-1: trade name spans two lines (MARBLE/TILE/TERRAZZO WORKERS)."""
+    page = parse_wage_schedule_text(
+        _load("epsca_wage_tile_lu6_page1.txt"), pdf_page_number=1
+    )
+    assert page is not None
+    assert page.local == "Local 6"
+    assert page.city == "Windsor/Chatham"
+    assert "MARBLE/TILE/TERRAZZO" in page.trade
+    assert page.groups
+
+
+def test_carpenters_admin_training_tail():
+    """C-1: 3-component layout with ADMIN TRAINING FUND tail column."""
+    page = parse_wage_schedule_text(
+        _load("epsca_wage_carpenters_c1_page1.txt"), pdf_page_number=1
+    )
+    assert page is not None
+    assert page.local == "Local 494"
+    group = _group_by_name(page, "SENIOR FOREMAN")
+    row = next(r for r in group.rows if r.effective_date == "2025-05-01")
+    assert row.values[0] == pytest.approx(52.73)
+    assert row.sum_valid
+    assert "administration & training fund" in row.columns
+
+
 # ─── Notes pages ──────────────────────────────────────────────────────────────
 
 
