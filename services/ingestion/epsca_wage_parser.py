@@ -55,13 +55,14 @@ _LEADING_FIVE = (
     "welfare",
 )
 
-_MAP_CODE_LINE_RE = re.compile(r"MAP CODE:", re.IGNORECASE)
+_MAP_CODE_LINE_RE = re.compile(r"MAP\s+CODE:", re.IGNORECASE)
 _PAGE_OF_RE = re.compile(r"(\d+)\s+OF\s+(\d+)", re.IGNORECASE)
 _HUMAN_DATE_RE = re.compile(r"[A-Z][a-z]+\.?\s+\d{1,2},\s+\d{4}")
 _DATE_ROW_RE = re.compile(r"^\s*(\d{4}-\d{2}-\d{2})((?:\s+\$?\d+\.\d{2})+)\s*$")
 _GRADE_LABEL_RE = re.compile(r"^\s*(\d{1,2}-\d{1,2})\s+(\S.*)$")
 _OCCUPATION_CODE_RE = re.compile(r"\b(\d{6})\b")
-_PERIOD_LABEL_RE = re.compile(r"^\d+(?:st|nd|rd|th)\s+Period", re.IGNORECASE)
+# "1st Period …" (most trades) or "1st 1000 hrs" (Ironworkers apprentices).
+_PERIOD_LABEL_RE = re.compile(r"^\d+(?:st|nd|rd|th)\b", re.IGNORECASE)
 # Name — optional "- 123456" code(s) — optional "(annotation)" tail.
 _LABEL_SPLIT_RE = re.compile(
     r"^(?P<name>.*?)(?:\s*-\s*(?P<codes>\d{6}(?:\s*[,/]\s*\d{6})*))?\s*"
@@ -78,8 +79,13 @@ _COLUMN_HEADER_KEYWORDS = (
 )
 # Column-header fragments that appear alone on their own line (UA layout).
 _COLUMN_HEADER_FRAGMENTS = frozenset({"GRADE", "AND", "STEP", "AND STEP"})
-_EPSCA_SCHEDULE_MARKER_RE = re.compile(r"\s+EPSCA WAGE SCHEDULE\b.*$", re.IGNORECASE)
-_LOCAL_RE = re.compile(r"\b(Local\s+\d+\w*)\b")
+_EPSCA_SCHEDULE_MARKER_RE = re.compile(r"\s+EPSCA\s+WAGE\s+SCHEDULE\b.*$", re.IGNORECASE)
+_LOCAL_RE = re.compile(r"\b(Locals?\s+\d+\w*)\b", re.IGNORECASE)
+# "Zone 2 - Transmission" line between the header values and the trade name
+# (Labourers schedules).
+_ZONE_LINE_RE = re.compile(r"^Zone\s+\d", re.IGNORECASE)
+# Continuation lines of a multi-local list: "1244, 1410, 1425," (Millwrights).
+_LOCALS_CONTINUATION_RE = re.compile(r"^[\d,&\s]+$")
 
 
 @dataclass(frozen=True)
@@ -134,8 +140,12 @@ def _trailing_columns(header: str) -> tuple[str, ...]:
         trailing.append("Bill 162")
     if "EDUCATION" in header:
         trailing.append("education union fund")
-    if "PROVINCIAL" in header or "TRAINING FUND" in header:
+    if "ADMIN" in header:
+        trailing.append("administration & training fund")
+    elif "PROVINCIAL" in header or "TRAINING FUND" in header:
         trailing.append("provincial training fund")
+    if "STABILIZ" in header:  # source PDFs misspell "STABILIZAITON"
+        trailing.append("benefits stabilization fund")
     trailing.append("EPSCA association fund")
     return tuple(trailing)
 
@@ -145,20 +155,49 @@ def _find_total_index(values: tuple[float, ...]) -> int | None:
 
     The components preceding the total always sum to it.  The standard form
     has 5 components; the RRSP variant (IBEW Local 353) has 6; apprentice and
-    probationary rows without a pension column (SM Local 30) have 4.
+    probationary rows without a pension column (SM Local 30) have 4; trades
+    without printed welfare/pension columns (Cement Masons, Carpenters,
+    Plasterers) have 3.
     """
-    for k in (5, 6, 4, 7):
+    for k in (5, 6, 4, 3, 7, 2):
         if k < len(values) and abs(sum(values[:k]) - values[k]) <= _SUM_TOLERANCE:
             return k
     return None
 
 
 _COMPONENT_NAMES: dict[int, tuple[str, ...]] = {
+    2: ("base hourly rate", "vacation & statutory holiday pay"),
+    3: ("base hourly rate", "vacation & statutory holiday pay", "union funds"),
     4: (*_LEADING_FIVE, "union funds"),
     5: (*_LEADING_FIVE, "{retirement}", "union funds"),
     6: (*_LEADING_FIVE, "{retirement}", "{rrsp}", "union funds"),
     7: (*_LEADING_FIVE, "{retirement}", "{rrsp}", "union funds", "other fund"),
 }
+
+
+def _header_positional_names(count: int, header: str) -> tuple[str, ...] | None:
+    """Derive column names purely from the printed header keywords.
+
+    Fallback for schedules whose printed columns do NOT sum to the total
+    (e.g. Teamsters, where welfare/pension exist but are not printed).  The
+    canonical column order is fixed; we include each column only when its
+    keyword appears in the header band, and use the result only when the
+    count matches the row.
+    """
+    names: list[str] = ["base hourly rate", "vacation & statutory holiday pay"]
+    if "WELFARE" in header:
+        names.append("welfare")
+    if "RETIREMENT" in header:
+        names.append("retirement fund")
+    elif "PENSION" in header:
+        names.append("pension")
+    if "RRSP" in header:
+        names.append("RRSP")
+    if "UNION" in header:
+        names.append("union funds")
+    names.append("total wage package")
+    names.extend(_trailing_columns(header))
+    return tuple(names) if len(names) == count else None
 
 
 def _column_names(values: tuple[float, ...], header: str) -> tuple[tuple[str, ...], bool]:
@@ -167,10 +206,16 @@ def _column_names(values: tuple[float, ...], header: str) -> tuple[tuple[str, ..
     Layout: <components> | total wage package | <trailing per-trade columns>.
     The total's position is found via the sum invariant; component and
     trailing names come from the page's printed column-header keywords.
+    When no sum position validates, fall back to purely header-driven
+    positional naming (some schedules print totals that include unprinted
+    benefit columns).
     """
     count = len(values)
     total_index = _find_total_index(values)
     if total_index is None:
+        positional = _header_positional_names(count, header)
+        if positional is not None:
+            return positional, False
         return tuple(f"column {i + 1}" for i in range(count)), False
 
     retirement = "retirement fund" if "RETIREMENT" in header else "pension"
@@ -211,6 +256,7 @@ class _Label:
 
 
 def _parse_label(text: str, grade_step: str | None) -> _Label:
+    text = re.sub(r"\s+", " ", text)
     match = _LABEL_SPLIT_RE.match(text.strip())
     name = text.strip()
     codes: tuple[str, ...] = ()
@@ -309,17 +355,60 @@ def parse_wage_schedule_text(
     page_in_schedule = int(page_of.group(1)) if page_of else 1
     pages_in_schedule = int(page_of.group(2)) if page_of else 1
 
-    # Trade and local lines share space with the schedule description, and
-    # layout mode does not guarantee a wide gap between the two columns —
-    # cut at known markers instead of relying on 2+ spaces.
-    trade = _EPSCA_SCHEDULE_MARKER_RE.sub("", non_blank[1][1].strip()).strip()
-    local_match = _LOCAL_RE.search(non_blank[2][1])
-    if local_match is None:
-        return None
-    local = local_match.group(1)
-    city = _first_cell(non_blank[3][1])
+    # Header block layouts vary: the trade name may span two lines (MARBLE/
+    # TILE/TERRAZZO WORKERS), a "Zone N - …" line may precede it (Labourers),
+    # the local may read "LOCAL 700" or "LOCALS 1151," with continuation lines
+    # (Millwrights), or there may be no local at all (Teamsters, province-
+    # wide).  Scan for the local line and derive the rest around it.
+    local_index = next(
+        (i for i in range(1, min(7, len(non_blank)))
+         if _LOCAL_RE.search(non_blank[i][1])),
+        None,
+    )
+    body_start = 4  # classic 4-line header (value / trade / local / city)
 
-    body_lines = [line for _, line in non_blank[4:]]
+    def _trade_from(lines: list[str]) -> str:
+        parts = [
+            _EPSCA_SCHEDULE_MARKER_RE.sub("", line.strip()).strip()
+            for line in lines
+            if line.strip() and not _ZONE_LINE_RE.match(line.strip())
+        ]
+        # Each header line shares space with the schedule description; the
+        # trade name is the leading cell of each.
+        return " ".join(_first_cell(part) for part in parts if part).strip()
+
+    if local_index is not None:
+        local_match = _LOCAL_RE.search(non_blank[local_index][1])
+        assert local_match is not None
+        local = re.sub(r"\s+", " ", local_match.group(1)).title()
+        trade = _trade_from([line for _, line in non_blank[1:local_index]])
+        # City: first line after the local that isn't a locals-list
+        # continuation ("1244, 1410, 1425,").
+        city = ""
+        for offset, (_, line) in enumerate(non_blank[local_index + 1 :]):
+            cell = _first_cell(line)
+            if cell and not _LOCALS_CONTINUATION_RE.match(cell):
+                city = cell
+                body_start = local_index + 1 + offset + 1
+                break
+        if not city:
+            return None
+    else:
+        # Province-wide schedule (Teamsters): no local; the line after the
+        # trade carries the coverage area.
+        if len(non_blank) < 3:
+            return None
+        local = ""
+        trade = _trade_from([non_blank[1][1]])
+        # The coverage line may share space with the schedule description
+        # ("Province of Ontario GEOGRAPHIC AREA") — strip the trailing
+        # all-caps description words.
+        city = re.sub(r"(\s+[A-Z][A-Z()0-9,.&/-]*)+$", "", _first_cell(non_blank[2][1]))
+        body_start = 3
+    if not trade:
+        return None
+
+    body_lines = [line for _, line in non_blank[body_start:]]
 
     groups: list[ClassificationGroup] = []
     note_lines: list[str] = []
@@ -448,10 +537,15 @@ def parse_wage_schedule_pdf(pdf_path: Path) -> list[WageSchedulePage]:
 # ─── Chunk building ───────────────────────────────────────────────────────────
 
 
+def _local_label(page: WageSchedulePage) -> str:
+    """"Local 105 Hamilton" or just the coverage area for province-wide docs."""
+    return f"{page.local} {page.city}".strip()
+
+
 def _page_identity(page: WageSchedulePage, union_name: str) -> str:
     revised_part = f", revised {page.revised}" if page.revised else ""
     return (
-        f"{union_name} {page.local} ({page.city}) — {page.trade} "
+        f"{union_name} {(page.local + ' ') if page.local else ''}({page.city}) — {page.trade} "
         f"EPSCA Wage Schedule {page.map_code}{revised_part}"
     )
 
@@ -511,7 +605,7 @@ def _notes_chunks(
                 is_table=False,
                 article_number=None,
                 section_number=None,
-                article_title=f"{page.local} {page.city} — Wage Schedule Notes",
+                article_title=f"{_local_label(page)} — Wage Schedule Notes",
                 chunk_index=start_index + len(chunks),
                 metadata=_base_metadata(page),
             )
@@ -582,7 +676,7 @@ def build_wage_chunks(
                     article_number=None,
                     section_number=None,
                     article_title=(
-                        f"{page.local} {page.city} — {group.names[0]} ({page.map_code})"
+                        f"{_local_label(page)} — {group.names[0]} ({page.map_code})"
                     ),
                     chunk_index=len(chunks),
                     metadata=metadata,

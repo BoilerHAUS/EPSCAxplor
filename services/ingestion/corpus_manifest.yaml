@@ -96,46 +96,6 @@ documents:
     document_type: "wage_schedule"
     conversion_engine: "pymupdf4llm"
     agreement_scope: "generation"
-    title: "IBEW Generation Wage Schedule E-3-C LU 530 Sarnia"
-    source_url: "https://www.epsca.org/upload/request/31?file=E-3-C%20LU%20530%20Sarnia%20-%20May%201%2C%202025%20%281%29.pdf&download=1"
-    source_filename: "E-3-C LU 530 Sarnia - May 1, 2025 (1).pdf"
-    effective_date: "2025-05-01"
-    expiry_date: null
-
-  - union_name: "IBEW"
-    document_type: "wage_schedule"
-    conversion_engine: "pymupdf4llm"
-    agreement_scope: "generation"
-    title: "IBEW Generation Wage Schedule E-4-C LU 120 London"
-    source_url: "https://www.epsca.org/upload/request/31?file=E-4-C%20LU%20120%20London%20-%20May%201%2C%202025%20%281%29.pdf&download=1"
-    source_filename: "E-4-C LU 120 London - May 1, 2025 (1).pdf"
-    effective_date: "2025-05-01"
-    expiry_date: null
-
-  - union_name: "IBEW"
-    document_type: "wage_schedule"
-    conversion_engine: "pymupdf4llm"
-    agreement_scope: "generation"
-    title: "IBEW Generation Wage Schedule E-6-C LU 105 Hamilton"
-    source_url: "https://www.epsca.org/upload/request/31?file=E-6-C%20LU%20105%20Hamilton%20-%20May%201%2C%202025.pdf&download=1"
-    source_filename: "E-6-C LU 105 Hamilton - May 1, 2025.pdf"
-    effective_date: "2025-05-01"
-    expiry_date: null
-
-  - union_name: "IBEW"
-    document_type: "wage_schedule"
-    conversion_engine: "pymupdf4llm"
-    agreement_scope: "generation"
-    title: "IBEW Generation Wage Schedule E-7-C LU 303 Niagara Peninsula"
-    source_url: "https://www.epsca.org/upload/request/31?file=E-7-C%20LU%20303%20Niagara%20Penninsula%20-%20May%201%2C%202025.pdf&download=1"
-    source_filename: "E-7-C LU 303 Niagara Penninsula - May 1, 2025.pdf"
-    effective_date: "2025-05-01"
-    expiry_date: null
-
-  - union_name: "IBEW"
-    document_type: "wage_schedule"
-    conversion_engine: "pymupdf4llm"
-    agreement_scope: "generation"
     title: "IBEW Generation Wage Schedule E-8A-C LU 804 Central Ontario"
     source_url: "https://www.epsca.org/upload/request/31?file=E-8A-C%20LU%20804%20Central%20Ontario%20-%20May%201%2C%202025.pdf&download=1"
     source_filename: "E-8A-C LU 804 Central Ontario - May 1, 2025.pdf"
@@ -309,36 +269,6 @@ documents:
     document_type: "wage_schedule"
     conversion_engine: "pymupdf4llm"
     agreement_scope: null
-    title: "Sheet Metal Wage Schedule SM-09 LU 30 Toronto"
-    source_url: "https://www.epsca.org/upload/request/69?file=SM%20-%2009%20LU%2030%20Toronto%20-%20Sep%2015%2C%202025.pdf&download=1"
-    source_filename: "SM - 09 LU 30 Toronto - Sep 15, 2025.pdf"
-    effective_date: "2025-09-15"
-    expiry_date: null
-
-  - union_name: "Sheet Metal"
-    document_type: "wage_schedule"
-    conversion_engine: "pymupdf4llm"
-    agreement_scope: null
-    title: "Sheet Metal Wage Schedule SM-10 LU 30 Barrie"
-    source_url: "https://www.epsca.org/upload/request/69?file=SM%20-%2010%20LU%2030%20Barrie%20-%20Sep%2015%2C%202025.pdf&download=1"
-    source_filename: "SM - 10 LU 30 Barrie - Sep 15, 2025.pdf"
-    effective_date: "2025-09-15"
-    expiry_date: null
-
-  - union_name: "Sheet Metal"
-    document_type: "wage_schedule"
-    conversion_engine: "pymupdf4llm"
-    agreement_scope: null
-    title: "Sheet Metal Wage Schedule SM-11 LU 30 Peterborough"
-    source_url: "https://www.epsca.org/upload/request/69?file=SM%20-%2011%20LU%2030%20Peterborough%20-%20Sep%2015%2C%202025.pdf&download=1"
-    source_filename: "SM - 11 LU 30 Peterborough - Sep 15, 2025.pdf"
-    effective_date: "2025-09-15"
-    expiry_date: null
-
-  - union_name: "Sheet Metal"
-    document_type: "wage_schedule"
-    conversion_engine: "pymupdf4llm"
-    agreement_scope: null
     title: "Sheet Metal Wage Schedule SM-12 LU 269 Kingston"
     source_url: "https://www.epsca.org/upload/request/69?file=SM-12%20LU%20269%20Kingston%20-%20May%201%202026%20.pdf&download=1"
     source_filename: "SM-12 LU 269 Kingston - May 1 2026 .pdf"
@@ -372,16 +302,6 @@ documents:
     title: "Sheet Metal Wage Schedule SM-15 LU 504 Sault Ste. Marie"
     source_url: "https://www.epsca.org/upload/request/69?file=SM%20-%2015%20LU%20504%20Sault%20Ste.%20Marie%20-%20May%201%2C%202025.pdf&download=1"
     source_filename: "SM - 15 LU 504 Sault Ste. Marie - May 1, 2025.pdf"
-    effective_date: "2025-05-01"
-    expiry_date: null
-
-  - union_name: "Sheet Metal"
-    document_type: "wage_schedule"
-    conversion_engine: "pymupdf4llm"
-    agreement_scope: null
-    title: "Sheet Metal Wage Schedule SM-16 LU 397 Thunder Bay"
-    source_url: "https://www.epsca.org/upload/request/69?file=SM%20-%2016%20LU%20397%20Thunder%20Bay%20-%20May%201%2C%202025.pdf&download=1"
-    source_filename: "SM - 16 LU 397 Thunder Bay - May 1, 2025.pdf"
     effective_date: "2025-05-01"
     expiry_date: null
 
@@ -535,5 +455,2749 @@ documents:
     title: "United Association Wage Schedule Local 800 Sudbury"
     source_url: "https://www.epsca.org/upload/request/77?file=Local%20800%20Sudbury%20UA%20-%20May%201%202025%20%281%29.pdf&download=1"
     source_filename: "Local 800 Sudbury UA - May 1 2025 (1).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ═══ Phase 2 — full corpus (generated from epsca.org 2026-07-11) ═══════════
+
+  # ─── Boilermakers ───────────────────────────────────────────────────────────
+
+  - union_name: "Boilermakers"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Boilermakers - 2025 to 2030 Collective Agreement 20251024"
+    source_url: "https://www.epsca.org/upload/request/2?file=Boilermakers%20-%202025%20to%202030%20Collective%20Agreement%2020251024.pdf&download=1"
+    source_filename: "Boilermakers - 2025 to 2030 Collective Agreement 20251024.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Boilermakers"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Boilermakers Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/2?file=Boilermakers%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Boilermakers Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Boilermakers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Boilermakers Wage Schedule EPSCA Boilermakers"
+    source_url: "https://www.epsca.org/upload/request/45?file=EPSCA%20Boilermakers%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "EPSCA Boilermakers - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── Brick and Allied Craft Union ───────────────────────────────────────────
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "BACU - 2025-2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/81?file=BACU%20-%202025-2030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "BACU - 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-01 Local 1 Niagara"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-01%20Local%201%20Niagara%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-01 Local 1 Niagara - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-02 Local 1 Hamilton"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-02%20Local%201%20Hamilton%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-02 Local 1 Hamilton - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-03 Local 2 Toronto"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-03%20Local%202%20Toronto%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-03 Local 2 Toronto - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-04 Local 2 Oshawa"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-04%20Local%202%20Oshawa%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-04 Local 2 Oshawa - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-05 Local 2 Barrie"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-05%20Local%202%20Barrie%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-05 Local 2 Barrie - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-06 Local 5 London"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-06%20Local%205%20London%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-06 Local 5 London - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-07 Local 6 Windsor"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-07%20Local%206%20Windsor%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-07 Local 6 Windsor - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-08 Local 7 Ottawa"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-08%20Local%207%20Ottawa%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-08 Local 7 Ottawa - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-09 Local 2 Kingston"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-09%20Local%202%20Kingston%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-09 Local 2 Kingston - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-10 Local 12 Bruce Power"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-10%20Local%2012%20Bruce%20Power%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-10 Local 12 Bruce Power - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-11 Local 23 Sarnia"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-11%20Local%2023%20Sarnia%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-11 Local 23 Sarnia - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-12 Local 25 Thunder Bay"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-12%20Local%2025%20Thunder%20Bay%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-12 Local 25 Thunder Bay - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-13 Local 28 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-13%20Local%2028%20Sudbury%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-13 Local 28 Sudbury - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Brick and Allied Craft Union"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Brick and Allied Craft Union Wage Schedule BACU-14 Local 29 Sault Ste Marie"
+    source_url: "https://www.epsca.org/upload/request/83?file=BACU-14%20Local%2029%20Sault%20Ste%20Marie%20-%20May%201%202026.pdf&download=1"
+    source_filename: "BACU-14 Local 29 Sault Ste Marie - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  # ─── Carpenters ─────────────────────────────────────────────────────────────
+
+  - union_name: "Carpenters"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Carpenters- 2025-2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/3?file=Carpenters-%202025-2030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Carpenters- 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Carpenters"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Carpenters Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/3?file=Carpenters%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Carpenters Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-1 LU 494 Windsor"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-1%20LU%20494%20Windsor%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-1 LU 494 Windsor - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-11 LU 249 Zone 1 Kingston"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-11%20LU%20249%20Zone%201%20Kingston%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-11 LU 249 Zone 1 Kingston - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-12 LU 249 Zone 2 Smith Falls"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-12%20LU%20249%20Zone%202%20Smith%20Falls%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-12 LU 249 Zone 2 Smith Falls - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-13 Ottawa"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-13%20LU%202041%20Ottawa.pdf&download=1"
+    source_filename: "AD-13 LU 2041 Ottawa.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-15 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-15%20LU%202486%20Sudbury%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-15 LU 2486 Sudbury - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-16 Zone 2 Sault Ste. Marie - Revised"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-16%20LU%202486%20Zone%202%20Sault%20Ste.%20Marie%20-%20May%201%2C%202025%20Revised.pdf&download=1"
+    source_filename: "AD-16 LU 2486 Zone 2 Sault Ste. Marie - May 1, 2025 Revised.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-16 Zone 2 Sault Ste. Marie"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-16%20LU%202486%20Zone%202%20Sault%20Ste.%20Marie%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-16 LU 2486 Zone 2 Sault Ste. Marie - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-17 Thunder Bay-Kenora"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-17%20LU%201669%20Thunder%20Bay-Kenora%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-17 LU 1669 Thunder Bay-Kenora - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-2 Sarnia"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-2%20LU%201256%20Sarnia%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-2 LU 1256 Sarnia - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-3 London"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-3%20LU%201946%20London%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-3 LU 1946 London - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-4 LU 785 Cambridge"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-4%20LU%20785%20Cambridge%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-4 LU 785 Cambridge - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-5 LU 18 Zone 1 Hamilton"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-5%20LU%2018%20Zone%201%20Hamilton%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-5 LU 18 Zone 1 Hamilton - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-5 LU 18 Zone 2 Niagara"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-5%20LU%2018%20Zone%202%20Niagara%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-5 LU 18 Zone 2 Niagara - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-7 LU 675 Toronto"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-7%20LU%20675%20Toronto%20-%20May%201%2C%202025%20%281%29.pdf&download=1"
+    source_filename: "AD-7 LU 675 Toronto - May 1, 2025 (1).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Acoustic and Drywall Wage Schedule AD-8 LU 397 Lake Ontario District Council Oshawa"
+    source_url: "https://www.epsca.org/upload/request/15?file=AD-8%20LU%20397%20Lake%20Ontario%20District%20Council%20Oshawa%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "AD-8 LU 397 Lake Ontario District Council Oshawa - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-1 LU 494 Windsor"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-1%20LU%20494%20Windsor%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-1 LU 494 Windsor - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-11 LU 249 Zone 1 Kingston"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-11%20LU%20249%20Zone%201%20Kingston%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-11 LU 249 Zone 1 Kingston - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-12 LU 249 Zone 2 Smith Falls"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-12%20LU%20249%20Zone%202%20Smith%20Falls%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-12 LU 249 Zone 2 Smith Falls - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-14 LU 93 Ottawa, Cornwall, Pembroke and Renfrew"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-14%20LU%2093%20Ottawa%2C%20Cornwall%2C%20Pembroke%20and%20Renfrew%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-14 LU 93 Ottawa, Cornwall, Pembroke and Renfrew - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-17 LU 27 Barrie-Orillia"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-17%20LU%2027%20Barrie-Orillia%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-17 LU 27 Barrie-Orillia - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-18 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-18%20LU%202486%20Sudbury%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-18 LU 2486 Sudbury - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-19 Zone 2 Sault Ste. Marie"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-19%20LU%202486%20Zone%202%20Sault%20Ste.%20Marie%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-19 LU 2486 Zone 2 Sault Ste. Marie - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-2 Sarnia"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-2%20LU%201256%20Sarnia%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-2 LU 1256 Sarnia - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-20 Thunder Bay"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-20%20LU%201669%20Thunder%20Bay%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-20 LU 1669 Thunder Bay - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-3 London"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-3%20LU%201946%20London%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-3 LU 1946 London - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-3A Goderich"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-3A%20LU%202222%20Goderich%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-3A LU 2222 Goderich - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-4 LU 785 Cambridge"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-4%20LU%20785%20Cambridge%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-4 LU 785 Cambridge - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-5 LU 18 Zone 1 Hamilton"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-5%20LU%2018%20Zone%201%20Hamilton%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-5 LU 18 Zone 1 Hamilton - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-6 LU 18 Zone 2 Niagara"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-6%20LU%2018%20Zone%202%20Niagara%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-6 LU 18 Zone 2 Niagara - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-8 LU 27 Toronto"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-8%20LU%2027%20Toronto%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-8 LU 27 Toronto - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Wage Schedule C-9 LU 397 Oshawa"
+    source_url: "https://www.epsca.org/upload/request/14?file=C-9%20LU%20397%20Oshawa%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "C-9 LU 397 Oshawa - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-1 LU 494 Windsor"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-1%20LU%20494%20Windsor%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-1 LU 494 Windsor - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-11 LU 249 Zone 1 Kingston"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-11%20LU%20249%20Zone%201%20Kingston%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-11 LU 249 Zone 1 Kingston - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-12 LU 249 Zone 2 Smith Falls"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-12%20LU%20249%20Zone%202%20Smith%20Falls%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-12 LU 249 Zone 2 Smith Falls - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-13 LU 93 Zone 1 Ottawa"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-13%20LU%2093%20Zone%201%20Ottawa%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-13 LU 93 Zone 1 Ottawa - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-14 LU 93 Zone 2 Cornwall"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-14%20LU%2093%20Zone%202%20Cornwall%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-14 LU 93 Zone 2 Cornwall - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-15 LU 93 Zone 3 Pembroke-Renfrew"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-15%20LU%2093%20Zone%203%20Pembroke-Renfrew%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-15 LU 93 Zone 3 Pembroke-Renfrew - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-16 Zone 1 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-16%20LU%202486%20Zone%201%20Sudbury%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-16 LU 2486 Zone 1 Sudbury - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-17 Zone 2 Sault Ste. Marie"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-17%20LU%202486%20Zone%202%20Sault%20Ste.%20Marie%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-17 LU 2486 Zone 2 Sault Ste. Marie - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-18 Thunder Bay"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-18%20LU%201669%20Thunder%20Bay%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-18 LU 1669 Thunder Bay - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-2 Sarnia"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-2%20LU%201256%20Sarnia%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-2 LU 1256 Sarnia - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-3 A London"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-3%20A%20LU%201946%20London%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-3 A LU 1946 London - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-3B Goderich"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-3B%20LU%202222%20Goderich%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-3B LU 2222 Goderich - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-4 LU 785 Cambridge"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-4%20LU%20785%20Cambridge%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-4 LU 785 Cambridge - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-5 LU 18 Zone 1 Hamilton"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-5%20LU%2018%20Zone%201%20Hamilton%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-5 LU 18 Zone 1 Hamilton - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-6 LU 18 Zone 2 Niagara"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-6%20LU%2018%20Zone%202%20Niagara%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-6 LU 18 Zone 2 Niagara - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-7 LU 27 Toronto"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-7%20LU%2027%20Toronto%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-7 LU 27 Toronto - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Carpenters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Carpenters Resilient Floor Wage Schedule RF-8 LU 397 Oshawa"
+    source_url: "https://www.epsca.org/upload/request/16?file=RF-8%20LU%20397%20Oshawa%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RF-8 LU 397 Oshawa - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── Cement Masons ──────────────────────────────────────────────────────────
+
+  - union_name: "Cement Masons"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Cement Masons - 2025-2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/4?file=Cement%20Masons%20-%202025-2030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Cement Masons - 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Cement Masons"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Cement Mason Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/4?file=Cement%20Mason%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Cement Mason Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Wage Schedule CM-1 Local 598 Windsor"
+    source_url: "https://www.epsca.org/upload/request/28?file=CM-1%20Local%20598%20Windsor%20-%20May%201%202025.pdf&download=1"
+    source_filename: "CM-1 Local 598 Windsor - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Wage Schedule CM-2 Local 598 Sarnia"
+    source_url: "https://www.epsca.org/upload/request/28?file=CM-2%20Local%20598%20Sarnia%20-%20May%201%202025.pdf&download=1"
+    source_filename: "CM-2 Local 598 Sarnia - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Wage Schedule CM-3 Local 598 London"
+    source_url: "https://www.epsca.org/upload/request/28?file=CM-3%20Local%20598%20London%20-%20May%201%202025.pdf&download=1"
+    source_filename: "CM-3 Local 598 London - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Wage Schedule CM-4 Local 598 Hamilton"
+    source_url: "https://www.epsca.org/upload/request/28?file=CM-4%20Local%20598%20Hamilton%20-%20May%201%202025.pdf&download=1"
+    source_filename: "CM-4 Local 598 Hamilton - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Wage Schedule CM-5A Local 598 Toronto"
+    source_url: "https://www.epsca.org/upload/request/28?file=CM-5A%20Local%20598%20Toronto%20-%20May%201%202025.pdf&download=1"
+    source_filename: "CM-5A Local 598 Toronto - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Wage Schedule CM-5B Local 598 Toronto"
+    source_url: "https://www.epsca.org/upload/request/28?file=CM-5B%20Local%20598%20Toronto%20-%20May%201%202025.pdf&download=1"
+    source_filename: "CM-5B Local 598 Toronto - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Wage Schedule CM-6 Local 598 Ottawa"
+    source_url: "https://www.epsca.org/upload/request/28?file=CM-6%20Local%20598%20Ottawa%20-%20May%201%202025.pdf&download=1"
+    source_filename: "CM-6 Local 598 Ottawa - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Wage Schedule CM-7 Local 598 Timmins"
+    source_url: "https://www.epsca.org/upload/request/28?file=CM-7%20Local%20598%20Timmins%20-%20May%201%202025.pdf&download=1"
+    source_filename: "CM-7 Local 598 Timmins - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Wage Schedule CM-8 Local 598 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/28?file=CM-8%20Local%20598%20Sudbury%20-%20May%201%202025.pdf&download=1"
+    source_filename: "CM-8 Local 598 Sudbury - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Wage Schedule CM-9 Local 598 Thunder Bay"
+    source_url: "https://www.epsca.org/upload/request/28?file=CM-9%20Local%20598%20Thunder%20Bay%20-%20May%201%202025.pdf&download=1"
+    source_filename: "CM-9 Local 598 Thunder Bay - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Steeplejacks Wage Schedule RS-1 Restoration Workers"
+    source_url: "https://www.epsca.org/upload/request/29?file=RS-1%20Restoration%20Workers%20-%20May%201%202025.pdf&download=1"
+    source_filename: "RS-1 Restoration Workers - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Steeplejacks Wage Schedule RS-2 Restoration Workers"
+    source_url: "https://www.epsca.org/upload/request/29?file=RS-2%20Restoration%20Workers%20-%20May%201%202025.pdf&download=1"
+    source_filename: "RS-2 Restoration Workers - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Steeplejacks Wage Schedule RS-3 Restoration Workers"
+    source_url: "https://www.epsca.org/upload/request/29?file=RS-3%20Restoration%20Workers%20-%20May%201%202025.pdf&download=1"
+    source_filename: "RS-3 Restoration Workers - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Cement Masons"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Cement Masons Waterproofers Wage Schedule Waterproofers"
+    source_url: "https://www.epsca.org/upload/request/30?file=Waterproofers%20-%20May%201%202025.pdf&download=1"
+    source_filename: "Waterproofers - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── IBEW ───────────────────────────────────────────────────────────────────
+
+  - union_name: "IBEW"
+    document_type: "primary_ca"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission - 2025-2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/5?file=IBEW%20Transmission%20-%202025-2030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "IBEW Transmission - 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "IBEW Generation Wage Schedule E-3-C LU 530 Sarnia IBEW Generation"
+    source_url: "https://www.epsca.org/upload/request/31?file=E-3-C%20LU%20530%20Sarnia%20IBEW%20Generation-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "E-3-C LU 530 Sarnia IBEW Generation- May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "IBEW Generation Wage Schedule E-4-C LU 120 London IBEW Generation"
+    source_url: "https://www.epsca.org/upload/request/31?file=E-4-C%20LU%20120%20London%20IBEW%20Generation-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "E-4-C LU 120 London IBEW Generation- May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "IBEW Generation Wage Schedule E-6-C LU 105 Hamilton IBEW Generation"
+    source_url: "https://www.epsca.org/upload/request/31?file=E-6-C%20LU%20105%20Hamilton%20IBEW%20Generation-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "E-6-C LU 105 Hamilton IBEW Generation- May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "IBEW Generation Wage Schedule E-7-C LU 303 Niagara IBEW Generation"
+    source_url: "https://www.epsca.org/upload/request/31?file=E-7-C%20LU%20303%20Niagara%20IBEW%20Generation%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "E-7-C LU 303 Niagara IBEW Generation - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-1-C LU 773 - Windsor"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-1-C%20LU%20773%20-%20Windsor%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "ET-1-C LU 773 - Windsor - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-10-C LU 353 - Port Hope"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-10-C%20LU%20353%20-%20Port%20Hope%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "ET-10-C LU 353 - Port Hope - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-12-C LU 115 - Quinte-St. Lawrence"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-12-C%20LU%20115%20-%20Quinte-St.%20Lawrence%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "ET-12-C LU 115 - Quinte-St. Lawrence - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-13-C LU 586 Ottawa IBEW Transmission"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-13-C%20LU%20586%20Ottawa%20IBEW%20Transmission%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "ET-13-C LU 586 Ottawa IBEW Transmission - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-14-C LU 353 - North"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-14-C%20LU%20353%20-%20North%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "ET-14-C LU 353 - North - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-15-C - Sudbury"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-15-C%20LU%201687%20-%20Sudbury%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "ET-15-C LU 1687 - Sudbury - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-16-C LU 402 - Thunder Bay"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-16-C%20LU%20402%20-%20Thunder%20Bay%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "ET-16-C LU 402 - Thunder Bay - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-3-C LU 530 Sarnia IBEW Transmission"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-3-C%20LU%20530%20Sarnia%20IBEW%20Transmission%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "ET-3-C LU 530 Sarnia IBEW Transmission - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-4-C LU 120 London IBEW Transmission"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-4-C%20LU%20120%20London%20IBEW%20Transmission%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "ET-4-C LU 120 London IBEW Transmission - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-6-C LU 105 Hamilton IBEW Transmission"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-6-C%20LU%20105%20Hamilton%20IBEW%20Transmission%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "ET-6-C LU 105 Hamilton IBEW Transmission - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-7-C LU 303 Niagara IBEW Transmission"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-7-C%20LU%20303%20Niagara%20IBEW%20Transmission%20%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "ET-7-C LU 303 Niagara IBEW Transmission  - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-8-C LU 804 - Central Ontario"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-8-C%20LU%20804%20-%20Central%20Ontario%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "ET-8-C LU 804 - Central Ontario - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-9-C LU 353 - South"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-9-C%20LU%20353%20-%20South%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "ET-9-C LU 353 - South - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "IBEW"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "IBEW Transmission Wage Schedule ET-9A-C LU 353 - Pickering Project"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-9A-C%20LU%20353%20-%20Pickering%20Project%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "ET-9A-C LU 353 - Pickering Project - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── Insulators ─────────────────────────────────────────────────────────────
+
+  - union_name: "Insulators"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Insulators- 2025 to 2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/6?file=Insulators-%202025%20to%202030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Insulators- 2025 to 2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Insulators"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Insulators Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/46?file=Insulators%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Insulators Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Insulators"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Insulators Wage Schedule IN-1 LU 95 Zone 1 Insulators"
+    source_url: "https://www.epsca.org/upload/request/33?file=IN-1%20LU%2095%20Zone%201%20Insulators%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "IN-1 LU 95 Zone 1 Insulators May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Insulators"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Insulators Wage Schedule IN-2 LU 95 Zone 2 Insulators"
+    source_url: "https://www.epsca.org/upload/request/33?file=IN-2%20LU%2095%20Zone%202%20Insulators%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "IN-2 LU 95 Zone 2 Insulators May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Insulators"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Insulators Wage Schedule IN-3 LU 95 Zone 3 Insulators"
+    source_url: "https://www.epsca.org/upload/request/33?file=IN-3%20LU%2095%20Zone%203%20Insulators%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "IN-3 LU 95 Zone 3 Insulators May 01, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  # ─── Ironworkers ────────────────────────────────────────────────────────────
+
+  - union_name: "Ironworkers"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Ironworker - 2025 - 2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/7?file=Ironworker%20-%202025%20-%202030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Ironworker - 2025 - 2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Ironworkers"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Ironworkers Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/47?file=Ironworkers%20Nuclear%20Project%20Agreement%20.pdf&download=1"
+    source_filename: "Ironworkers Nuclear Project Agreement .pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Ironworkers Generation Wage Schedule I-1 LU 700 Windsor Ironworkers - Generation"
+    source_url: "https://www.epsca.org/upload/request/34?file=I-1%20LU%20700%20Windsor%20Ironworkers%20-%20Generation%20May%201%202026.pdf&download=1"
+    source_filename: "I-1 LU 700 Windsor Ironworkers - Generation May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Ironworkers Generation Wage Schedule I-2 LU 736 Hamilton Ironworkers - Generation"
+    source_url: "https://www.epsca.org/upload/request/34?file=I-2%20LU%20736%20Hamilton%20Ironworkers%20-%20Generation%20May%201%202026.pdf&download=1"
+    source_filename: "I-2 LU 736 Hamilton Ironworkers - Generation May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Ironworkers Generation Wage Schedule I-3 LU 721 Toronto Ironworkers - Generation"
+    source_url: "https://www.epsca.org/upload/request/34?file=I-3%20LU%20721%20Toronto%20Ironworkers%20-%20Generation%20May%201%202026.pdf&download=1"
+    source_filename: "I-3 LU 721 Toronto Ironworkers - Generation May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Ironworkers Generation Wage Schedule I-4 LU 765 Ottawa Ironworkers - Generation"
+    source_url: "https://www.epsca.org/upload/request/34?file=I-4%20LU%20765%20Ottawa%20Ironworkers%20-%20Generation%20May%201%202026.pdf&download=1"
+    source_filename: "I-4 LU 765 Ottawa Ironworkers - Generation May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Ironworkers Generation Wage Schedule I-5 LU 786 Sudbury Ironworkers - Generation"
+    source_url: "https://www.epsca.org/upload/request/34?file=I-5%20LU%20786%20Sudbury%20Ironworkers%20-%20Generation%20May%201%202026.pdf&download=1"
+    source_filename: "I-5 LU 786 Sudbury Ironworkers - Generation May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Ironworkers Generation Wage Schedule I-6 LU 759 Thunder Bay Ironworkers - Generation"
+    source_url: "https://www.epsca.org/upload/request/34?file=I-6%20LU%20759%20Thunder%20Bay%20Ironworkers%20-%20Generation%20May%201%202026.pdf&download=1"
+    source_filename: "I-6 LU 759 Thunder Bay Ironworkers - Generation May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Ironworkers Transmission Wage Schedule I-1 LU 700 Windsor Ironworkers - Transmission"
+    source_url: "https://www.epsca.org/upload/request/35?file=I-1%20LU%20700%20Windsor%20Ironworkers%20-%20Transmission%20May%201%202026.pdf&download=1"
+    source_filename: "I-1 LU 700 Windsor Ironworkers - Transmission May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Ironworkers Transmission Wage Schedule I-2 LU 736 Hamilton Ironworkers - Transmission"
+    source_url: "https://www.epsca.org/upload/request/35?file=I-2%20LU%20736%20Hamilton%20Ironworkers%20-%20Transmission%20May%201%202026.pdf&download=1"
+    source_filename: "I-2 LU 736 Hamilton Ironworkers - Transmission May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Ironworkers Transmission Wage Schedule I-3 LU 721 Toronto Ironworkers - Transmission"
+    source_url: "https://www.epsca.org/upload/request/35?file=I-3%20LU%20721%20Toronto%20Ironworkers%20-%20Transmission%20May%201%202026.pdf&download=1"
+    source_filename: "I-3 LU 721 Toronto Ironworkers - Transmission May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Ironworkers Transmission Wage Schedule I-4 LU 765 Ottawa Ironworkers - Transmission"
+    source_url: "https://www.epsca.org/upload/request/35?file=I-4%20LU%20765%20Ottawa%20Ironworkers%20-%20Transmission%20May%201%202026.pdf&download=1"
+    source_filename: "I-4 LU 765 Ottawa Ironworkers - Transmission May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Ironworkers Transmission Wage Schedule I-5 LU 786 Sudbury Ironworkers - Transmission"
+    source_url: "https://www.epsca.org/upload/request/35?file=I-5%20LU%20786%20Sudbury%20Ironworkers%20-%20Transmission%20May%201%202026.pdf&download=1"
+    source_filename: "I-5 LU 786 Sudbury Ironworkers - Transmission May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Ironworkers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Ironworkers Transmission Wage Schedule I-6 LU 759 Thunder Bay Ironworkers - Transmission"
+    source_url: "https://www.epsca.org/upload/request/35?file=I-6%20LU%20759%20Thunder%20Bay%20Ironworkers%20-%20Transmission%20May%201%202026.pdf&download=1"
+    source_filename: "I-6 LU 759 Thunder Bay Ironworkers - Transmission May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  # ─── Labourers ──────────────────────────────────────────────────────────────
+
+  - union_name: "Labourers"
+    document_type: "primary_ca"
+    agreement_scope: "generation"
+    title: "Labourers Generation - 2025-2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/36?file=Labourers%20Generation%20-%202025-2030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Labourers Generation - 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Labourers"
+    document_type: "primary_ca"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - 2025 - 2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/36?file=Labourers%20Transmission%20-%202025%20-%202030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Labourers Transmission - 2025 - 2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Generation - Zone 1 Wage Schedule L-1-L-2 LU 625 Windsor-Chatham (Generation"
+    source_url: "https://www.epsca.org/upload/request/37?file=L-1-L-2%20LU%20625%20Windsor-Chatham%20%28Generation%29%20May%201%2C%202025.pdf&download=1"
+    source_filename: "L-1-L-2 LU 625 Windsor-Chatham (Generation) May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Generation - Zone 1 Wage Schedule L-3 Sarnia (Generation"
+    source_url: "https://www.epsca.org/upload/request/37?file=L-3%20LU%201089%20Sarnia%20%28Generation%29%20May%201%2C%202025.pdf&download=1"
+    source_filename: "L-3 LU 1089 Sarnia (Generation) May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Generation - Zone 1 Wage Schedule L-4A-L-4B London (Generation) .pdf"
+    source_url: "https://www.epsca.org/upload/request/37?file=L-4A-L-4B%20LU%201059%20London%20%28Generation%29%20May%201%2C%202026.pdf.pdf&download=1"
+    source_filename: "L-4A-L-4B LU 1059 London (Generation) May 1, 2026.pdf.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Generation - Zone 1 Wage Schedule L-6-L-7 LU 837 Hamilton-St. Catharines (Generation"
+    source_url: "https://www.epsca.org/upload/request/37?file=L-6-L-7%20LU%20837%20Hamilton-St.%20Catharines%20%28Generation%29%20May%201%2C%202025.pdf&download=1"
+    source_filename: "L-6-L-7 LU 837 Hamilton-St. Catharines (Generation) May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Generation - Zone 2 Wage Schedule L-1-L-16-L-17 LU 527 Ottawa-Cornwall-Smith Falls (Generation"
+    source_url: "https://www.epsca.org/upload/request/38?file=L-1-L-16-L-17%20LU%20527%20Ottawa-Cornwall-Smith%20Falls%20%28Generation%29%20May%201%2C%202025.pdf&download=1"
+    source_filename: "L-1-L-16-L-17 LU 527 Ottawa-Cornwall-Smith Falls (Generation) May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Generation - Zone 2 Wage Schedule L-12A-L-12B-L-11 LU 183 Peterborough - Huntsville - Oshawa (Generation"
+    source_url: "https://www.epsca.org/upload/request/38?file=L-12A-L-12B-L-11%20LU%20183%20Peterborough%20-%20Huntsville%20-%20Oshawa%20%28Generation%29%20May%201%2C%202025.pdf&download=1"
+    source_filename: "L-12A-L-12B-L-11 LU 183 Peterborough - Huntsville - Oshawa (Generation) May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Generation - Zone 2 Wage Schedule L-14 LU 183 Kingston (Generation"
+    source_url: "https://www.epsca.org/upload/request/38?file=L-14%20LU%20183%20Kingston%20%28Generation%29%20May%201%2C%202025.pdf&download=1"
+    source_filename: "L-14 LU 183 Kingston (Generation) May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Generation - Zone 3 Wage Schedule L-18-L-19-L-20 LU 493 Sudbury-NE Misc - Timmins (Generation"
+    source_url: "https://www.epsca.org/upload/request/39?file=L-18-L-19-L-20%20LU%20493%20Sudbury-NE%20Misc%20-%20Timmins%20%28Generation%29%20May%201%2C%202025.pdf&download=1"
+    source_filename: "L-18-L-19-L-20 LU 493 Sudbury-NE Misc - Timmins (Generation) May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Generation - Zone 3 Wage Schedule L-21 Sault Ste Marie (Generation"
+    source_url: "https://www.epsca.org/upload/request/39?file=L-21%20LU%201036%20Sault%20Ste%20Marie%20%28Generation%29%20May%201%2C%202025.pdf&download=1"
+    source_filename: "L-21 LU 1036 Sault Ste Marie (Generation) May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Generation - Zone 3 Wage Schedule L-22 LU 607 Thunder Bay (Generation"
+    source_url: "https://www.epsca.org/upload/request/39?file=L-22%20LU%20607%20Thunder%20Bay%20%28Generation%29%20May%201%2C%202025.pdf&download=1"
+    source_filename: "L-22 LU 607 Thunder Bay (Generation) May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Nuclear Wage Schedule LN-11 LU 183 Oshawa (Nuclear - Generation"
+    source_url: "https://www.epsca.org/upload/request/40?file=LN-11%20LU%20183%20Oshawa%20%28Nuclear%20-%20Generation%29%20-%20May%201%2C%202025%20%281%29.pdf&download=1"
+    source_filename: "LN-11 LU 183 Oshawa (Nuclear - Generation) - May 1, 2025 (1).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Nuclear Wage Schedule LN-4 Bruce (Nuclear - Generation) - .pdf"
+    source_url: "https://www.epsca.org/upload/request/40?file=LN-4%20LU%201059%20Bruce%20%28Nuclear%20-%20Generation%29%20-%20May%201%2C%202026.pdf.pdf&download=1"
+    source_filename: "LN-4 LU 1059 Bruce (Nuclear - Generation) - May 1, 2026.pdf.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Labourers Nuclear Wage Schedule LN-9 LU 506 Pickering (Nuclear - Generation"
+    source_url: "https://www.epsca.org/upload/request/40?file=LN-9%20LU%20506%20Pickering%20%28Nuclear%20-%20Generation%29%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LN-9 LU 506 Pickering (Nuclear - Generation) - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 1 Wage Schedule L-1-L-2 LU 625 Windsor-Chatham (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/41?file=L-1-L-2%20LU%20625%20Windsor-Chatham%20%20%28TRANSMISSION%29%20-%20May%201%202025.pdf&download=1"
+    source_filename: "L-1-L-2 LU 625 Windsor-Chatham  (TRANSMISSION) - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 1 Wage Schedule L-3 Sarnia (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/41?file=L-3%20LU%201089%20Sarnia%20%28TRANSMISSION%29%20-%20May%201%202025.pdf&download=1"
+    source_filename: "L-3 LU 1089 Sarnia (TRANSMISSION) - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 1 Wage Schedule L-4A-L-4B London (TRANSMISSION) - .pdf"
+    source_url: "https://www.epsca.org/upload/request/41?file=L-4A-L-4B%20LU%201059%20London%20%28TRANSMISSION%29%20-%20May%201%202026.pdf.pdf&download=1"
+    source_filename: "L-4A-L-4B LU 1059 London (TRANSMISSION) - May 1 2026.pdf.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 1 Wage Schedule L-6-L-7 LU 837 Hamilton-St. Catharines (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/41?file=L-6-L-7%20LU%20837%20Hamilton-St.%20Catharines%20%20%28TRANSMISSION%29%20-%20June%206%2C%202025.pdf&download=1"
+    source_filename: "L-6-L-7 LU 837 Hamilton-St. Catharines  (TRANSMISSION) - June 6, 2025.pdf"
+    effective_date: "2025-06-06"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 2 Wage Schedule L-10B LU 183 Barrie (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/42?file=L-10B%20LU%20183%20Barrie%20%28TRANSMISSION%29%20-%20May%201%202025.pdf&download=1"
+    source_filename: "L-10B LU 183 Barrie (TRANSMISSION) - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 2 Wage Schedule L-11 LU 183 Oshawa (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/42?file=L-11%20LU%20183%20Oshawa%20%28TRANSMISSION%29%20-%20May%201%202025.pdf&download=1"
+    source_filename: "L-11 LU 183 Oshawa (TRANSMISSION) - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 2 Wage Schedule L-9 LU 183 Toronto (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/42?file=L-9%20LU%20183%20Toronto%20%28TRANSMISSION%29%20-%20May%201%202025.pdf&download=1"
+    source_filename: "L-9 LU 183 Toronto (TRANSMISSION) - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 3 Wage Schedule L-12A-L-12B LU 183 Peterborough - Hunsville (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/43?file=L-12A-L-12B%20LU%20183%20Peterborough%20-%20Hunsville%20%20%28TRANSMISSION%29%20-%20May%201%202025.pdf&download=1"
+    source_filename: "L-12A-L-12B LU 183 Peterborough - Hunsville  (TRANSMISSION) - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 3 Wage Schedule L-14 LU 183 Kingston (TRANSMISSION) - - Revised"
+    source_url: "https://www.epsca.org/upload/request/43?file=L-14%20LU%20183%20Kingston%20%28TRANSMISSION%29%20-%20May%201%202025%20-%20Revised.pdf&download=1"
+    source_filename: "L-14 LU 183 Kingston (TRANSMISSION) - May 1 2025 - Revised.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 3 Wage Schedule L-15-L-16-L-17 LU 527 Ottawa-Cornwall-Smith Falls-Arnprior (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/43?file=L-15-L-16-L-17%20LU%20527%20Ottawa-Cornwall-Smith%20Falls-Arnprior%20%20%28TRANSMISSION%29%20-%20May%201%202025.pdf&download=1"
+    source_filename: "L-15-L-16-L-17 LU 527 Ottawa-Cornwall-Smith Falls-Arnprior  (TRANSMISSION) - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 4 Wage Schedule L-18-L-19-L-20 LU 493 Sudbury-NE Misc-Timmins (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/44?file=L-18-L-19-L-20%20LU%20493%20Sudbury-NE%20Misc-Timmins%20%20%28TRANSMISSION%29%20-%20May%201%202025.pdf&download=1"
+    source_filename: "L-18-L-19-L-20 LU 493 Sudbury-NE Misc-Timmins  (TRANSMISSION) - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 4 Wage Schedule L-21 Sault Ste Marie (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/44?file=L-21%20LU%201036%20Sault%20Ste%20Marie%20%20%28TRANSMISSION%29%20-%20May%201%202025.pdf&download=1"
+    source_filename: "L-21 LU 1036 Sault Ste Marie  (TRANSMISSION) - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Labourers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Labourers Transmission - Zone 4 Wage Schedule L-22 LU 607 Thunder Bay (TRANSMISSION"
+    source_url: "https://www.epsca.org/upload/request/44?file=L-22%20LU%20607%20Thunder%20Bay%20%28TRANSMISSION%29%20-%20May%201%202025.pdf&download=1"
+    source_filename: "L-22 LU 607 Thunder Bay (TRANSMISSION) - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── Millwrights ────────────────────────────────────────────────────────────
+
+  - union_name: "Millwrights"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Millwrights 2025-2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/8?file=Millwrights_2025-2030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Millwrights_2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Millwrights"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Millwrights Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/49?file=Millwrights%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Millwrights Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Millwrights"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Millwrights Wage Schedule Millwright"
+    source_url: "https://www.epsca.org/upload/request/50?file=Millwright%20-%20May%201%202025.pdf&download=1"
+    source_filename: "Millwright - May 1 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── Operating Engineers ────────────────────────────────────────────────────
+
+  - union_name: "Operating Engineers"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Collective Agreement-Operating Engineers - May 1 2025 to April 30 2030"
+    source_url: "https://www.epsca.org/upload/request/9?file=Collective%20Agreement-Operating%20Engineers%20-%20May%201%202025%20to%20April%2030%202030.pdf&download=1"
+    source_filename: "Collective Agreement-Operating Engineers - May 1 2025 to April 30 2030.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Operating Engineers"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "OE Nuclear Project Agreement (1)"
+    source_url: "https://www.epsca.org/upload/request/51?file=OE%20Nuclear%20Project%20Agreement%20%281%29.pdf&download=1"
+    source_filename: "OE Nuclear Project Agreement (1).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Operating Engineers"
+    document_type: "moa_supplement"
+    agreement_scope: null
+    title: "Appendix C Forepersons Rate MOA Update 2021- OE"
+    source_url: "https://www.epsca.org/upload/request/51?file=Appendix%20C%20Forepersons%20Rate%20MOA%20Update%202021-%20OE%20-%20FOR%20WEBSITE%20%282%29.pdf&download=1"
+    source_filename: "Appendix C Forepersons Rate MOA Update 2021- OE - FOR WEBSITE (2).pdf"
+    effective_date: "2021-01-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-1 Windsor"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-1%20Windsor.pdf&download=1"
+    source_filename: "OE Classifications 0-1 Windsor.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-1M Province of Ontario (Marine"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-1M%20Province%20of%20Ontario%20%28Marine%29.pdf&download=1"
+    source_filename: "OE Classifications 0-1M Province of Ontario (Marine).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-1T Province of Ontario (Tunnelling"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-1T%20Province%20of%20Ontario%20%28Tunnelling%29.pdf&download=1"
+    source_filename: "OE Classifications 0-1T Province of Ontario (Tunnelling).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-2 Sarnia"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-2%20Sarnia.pdf&download=1"
+    source_filename: "OE Classifications 0-2 Sarnia.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-2E Province of Ontario (Structural Steel"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-2E%20Province%20of%20Ontario%20%28Structural%20Steel%29.pdf&download=1"
+    source_filename: "OE Classifications 0-2E Province of Ontario (Structural Steel).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-3 London"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-3%20London.pdf&download=1"
+    source_filename: "OE Classifications 0-3 London.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-4 Hamilton"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-4%20Hamilton.pdf&download=1"
+    source_filename: "OE Classifications 0-4 Hamilton.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-5A Toronto"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-5A%20Toronto.pdf&download=1"
+    source_filename: "OE Classifications 0-5A Toronto.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-5B Toronto"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-5B%20Toronto.pdf&download=1"
+    source_filename: "OE Classifications 0-5B Toronto.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-6 Ottawa"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-6%20Ottawa.pdf&download=1"
+    source_filename: "OE Classifications 0-6 Ottawa.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-7 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-7%20Sudbury.pdf&download=1"
+    source_filename: "OE Classifications 0-7 Sudbury.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-8 Thunder Bay"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-8%20Thunder%20Bay.pdf&download=1"
+    source_filename: "OE Classifications 0-8 Thunder Bay.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications 0-9 Sault Ste Marie"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%200-9%20Sault%20Ste%20Marie.pdf&download=1"
+    source_filename: "OE Classifications 0-9 Sault Ste Marie.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Classifications Wage Schedule OE Classifications O-1E Province of Ontario (Structural Steel"
+    source_url: "https://www.epsca.org/upload/request/78?file=OE%20Classifications%20O-1E%20Province%20of%20Ontario%20%28Structural%20Steel%29.pdf&download=1"
+    source_filename: "OE Classifications O-1E Province of Ontario (Structural Steel).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-1 Windsor"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-1%20Windsor.pdf&download=1"
+    source_filename: "O-1 Windsor.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-1E Toronto Bd. Area 8"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-1E%20Toronto%20Bd.%20Area%208.pdf&download=1"
+    source_filename: "O-1E Toronto Bd. Area 8.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-1M Province of Ontario"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-1M%20Province%20of%20Ontario.pdf&download=1"
+    source_filename: "O-1M Province of Ontario.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-1T Province of Ontario"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-1T%20Province%20of%20Ontario.pdf&download=1"
+    source_filename: "O-1T Province of Ontario.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-2 Sarnia"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-2%20Sarnia.pdf&download=1"
+    source_filename: "O-2 Sarnia.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-2E Province of Ontario Outside Bd. Area 8"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-2E%20Province%20of%20Ontario%20Outside%20Bd.%20Area%208.pdf&download=1"
+    source_filename: "O-2E Province of Ontario Outside Bd. Area 8.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-3 London"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-3%20London.pdf&download=1"
+    source_filename: "O-3 London.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-4 Hamilton"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-4%20Hamilton%20%281%29.pdf&download=1"
+    source_filename: "O-4 Hamilton (1).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-5A Toronto Bd. Area 8"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-5A%20Toronto%20Bd.%20Area%208%20%281%29.pdf&download=1"
+    source_filename: "O-5A Toronto Bd. Area 8 (1).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-5B Outside Toronto Bd. Area 8"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-5B%20Outside%20Toronto%20Bd.%20Area%208.pdf&download=1"
+    source_filename: "O-5B Outside Toronto Bd. Area 8.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-6 Ottawa"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-6%20Ottawa.pdf&download=1"
+    source_filename: "O-6 Ottawa.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-7 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-7%20Sudbury.pdf&download=1"
+    source_filename: "O-7 Sudbury.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-8 Thunder Bay"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-8%20Thunder%20Bay.pdf&download=1"
+    source_filename: "O-8 Thunder Bay.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Operating Engineers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Operating Engineers Wage Schedule O-9 Sault Ste. Marie"
+    source_url: "https://www.epsca.org/upload/request/52?file=O-9%20Sault%20Ste.%20Marie.pdf&download=1"
+    source_filename: "O-9 Sault Ste. Marie.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── Painters ───────────────────────────────────────────────────────────────
+
+  - union_name: "Painters"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Painters- 2025-2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/10?file=Painters-%202025-2030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Painters- 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Painters"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Painters Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/56?file=Painters%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Painters Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Painters"
+    document_type: "moa_supplement"
+    agreement_scope: null
+    title: "Travel & Board MOA Updates- 2019 - Painters"
+    source_url: "https://www.epsca.org/upload/request/56?file=Travel%20%26%20Board%20MOA%20Updates-%202019%20-%20Painters.pdf&download=1"
+    source_filename: "Travel & Board MOA Updates- 2019 - Painters.pdf"
+    effective_date: "2019-01-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Asbestos Removers Wage Schedule Asbestos Remover"
+    source_url: "https://www.epsca.org/upload/request/57?file=Asbestos%20Remover%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "Asbestos Remover - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Drywall Tapers Wage Schedule DT-1 Windsor London"
+    source_url: "https://www.epsca.org/upload/request/60?file=DT-1%20LU%201891%20Windsor%20London%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "DT-1 LU 1891 Windsor London - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Drywall Tapers Wage Schedule DT-2 Sarnia"
+    source_url: "https://www.epsca.org/upload/request/60?file=DT-2%20LU%201891%20Sarnia%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "DT-2 LU 1891 Sarnia - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Drywall Tapers Wage Schedule DT-3 Kitchener"
+    source_url: "https://www.epsca.org/upload/request/60?file=DT-3%20LU%201891%20Kitchener%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "DT-3 LU 1891 Kitchener - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Drywall Tapers Wage Schedule DT-4A LU Toronto Bd. Area 8"
+    source_url: "https://www.epsca.org/upload/request/60?file=DT-4A%20LU%20Toronto%20Bd.%20Area%208%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "DT-4A LU Toronto Bd. Area 8 - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Drywall Tapers Wage Schedule DT-4B LU Toronto Outside Bd. Area 8"
+    source_url: "https://www.epsca.org/upload/request/60?file=DT-4B%20LU%20Toronto%20Outside%20Bd.%20Area%208%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "DT-4B LU Toronto Outside Bd. Area 8 - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Drywall Tapers Wage Schedule DT-6 Ottawa"
+    source_url: "https://www.epsca.org/upload/request/60?file=DT-6%20LU%201891%20Ottawa%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "DT-6 LU 1891 Ottawa - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Drywall Tapers Wage Schedule DT-7 Kingston, Peterborough"
+    source_url: "https://www.epsca.org/upload/request/60?file=DT-7%20LU%201891%20Kingston%2C%20Peterborough%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "DT-7 LU 1891 Kingston, Peterborough - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Drywall Tapers Wage Schedule DT-9 Thunder Bay, Sudbury"
+    source_url: "https://www.epsca.org/upload/request/60?file=DT-9%20LU%201891%20Thunder%20Bay%2C%20Sudbury%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "DT-9 LU 1891 Thunder Bay, Sudbury - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Glaziers Wage Schedule LU 114 Kingston - Glazier"
+    source_url: "https://www.epsca.org/upload/request/58?file=LU%20114%20Kingston%20-%20Glazier%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LU 114 Kingston - Glazier - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Glaziers Wage Schedule Windsor - Glazier"
+    source_url: "https://www.epsca.org/upload/request/58?file=LU%201494%20Windsor%20-%20Glazier%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LU 1494 Windsor - Glazier - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Glaziers Wage Schedule Sarnia, London - Glazier"
+    source_url: "https://www.epsca.org/upload/request/58?file=LU%201590%20Sarnia%2C%20London%20-%20Glazier%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LU 1590 Sarnia, London - Glazier - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Glaziers Wage Schedule Thunder Bay - Glazier"
+    source_url: "https://www.epsca.org/upload/request/58?file=LU%201671%20-%20Thunder%20Bay%20-%20Glazier%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LU 1671 - Thunder Bay - Glazier - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Glaziers Wage Schedule Hamilton - Glazier"
+    source_url: "https://www.epsca.org/upload/request/58?file=LU%201795%20Hamilton%20-%20Glazier%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LU 1795 Hamilton - Glazier - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Glaziers Wage Schedule Toronto - Glazier"
+    source_url: "https://www.epsca.org/upload/request/58?file=LU%201819%20-%20Toronto%20-%20Glazier%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LU 1819 - Toronto - Glazier - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Glaziers Wage Schedule Kitchener - Glazier"
+    source_url: "https://www.epsca.org/upload/request/58?file=LU%201824%20Kitchener%20-%20Glazier%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LU 1824 Kitchener - Glazier - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Glaziers Wage Schedule Oshawa - Glazier"
+    source_url: "https://www.epsca.org/upload/request/58?file=LU%201832%20Oshawa%20-%20Glazier%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LU 1832 Oshawa - Glazier - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Glaziers Wage Schedule Sudbury, Sault Ste. Marie - Glazier"
+    source_url: "https://www.epsca.org/upload/request/58?file=LU%201904%20Sudbury%2C%20Sault%20Ste.%20Marie%20-%20Glazier%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LU 1904 Sudbury, Sault Ste. Marie - Glazier - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Glaziers Wage Schedule LU 200 Ottawa - Glazier"
+    source_url: "https://www.epsca.org/upload/request/58?file=LU%20200%20Ottawa%20-%20Glazier%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "LU 200 Ottawa - Glazier - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Wage Schedule P-1 Windsor"
+    source_url: "https://www.epsca.org/upload/request/59?file=P-1%20LU%201494%20Windsor%20May%201%20%2C%202025.pdf&download=1"
+    source_filename: "P-1 LU 1494 Windsor May 1 , 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Wage Schedule P-10 LU 200 Ottawa"
+    source_url: "https://www.epsca.org/upload/request/59?file=P-10%20LU%20200%20Ottawa%20May%201%2C%202025.pdf&download=1"
+    source_filename: "P-10 LU 200 Ottawa May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Wage Schedule P-11 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/59?file=P-11%20LU%201904%20Sudbury%20May%201%2C%202025.pdf&download=1"
+    source_filename: "P-11 LU 1904 Sudbury May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Wage Schedule P-13 Thunder Bay"
+    source_url: "https://www.epsca.org/upload/request/59?file=P-13%20LU%201671%20Thunder%20Bay%20May%201%2C%202025.pdf&download=1"
+    source_filename: "P-13 LU 1671 Thunder Bay May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Wage Schedule P-2 Sarnia, London"
+    source_url: "https://www.epsca.org/upload/request/59?file=P-2%20LU%201590%20Sarnia%2C%20London%20May%201%2C%202025.pdf&download=1"
+    source_filename: "P-2 LU 1590 Sarnia, London May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Wage Schedule P-4 Brantfod-Kitchener"
+    source_url: "https://www.epsca.org/upload/request/59?file=P-4%20LU%201824%20Brantfod-Kitchener%20May%201%2C%202025.pdf&download=1"
+    source_filename: "P-4 LU 1824 Brantfod-Kitchener May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Wage Schedule P-5 LU 205 Hamilton, Niagara"
+    source_url: "https://www.epsca.org/upload/request/59?file=P-5%20LU%20205%20Hamilton%2C%20Niagara%20May%201%2C%202025.pdf&download=1"
+    source_filename: "P-5 LU 205 Hamilton, Niagara May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Wage Schedule P-7 LU 557 Toronto"
+    source_url: "https://www.epsca.org/upload/request/59?file=P-7%20LU%20557%20Toronto%20May%201%2C%202025.pdf&download=1"
+    source_filename: "P-7 LU 557 Toronto May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Painters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Painters Wage Schedule P-9 LU 114 Kingston"
+    source_url: "https://www.epsca.org/upload/request/59?file=P-9%20LU%20114%20Kingston%20May%201%2C%202025.pdf&download=1"
+    source_filename: "P-9 LU 114 Kingston May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── Plasterers ─────────────────────────────────────────────────────────────
+
+  - union_name: "Plasterers"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Plasterers - 2025-2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/53?file=Plasterers%20-%202025-2030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Plasterers - 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Plasterers"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Plasterers Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/54?file=Plasterers%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Plasterers Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Plasterers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Plasterers Wage Schedule PL-1 LU 124 Windsor"
+    source_url: "https://www.epsca.org/upload/request/55?file=PL-1%20LU%20124%20Windsor%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "PL-1 LU 124 Windsor - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Plasterers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Plasterers Wage Schedule PL-2 LU 124 Sarnia"
+    source_url: "https://www.epsca.org/upload/request/55?file=PL-2%20LU%20124%20Sarnia%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "PL-2 LU 124 Sarnia - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Plasterers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Plasterers Wage Schedule PL-3 LU 124 Bruce Project"
+    source_url: "https://www.epsca.org/upload/request/55?file=PL-3%20LU%20124%20Bruce%20Project%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "PL-3 LU 124 Bruce Project - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Plasterers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Plasterers Wage Schedule PL-4 LU 124 Hamilton"
+    source_url: "https://www.epsca.org/upload/request/55?file=PL-4%20LU%20124%20Hamilton%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "PL-4 LU 124 Hamilton - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Plasterers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Plasterers Wage Schedule PL-5 LU 124 Toronto"
+    source_url: "https://www.epsca.org/upload/request/55?file=PL-5%20LU%20124%20Toronto%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "PL-5 LU 124 Toronto - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Plasterers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Plasterers Wage Schedule PL-6 LU 124 Ottawa"
+    source_url: "https://www.epsca.org/upload/request/55?file=PL-6%20LU%20124%20Ottawa%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "PL-6 LU 124 Ottawa - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Plasterers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Plasterers Wage Schedule PL-7 LU 124 Timmins"
+    source_url: "https://www.epsca.org/upload/request/55?file=PL-7%20LU%20124%20Timmins%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "PL-7 LU 124 Timmins - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Plasterers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Plasterers Wage Schedule PL-8 LU 124 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/55?file=PL-8%20LU%20124%20Sudbury%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "PL-8 LU 124 Sudbury - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Plasterers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Plasterers Wage Schedule PL-9 LU 124 Thunder Bay"
+    source_url: "https://www.epsca.org/upload/request/55?file=PL-9%20LU%20124%20Thunder%20Bay%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "PL-9 LU 124 Thunder Bay - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── Rodmen ─────────────────────────────────────────────────────────────────
+
+  - union_name: "Rodmen"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Rodmen - 2025 to 2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/61?file=Rodmen%20-%202025%20to%202030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Rodmen - 2025 to 2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Rodmen"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Rodmen Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/62?file=Rodmen%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Rodmen Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Rodmen Generation Wage Schedule R-2 LU 700 SarniaWindsorLondon Rodmen Generation"
+    source_url: "https://www.epsca.org/upload/request/63?file=R-2%20LU%20700%20SarniaWindsorLondon%20Rodmen%20Generation%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-2 LU 700 SarniaWindsorLondon Rodmen Generation - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Rodmen Generation Wage Schedule R-4 LU 736 Hamilton Rodmen Generation"
+    source_url: "https://www.epsca.org/upload/request/63?file=R-4%20LU%20736%20Hamilton%20Rodmen%20Generation%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-4 LU 736 Hamilton Rodmen Generation - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Rodmen Generation Wage Schedule R-5 LU 721 Toronto Rodmen Generation"
+    source_url: "https://www.epsca.org/upload/request/63?file=R-5%20LU%20721%20Toronto%20Rodmen%20Generation%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-5 LU 721 Toronto Rodmen Generation - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Rodmen Generation Wage Schedule R-7 LU 765 Ottawa Rodmen Generation"
+    source_url: "https://www.epsca.org/upload/request/63?file=R-7%20LU%20765%20Ottawa%20Rodmen%20Generation%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-7 LU 765 Ottawa Rodmen Generation - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Rodmen Generation Wage Schedule R-8 LU 786 Sudbury Rodmen Generation"
+    source_url: "https://www.epsca.org/upload/request/63?file=R-8%20LU%20786%20Sudbury%20Rodmen%20Generation%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-8 LU 786 Sudbury Rodmen Generation - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "generation"
+    title: "Rodmen Generation Wage Schedule R-9 LU 789 Thunder Bay Rodmen Generation"
+    source_url: "https://www.epsca.org/upload/request/63?file=R-9%20LU%20789%20Thunder%20Bay%20Rodmen%20Generation%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-9 LU 789 Thunder Bay Rodmen Generation - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Rodmen Transmission Wage Schedule R-2 LU 700 SarniaWindsorLondon Rodmen Transmission"
+    source_url: "https://www.epsca.org/upload/request/64?file=R-2%20LU%20700%20SarniaWindsorLondon%20Rodmen%20Transmission%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-2 LU 700 SarniaWindsorLondon Rodmen Transmission - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Rodmen Transmission Wage Schedule R-4 LU 736 Hamilton Rodmen Transmission"
+    source_url: "https://www.epsca.org/upload/request/64?file=R-4%20LU%20736%20Hamilton%20Rodmen%20Transmission%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-4 LU 736 Hamilton Rodmen Transmission - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Rodmen Transmission Wage Schedule R-5 LU 721 Toronto Rodmen Transmission"
+    source_url: "https://www.epsca.org/upload/request/64?file=R-5%20LU%20721%20Toronto%20Rodmen%20Transmission%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-5 LU 721 Toronto Rodmen Transmission - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Rodmen Transmission Wage Schedule R-7 LU 765 Ottawa Rodmen Transmission"
+    source_url: "https://www.epsca.org/upload/request/64?file=R-7%20LU%20765%20Ottawa%20Rodmen%20Transmission%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-7 LU 765 Ottawa Rodmen Transmission - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Rodmen Transmission Wage Schedule R-8 LU 786 Sudbury Rodmen Transmission"
+    source_url: "https://www.epsca.org/upload/request/64?file=R-8%20LU%20786%20Sudbury%20Rodmen%20Transmission%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-8 LU 786 Sudbury Rodmen Transmission - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Rodmen"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: "transmission"
+    title: "Rodmen Transmission Wage Schedule R-9 LU 789 Thunder Bay Rodmen Transmission"
+    source_url: "https://www.epsca.org/upload/request/64?file=R-9%20LU%20789%20Thunder%20Bay%20Rodmen%20Transmission%20-%20May%201%202026.pdf&download=1"
+    source_filename: "R-9 LU 789 Thunder Bay Rodmen Transmission - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  # ─── Roofers ────────────────────────────────────────────────────────────────
+
+  - union_name: "Roofers"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Roofers - 2025 to 2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/65?file=Roofers%20-%202025%20to%202030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Roofers - 2025 to 2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Roofers"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Roofers Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/66?file=Roofers%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Roofers Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-01 LU 235 Windsor"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-01%20LU%20235%20Windsor%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RO-01 LU 235 Windsor - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-02 LU 235 Sarnia"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-02%20LU%20235%20Sarnia%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RO-02 LU 235 Sarnia - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-03 LU473 London Roofers"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-03%20LU473%20London%20Roofers%20-%20May%201%2C%202026.pdf&download=1"
+    source_filename: "RO-03 LU473 London Roofers - May 1, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-04 LU 562 Kitchener"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-04%20LU%20562%20Kitchener%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RO-04 LU 562 Kitchener - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-05 LU 537 HamiltonBrantfordNiagara Roofers"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-05%20LU%20537%20HamiltonBrantfordNiagara%20Roofers%20-%20May%201%2C%202026.pdf&download=1"
+    source_filename: "RO-05 LU 537 HamiltonBrantfordNiagara Roofers - May 1, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-07 LU 30 Toronto Roofers"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-07%20LU%2030%20Toronto%20Roofers%20-%20May%201%2C%202026%20%281%29.pdf&download=1"
+    source_filename: "RO-07 LU 30 Toronto Roofers - May 1, 2026 (1).pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-08 LU 30 Peterborough Roofers"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-08%20LU%2030%20Peterborough%20Roofers%20-%20May%201%2C%202026%20%281%29.pdf&download=1"
+    source_filename: "RO-08 LU 30 Peterborough Roofers - May 1, 2026 (1).pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-09 LU 269 Kingston Roofers"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-09%20LU%20269%20Kingston%20Roofers%20-%20May%201%2C%202026.pdf&download=1"
+    source_filename: "RO-09 LU 269 Kingston Roofers - May 1, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-10 LU 47 Ottawa"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-10%20LU%2047%20Ottawa%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RO-10 LU 47 Ottawa - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-11 LU 504 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-11%20LU%20504%20Sudbury%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RO-11 LU 504 Sudbury - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-12 LU 504 Sault Ste Marie"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-12%20LU%20504%20Sault%20Ste%20Marie%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RO-12 LU 504 Sault Ste Marie - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-13 LU 397 Thunder Bay Roofers"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-13%20LU%20397%20Thunder%20Bay%20Roofers%20-%20May%201%2C%202026.pdf&download=1"
+    source_filename: "RO-13 LU 397 Thunder Bay Roofers - May 1, 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Roofers"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Roofers Wage Schedule RO-14 LU 269 Belleville"
+    source_url: "https://www.epsca.org/upload/request/67?file=RO-14%20LU%20269%20Belleville%20-%20May%201%2C%202025.pdf&download=1"
+    source_filename: "RO-14 LU 269 Belleville - May 1, 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── Sheet Metal ────────────────────────────────────────────────────────────
+
+  - union_name: "Sheet Metal"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Sheet Metal Wage Schedule SM-09 LU 30 Toronto"
+    source_url: "https://www.epsca.org/upload/request/69?file=SM-09%20LU%2030%20Toronto%20-%20May%201%202026%20.pdf&download=1"
+    source_filename: "SM-09 LU 30 Toronto - May 1 2026 .pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Sheet Metal"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Sheet Metal Wage Schedule SM-10 LU 30 Barrie"
+    source_url: "https://www.epsca.org/upload/request/69?file=SM-10%20LU%2030%20Barrie%20-%20May%201%202026.pdf&download=1"
+    source_filename: "SM-10 LU 30 Barrie - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Sheet Metal"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Sheet Metal Wage Schedule SM-11 LU 30 Peterborough"
+    source_url: "https://www.epsca.org/upload/request/69?file=SM-11%20LU%2030%20Peterborough%20-%20May%201%202026%20.pdf&download=1"
+    source_filename: "SM-11 LU 30 Peterborough - May 1 2026 .pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Sheet Metal"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Sheet Metal Wage Schedule SM-16 LU 397 Thunder Bay"
+    source_url: "https://www.epsca.org/upload/request/69?file=SM-16%20LU%20397%20Thunder%20Bay%20-%20May%201%202026%20.pdf&download=1"
+    source_filename: "SM-16 LU 397 Thunder Bay - May 1 2026 .pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  # ─── Teamsters ──────────────────────────────────────────────────────────────
+
+  - union_name: "Teamsters"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Teamsters - 2025 to 2030 Collective Agreement (1)"
+    source_url: "https://www.epsca.org/upload/request/12?file=Teamsters%20-%202025%20to%202030%20Collective%20Agreement%20%281%29.pdf&download=1"
+    source_filename: "Teamsters - 2025 to 2030 Collective Agreement (1).pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Teamsters"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Teamsters Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/70?file=Teamsters%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Teamsters Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Teamsters"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Teamsters Wage Schedule Teamsters - Province of Ontario"
+    source_url: "https://www.epsca.org/upload/request/84?file=Teamsters%20-%20Province%20of%20Ontario%20-%20May%202025.pdf&download=1"
+    source_filename: "Teamsters - Province of Ontario - May 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # ─── Tile and Terrazzo ──────────────────────────────────────────────────────
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "primary_ca"
+    agreement_scope: null
+    title: "Tile and Terrazzo - 2025-2030 Collective Agreement"
+    source_url: "https://www.epsca.org/upload/request/73?file=Tile%20and%20Terrazzo%20-%202025-2030%20Collective%20Agreement.pdf&download=1"
+    source_filename: "Tile and Terrazzo - 2025-2030 Collective Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "nuclear_pa"
+    agreement_scope: null
+    title: "Tile and Terrazzo Nuclear Project Agreement"
+    source_url: "https://www.epsca.org/upload/request/74?file=Tile%20and%20Terrazzo%20Nuclear%20Project%20Agreement.pdf&download=1"
+    source_filename: "Tile and Terrazzo Nuclear Project Agreement.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: "2030-04-30"
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Tile and Terrazzo Wage Schedule M-01 LU 6 WindsorChatham Marble Tile Terrazzo"
+    source_url: "https://www.epsca.org/upload/request/75?file=M-01%20LU%206%20WindsorChatham%20Marble%20Tile%20Terrazzo%20-%20May%201%202026.pdf&download=1"
+    source_filename: "M-01 LU 6 WindsorChatham Marble Tile Terrazzo - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Tile and Terrazzo Wage Schedule M-02 LU 23 Sarnia Marble Tile Terrazzo"
+    source_url: "https://www.epsca.org/upload/request/75?file=M-02%20LU%2023%20Sarnia%20Marble%20Tile%20Terrazzo%20-%20May%201%202026.pdf&download=1"
+    source_filename: "M-02 LU 23 Sarnia Marble Tile Terrazzo - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Tile and Terrazzo Wage Schedule M-03 LU 5 London Marble Tile Terrazzo"
+    source_url: "https://www.epsca.org/upload/request/75?file=M-03%20LU%205%20London%20Marble%20Tile%20Terrazzo%20-%20May%201%202026.pdf&download=1"
+    source_filename: "M-03 LU 5 London Marble Tile Terrazzo - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Tile and Terrazzo Wage Schedule M-04 LU 12 Kitchener Marble Tile Terrazzo"
+    source_url: "https://www.epsca.org/upload/request/75?file=M-04%20LU%2012%20Kitchener%20Marble%20Tile%20Terrazzo%20-%20May%201%202026.pdf&download=1"
+    source_filename: "M-04 LU 12 Kitchener Marble Tile Terrazzo - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Tile and Terrazzo Wage Schedule M-06 LU 1 Niagara Marble Tile Terrazzo"
+    source_url: "https://www.epsca.org/upload/request/75?file=M-06%20LU%201%20Niagara%20Marble%20Tile%20Terrazzo%20-%20May%201%202026.pdf&download=1"
+    source_filename: "M-06 LU 1 Niagara Marble Tile Terrazzo - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Tile and Terrazzo Wage Schedule M-08 LU 2 Kingston Marble Tile Terrazzo"
+    source_url: "https://www.epsca.org/upload/request/75?file=M-08%20LU%202%20Kingston%20Marble%20Tile%20Terrazzo%20-%20May%201%202026.pdf&download=1"
+    source_filename: "M-08 LU 2 Kingston Marble Tile Terrazzo - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Tile and Terrazzo Wage Schedule M-09 LU 7 Ottawa Marble Tile Terrazzo"
+    source_url: "https://www.epsca.org/upload/request/75?file=M-09%20LU%207%20Ottawa%20Marble%20Tile%20Terrazzo%20-%20May%201%202026.pdf&download=1"
+    source_filename: "M-09 LU 7 Ottawa Marble Tile Terrazzo - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Tile and Terrazzo Wage Schedule M-10 Sudbury"
+    source_url: "https://www.epsca.org/upload/request/75?file=M-10%20Sudbury.pdf&download=1"
+    source_filename: "M-10 Sudbury.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Tile and Terrazzo Wage Schedule M-11 LU 25 Thunder Bay Marble Tile Terrazzo"
+    source_url: "https://www.epsca.org/upload/request/75?file=M-11%20LU%2025%20Thunder%20Bay%20Marble%20Tile%20Terrazzo%20-%20May%201%202026.pdf&download=1"
+    source_filename: "M-11 LU 25 Thunder Bay Marble Tile Terrazzo - May 1 2026.pdf"
+    effective_date: "2026-05-01"
+    expiry_date: null
+
+  - union_name: "Tile and Terrazzo"
+    document_type: "wage_schedule"
+    conversion_engine: "pymupdf4llm"
+    agreement_scope: null
+    title: "Tile and Terrazzo Wage Schedule M-5 M-7 Toronto"
+    source_url: "https://www.epsca.org/upload/request/75?file=M-5%20M-7%20Toronto.pdf&download=1"
+    source_filename: "M-5 M-7 Toronto.pdf"
     effective_date: "2025-05-01"
     expiry_date: null

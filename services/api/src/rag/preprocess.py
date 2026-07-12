@@ -7,6 +7,7 @@ Performs lightweight query analysis before embedding and retrieval:
 - Cross-union complexity classification (routes to Sonnet vs. Haiku)
 """
 
+import functools
 import re
 
 from pydantic import BaseModel
@@ -62,7 +63,36 @@ _UNION_ALIASES: dict[str, list[re.Pattern[str]]] = {
     "Sheet Metal": [
         re.compile(r"\bsheet metal\b", re.IGNORECASE),
     ],
+    "Brick and Allied Craft Union": [
+        re.compile(r"\bBACU\b", re.IGNORECASE),
+        re.compile(r"\bbricklayers?\b", re.IGNORECASE),
+    ],
+    "Labourers": [
+        re.compile(r"\bLiUNA\b", re.IGNORECASE),
+        re.compile(r"\blaborers?\b", re.IGNORECASE),  # US spelling
+    ],
+    "Rodmen": [
+        re.compile(r"\brodman\b", re.IGNORECASE),
+    ],
+    "Operating Engineers": [
+        re.compile(r"\bIUOE\b", re.IGNORECASE),
+    ],
 }
+
+
+@functools.lru_cache(maxsize=64)
+def _union_patterns(union: str) -> tuple[re.Pattern[str], ...]:
+    """Compiled alias patterns for *union*, including its singular form.
+
+    Plural union names ("Carpenters", "Teamsters", "Cement Masons") should
+    match singular mentions ("the carpenter rate"); names not ending in "s"
+    (IBEW, Rodmen, United Association) rely on explicit aliases instead.
+    """
+    patterns = list(_UNION_ALIASES.get(union, []))
+    lower = union.lower()
+    if lower.endswith("s"):
+        patterns.append(re.compile(rf"\b{re.escape(lower[:-1])}\b", re.IGNORECASE))
+    return tuple(patterns)
 
 _WAGE_KEYWORDS: list[str] = [
     "rate",
@@ -121,7 +151,7 @@ def detect_unions(query: str, known_unions: list[str]) -> list[str]:
     for index, union in enumerate(known_unions):
         position = lower.find(union.lower())
         if position == -1:
-            for pattern in _UNION_ALIASES.get(union, []):
+            for pattern in _union_patterns(union):
                 alias_match = pattern.search(query)
                 if alias_match:
                     position = alias_match.start()

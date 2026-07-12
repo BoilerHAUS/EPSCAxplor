@@ -134,6 +134,24 @@ class TestDetectUnion:
         result = detect_union("electrical workers wage schedule", KNOWN_UNIONS)
         assert result == "IBEW"
 
+    def test_singular_form_detects_plural_union(self) -> None:
+        # Phase 2 unions are stored plural; singular mentions must match.
+        unions = [*KNOWN_UNIONS, "Carpenters", "Teamsters", "Cement Masons"]
+        assert detect_union("what is the carpenter rate?", unions) == "Carpenters"
+        assert detect_union("teamster travel allowance", unions) == "Teamsters"
+        assert detect_union("cement mason overtime", unions) == "Cement Masons"
+
+    def test_singular_stripping_not_applied_to_non_plural_names(self) -> None:
+        # "Rodmen" must not degrade to "rodme"; explicit alias handles "rodman".
+        unions = [*KNOWN_UNIONS, "Rodmen"]
+        assert detect_union("rodman wage rate", unions) == "Rodmen"
+        assert detect_union("rodme nonsense", unions) is None
+
+    def test_alias_bacu_detects_brick_union(self) -> None:
+        unions = [*KNOWN_UNIONS, "Brick and Allied Craft Union"]
+        assert detect_union("BACU journeyperson rate", unions) == "Brick and Allied Craft Union"
+        assert detect_union("bricklayer overtime rules", unions) == "Brick and Allied Craft Union"
+
 
 class TestDetectUnions:
     def test_empty_query_returns_empty_list(self) -> None:
