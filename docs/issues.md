@@ -51,11 +51,6 @@ Goal: End-to-end pipeline validated against 3 unions (IBEW Generation, Sheet Met
 | [#55](https://github.com/BoilerHAUS/EPSCAxplor/issues/55) | pr | [x] | fix(rag): wage schedule rate rows not retrieved — tabular data missing from Qdrant results |
 | [#56](https://github.com/BoilerHAUS/EPSCAxplor/issues/56) | pr | [x] | fix(rag): cross-union queries retrieve single-union context only |
 | [#57](https://github.com/BoilerHAUS/EPSCAxplor/issues/57) | pr | [x] | fix(rag): spurious citations returned on out-of-corpus refusal queries |
-| [#75](https://github.com/BoilerHAUS/EPSCAxplor/issues/75) | pr | [ ] | chore(ci): harden Dokploy deploys — pin GIT_SHA images and verify deployment status |
-| [#76](https://github.com/BoilerHAUS/EPSCAxplor/issues/76) | no-pr | [ ] | ops: rotate Dokploy GHCR token before Oct 9, 2026 |
-| [#77](https://github.com/BoilerHAUS/EPSCAxplor/issues/77) | pr | [ ] | fix(rag): agreement_scope filter excludes unscoped unions in cross-union queries (C01) |
-| [#78](https://github.com/BoilerHAUS/EPSCAxplor/issues/78) | pr | [ ] | fix(rag): specific-provision narrative chunks not retrieved — recall gaps (O07/W02/T03/N02) |
-| [#79](https://github.com/BoilerHAUS/EPSCAxplor/issues/79) | pr | [ ] | fix(ingestion): CA chunks missing section metadata — model mislabels section numbers (O01/O04) |
 | [#39](https://github.com/BoilerHAUS/EPSCAxplor/issues/39) | pr | [x] | chore(ci): extract shared validation steps into reusable workflow |
 | [#49](https://github.com/BoilerHAUS/EPSCAxplor/issues/49) | pr | [x] | feat(ingestion): ingest Phase 1 wage schedule PDFs into corpus |
 | [#68](https://github.com/BoilerHAUS/EPSCAxplor/issues/68) | pr | [x] | fix(ingestion): propagate classification labels across date sub-rows in wage schedule chunks |
@@ -74,6 +69,28 @@ Goal: All 58 documents ingested and queryable. Completion gate: full gold questi
 | [#20](https://github.com/BoilerHAUS/EPSCAxplor/issues/20) | no-pr | [x] | ops: run full corpus ingestion (all 58 documents) |
 | [#21](https://github.com/BoilerHAUS/EPSCAxplor/issues/21) | pr | [x] | feat(ingestion): validate and refine chunking for wage schedule table extraction |
 | [#22](https://github.com/BoilerHAUS/EPSCAxplor/issues/22) | no-pr | [ ] | ops: evaluate full corpus against complete gold question set |
+
+---
+
+## Hardening & Quality (post-Phase 2)
+
+Improvements identified during the Phase 1/2 retrieval work (2026-07). Not phase-gated;
+prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
+
+| # | type | status | title |
+|---|------|--------|-------|
+| [#85](https://github.com/BoilerHAUS/EPSCAxplor/issues/85) | pr | [ ] | fix(api): interim auth on /query — bearer token + rate limit (URGENT) |
+| [#86](https://github.com/BoilerHAUS/EPSCAxplor/issues/86) | pr | [ ] | fix(rag): nomic task prefixes for embeddings (+ reingest) |
+| [#87](https://github.com/BoilerHAUS/EPSCAxplor/issues/87) | pr | [ ] | chore(ci): nightly smoke eval with auto-checked questions |
+| [#88](https://github.com/BoilerHAUS/EPSCAxplor/issues/88) | pr | [ ] | feat(api): wire query logging (query_log_id currently N/A) |
+| [#89](https://github.com/BoilerHAUS/EPSCAxplor/issues/89) | pr | [ ] | feat(rag): structured rate lookup path for wage queries |
+| [#90](https://github.com/BoilerHAUS/EPSCAxplor/issues/90) | pr | [ ] | chore(ingestion): retire Docling + TPDS branch and committed node_modules |
+| [#91](https://github.com/BoilerHAUS/EPSCAxplor/issues/91) | pr | [ ] | chore(ci): monthly corpus drift check against epsca.org |
+| [#75](https://github.com/BoilerHAUS/EPSCAxplor/issues/75) | pr | [ ] | chore(ci): harden Dokploy deploys — pin GIT_SHA images and verify deployment status |
+| [#76](https://github.com/BoilerHAUS/EPSCAxplor/issues/76) | no-pr | [ ] | ops: rotate Dokploy GHCR token before Oct 9, 2026 |
+| [#77](https://github.com/BoilerHAUS/EPSCAxplor/issues/77) | pr | [x] | fix(rag): agreement_scope filter excludes unscoped unions in cross-union queries (C01) |
+| [#78](https://github.com/BoilerHAUS/EPSCAxplor/issues/78) | pr | [ ] | fix(rag): hybrid retrieval for narrative recall gaps (O07/W02/T03/N02) |
+| [#79](https://github.com/BoilerHAUS/EPSCAxplor/issues/79) | pr | [ ] | fix(ingestion): CA chunks missing section metadata — model mislabels section numbers (O01/O04) |
 
 ---
 
