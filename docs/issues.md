@@ -47,7 +47,7 @@ Goal: End-to-end pipeline validated against 3 unions (IBEW Generation, Sheet Met
 | [#61](https://github.com/BoilerHAUS/EPSCAxplor/issues/61) | pr | [x] | feat(ingestion): persist Docling and TPDS wage-table artifacts plus retrieval metadata (superseded by epsca_form parser) |
 | [#60](https://github.com/BoilerHAUS/EPSCAxplor/issues/60) | pr | [x] | fix(ingestion): handle multi-page wage tables and repeated headers in Docling + TPDS path (superseded by epsca_form parser) |
 | [#59](https://github.com/BoilerHAUS/EPSCAxplor/issues/59) | no-pr | [x] | ops(eval): reingest wage schedules and rerun Phase 1 evaluation after Docling + TPDS rollout |
-| [#18](https://github.com/BoilerHAUS/EPSCAxplor/issues/18) | no-pr | [ ] | ops: evaluate Phase 1 POC against gold question set |
+| [#18](https://github.com/BoilerHAUS/EPSCAxplor/issues/18) | no-pr | [x] | ops: evaluate Phase 1 POC against gold question set |
 | [#55](https://github.com/BoilerHAUS/EPSCAxplor/issues/55) | pr | [x] | fix(rag): wage schedule rate rows not retrieved — tabular data missing from Qdrant results |
 | [#56](https://github.com/BoilerHAUS/EPSCAxplor/issues/56) | pr | [x] | fix(rag): cross-union queries retrieve single-union context only |
 | [#57](https://github.com/BoilerHAUS/EPSCAxplor/issues/57) | pr | [x] | fix(rag): spurious citations returned on out-of-corpus refusal queries |
@@ -68,7 +68,7 @@ Goal: All 58 documents ingested and queryable. Completion gate: full gold questi
 | [#19](https://github.com/BoilerHAUS/EPSCAxplor/issues/19) | pr | [x] | feat(ingestion): expand corpus_manifest.yaml for all 18 unions |
 | [#20](https://github.com/BoilerHAUS/EPSCAxplor/issues/20) | no-pr | [x] | ops: run full corpus ingestion (all 58 documents) |
 | [#21](https://github.com/BoilerHAUS/EPSCAxplor/issues/21) | pr | [x] | feat(ingestion): validate and refine chunking for wage schedule table extraction |
-| [#22](https://github.com/BoilerHAUS/EPSCAxplor/issues/22) | no-pr | [ ] | ops: evaluate full corpus against complete gold question set |
+| [#22](https://github.com/BoilerHAUS/EPSCAxplor/issues/22) | no-pr | [x] | ops: evaluate full corpus against complete gold question set |
 
 ---
 
@@ -79,8 +79,8 @@ prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
 
 | # | type | status | title |
 |---|------|--------|-------|
-| [#85](https://github.com/BoilerHAUS/EPSCAxplor/issues/85) | pr | [ ] | fix(api): interim auth on /query — bearer token + rate limit (URGENT) |
-| [#86](https://github.com/BoilerHAUS/EPSCAxplor/issues/86) | pr | [ ] | fix(rag): nomic task prefixes for embeddings (+ reingest) |
+| [#85](https://github.com/BoilerHAUS/EPSCAxplor/issues/85) | pr | [x] | fix(api): interim auth on /query — bearer token + rate limit (URGENT) |
+| [#86](https://github.com/BoilerHAUS/EPSCAxplor/issues/86) | pr | [x] | fix(rag): nomic task prefixes for embeddings (+ reingest) |
 | [#87](https://github.com/BoilerHAUS/EPSCAxplor/issues/87) | pr | [ ] | chore(ci): nightly smoke eval with auto-checked questions |
 | [#88](https://github.com/BoilerHAUS/EPSCAxplor/issues/88) | pr | [ ] | feat(api): wire query logging (query_log_id currently N/A) |
 | [#89](https://github.com/BoilerHAUS/EPSCAxplor/issues/89) | pr | [ ] | feat(rag): structured rate lookup path for wage queries |
