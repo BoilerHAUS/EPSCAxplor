@@ -936,6 +936,51 @@ class TestRetrieveWageQuery:
         assert [c.point_id for c in results[:2]] == ["ibew-ws", "ua-ws"]
 
     @pytest.mark.asyncio
+    async def test_wage_pass_applies_null_tolerant_scope_filter(
+        self, settings: Settings
+    ) -> None:
+        """'generation project' rate queries must not surface the same
+        local's TRANSMISSION wage schedule in the wage slots (W15)."""
+        ca_hit = self._make_hit("ca-1")
+        wage_hit = self._make_hit("ws-1", "wage_schedule")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([wage_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "Labourers foreman rate on a generation project in Sarnia",
+                union_filters=["Labourers"],
+                agreement_scope="generation",
+                is_wage_query=True,
+                settings=settings,
+            )
+
+        wage_filter = mock_qdrant.query_points.await_args_list[1].kwargs["query_filter"]
+        scope_guards = [
+            c for c in wage_filter.must
+            if isinstance(c, Filter)
+            and any(
+                isinstance(s, FieldCondition) and s.key == "agreement_scope"
+                for s in (c.should or [])
+            )
+        ]
+        assert len(scope_guards) == 1
+        should = scope_guards[0].should
+        assert should[0].is_null is True
+        assert should[1].match.value == "generation"
+
+    @pytest.mark.asyncio
     async def test_non_wage_query_uses_single_qdrant_call(
         self, settings: Settings
     ) -> None:
