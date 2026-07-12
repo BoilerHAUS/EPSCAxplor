@@ -135,10 +135,20 @@ def build_filter(
         )
 
     if agreement_scope:
+        # Null-tolerant, like the date guards: scope disambiguates unions that
+        # HAVE scoped agreements (IBEW/Labourers generation vs. transmission).
+        # Most unions have agreement_scope=null, and a hard match would
+        # exclude them entirely — e.g. "compare IBEW Generation and Sheet
+        # Metal" would silently drop all Sheet Metal chunks.
         must.append(
-            FieldCondition(
-                key="agreement_scope",
-                match=MatchValue(value=agreement_scope),
+            Filter(
+                should=[
+                    FieldCondition(key="agreement_scope", is_null=True),
+                    FieldCondition(
+                        key="agreement_scope",
+                        match=MatchValue(value=agreement_scope),
+                    ),
+                ]
             )
         )
 
