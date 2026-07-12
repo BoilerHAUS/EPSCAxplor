@@ -59,7 +59,8 @@ _MAP_CODE_LINE_RE = re.compile(r"MAP\s+CODE:", re.IGNORECASE)
 _PAGE_OF_RE = re.compile(r"(\d+)\s+OF\s+(\d+)", re.IGNORECASE)
 _HUMAN_DATE_RE = re.compile(r"[A-Z][a-z]+\.?\s+\d{1,2},\s+\d{4}")
 _DATE_ROW_RE = re.compile(r"^\s*(\d{4}-\d{2}-\d{2})((?:\s+\$?\d+\.\d{2})+)\s*$")
-_GRADE_LABEL_RE = re.compile(r"^\s*(\d{1,2}-\d{1,2})\s+(\S.*)$")
+# Grade/step is usually "NN-N" but BACU schedules print "XX".
+_GRADE_LABEL_RE = re.compile(r"^\s*(\d{1,2}-\d{1,2}|XX)\s+(\S.*)$")
 _OCCUPATION_CODE_RE = re.compile(r"\b(\d{6})\b")
 # "1st Period …" (most trades) or "1st 1000 hrs" (Ironworkers apprentices).
 _PERIOD_LABEL_RE = re.compile(r"^\d+(?:st|nd|rd|th)\b", re.IGNORECASE)

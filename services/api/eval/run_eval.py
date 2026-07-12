@@ -235,15 +235,120 @@ GOLD_QUESTIONS: list[GoldQuestion] = [
     GoldQuestion(
         id="R01",
         category="Refusal",
-        union="N/A (out of corpus)",
+        union="Boilermakers",  # in corpus since Phase 2 — must now ANSWER
         question="What are the pension benefits for retired Boilermakers under EPSCA agreements?",
-        is_refusal=True,
+        is_refusal=False,
     ),
     GoldQuestion(
         id="R02",
         category="Refusal",
-        union="N/A (out of corpus)",
+        union="IBEW",  # Transmission CA in corpus since Phase 2 — must now ANSWER
         question="What is the grievance arbitration process for IBEW Transmission workers at Bruce Power?",
+        is_refusal=False,
+    ),
+
+    # ── Phase 2: full corpus (added 2026-07-12) ──────────────────────────────
+    # Expected rates verified against the source wage schedule PDFs.
+    GoldQuestion(
+        id="W09", category="Wages & Rates", union="Boilermakers",
+        question="What is the Boilermakers journeyperson hourly rate effective May 1, 2025?",
+        expected_contains=["52.72"],
+    ),
+    GoldQuestion(
+        id="W10", category="Wages & Rates", union="Carpenters",
+        question="What is the journeyperson hourly rate for Carpenters in Windsor effective May 1, 2025?",
+        expected_contains=["44.69"],
+    ),
+    GoldQuestion(
+        id="W11", category="Wages & Rates", union="Millwrights",
+        question="What is the Millwrights journeyperson hourly rate effective May 1, 2025?",
+        expected_contains=["50.14"],
+    ),
+    GoldQuestion(
+        id="W12", category="Wages & Rates", union="Ironworkers",
+        question="What is the journeyperson rate for Ironworkers in Windsor on a generation project effective May 1, 2025?",
+        expected_contains=["48.33"],
+    ),
+    GoldQuestion(
+        id="W13", category="Wages & Rates", union="Rodmen",
+        question="What is the Rodmen journeyperson hourly rate in Toronto on a generation project effective May 1, 2025?",
+        expected_contains=["46.94"],
+    ),
+    GoldQuestion(
+        id="W14", category="Wages & Rates", union="Operating Engineers",
+        question="What is the operating engineer hourly rate in Hamilton effective May 1, 2025?",
+        expected_contains=["50.40"],
+    ),
+    GoldQuestion(
+        id="W15", category="Wages & Rates", union="Labourers",
+        question="What is the Labourers Foreman Group IX rate in Sarnia on a generation project effective May 1, 2025?",
+        expected_contains=["46.51"],
+    ),
+    GoldQuestion(
+        id="W16", category="Wages & Rates", union="Painters",
+        question="What is the painter journeyperson hourly rate in Windsor effective May 1, 2025?",
+        expected_contains=["39.41"],
+    ),
+    GoldQuestion(
+        id="W17", category="Wages & Rates", union="Roofers",
+        question="What is the journeyperson roofer hourly rate in Windsor effective May 1, 2025?",
+        expected_contains=["42.57"],
+    ),
+    GoldQuestion(
+        id="W18", category="Wages & Rates", union="Cement Masons",
+        question="What is the Cement Masons foreman hourly rate in Windsor effective May 1, 2025?",
+        expected_contains=["43.96"],
+    ),
+    GoldQuestion(
+        id="W19", category="Wages & Rates", union="Plasterers",
+        question="What is the Plasterers foreman hourly rate in Windsor effective May 1, 2025?",
+        expected_contains=["52.57"],
+    ),
+    GoldQuestion(
+        id="W20", category="Wages & Rates", union="Insulators",
+        question="What is the Insulators foreman hourly rate for Local 95 Zone 1 effective May 1, 2025?",
+        expected_contains=["55.74"],
+    ),
+    GoldQuestion(
+        id="W21", category="Wages & Rates", union="Tile and Terrazzo",
+        question="What is the working foreman rate for Marble/Tile/Terrazzo workers in Windsor effective May 1, 2025?",
+        expected_contains=["50.52"],
+    ),
+    GoldQuestion(
+        id="W22", category="Wages & Rates", union="Teamsters",
+        question="What is the Teamsters Group 1 hourly rate effective May 1, 2025?",
+        expected_contains=["43.13"],
+    ),
+    GoldQuestion(
+        id="W23", category="Wages & Rates", union="Brick and Allied Craft Union",
+        question="What is the BACU bricklayer journeyperson hourly rate in Niagara effective May 1, 2025?",
+        expected_contains=["46.45"],
+    ),
+    GoldQuestion(
+        id="C03", category="Cross-Union Comparison", union="Carpenters / Ironworkers",
+        question="Which union has the higher journeyperson base rate in Windsor as of May 2025: Carpenters or Ironworkers?",
+        expected_contains=["44.69", "48.33"],
+        is_cross_union=True,
+    ),
+    GoldQuestion(
+        id="C04", category="Cross-Union Comparison", union="Cement Masons / Plasterers",
+        question="Compare the foreman hourly rates for Cement Masons and Plasterers in Windsor as of May 2025.",
+        expected_contains=["43.96", "52.57"],
+        is_cross_union=True,
+    ),
+    GoldQuestion(
+        id="N06", category="Nuclear Project Specific", union="Boilermakers",
+        question="What special conditions apply to Boilermakers working at Darlington under their Nuclear Project Agreement?",
+        is_nuclear=True,
+    ),
+    GoldQuestion(
+        id="R03", category="Refusal", union="N/A (out of corpus)",
+        question="What is the wage rate for Elevator Constructors under EPSCA agreements?",
+        is_refusal=True,
+    ),
+    GoldQuestion(
+        id="R04", category="Refusal", union="N/A (out of corpus)",
+        question="What does the Sprinkler Fitters collective agreement say about overtime pay?",
         is_refusal=True,
     ),
 ]
@@ -266,6 +371,19 @@ class EvalResult:
     @property
     def citation_count(self) -> int:
         return len(self.citations)
+
+    @property
+    def expected_missing(self) -> list[str]:
+        """expected_contains strings absent from the answer (case-insensitive)."""
+        answer = self.answer.lower()
+        return [s for s in self.question.expected_contains if s.lower() not in answer]
+
+    @property
+    def auto_check(self) -> str | None:
+        """PASS/FAIL when the question declares expected content, else None."""
+        if not self.question.expected_contains:
+            return None
+        return "PASS" if not self.expected_missing else "FAIL"
 
     @property
     def is_refusal_response(self) -> bool:
@@ -324,6 +442,10 @@ def run_eval(api_url: str, output_path: Path) -> list[EvalResult]:
             results.append(result)
 
             status = "ERROR" if error else f"{result.citation_count} citations"
+            if result.auto_check:
+                status += f", auto-check {result.auto_check}"
+                if result.expected_missing:
+                    status += f" (missing: {', '.join(result.expected_missing)})"
             print(f"         → {status} ({latency_ms}ms)")
 
     _write_markdown(results, output_path)
@@ -386,6 +508,10 @@ def _write_markdown(results: list[EvalResult], path: Path) -> None:
         f"**Run date:** {run_at}  ",
         f"**Questions:** {total}  ",
         f"**API errors:** {errors}  ",
+        f"**Auto-checked (expected_contains):** "
+        f"{sum(1 for r in results if r.auto_check == 'PASS')} pass / "
+        f"{sum(1 for r in results if r.auto_check == 'FAIL')} fail / "
+        f"{sum(1 for r in results if r.auto_check is None)} manual-only  ",
         "",
         "> **Note:** Correctness and citation accuracy scores require manual review against",
         "> the source PDFs. Fill in the `Correct?` and `Citations valid?` columns below.",
@@ -435,6 +561,19 @@ def _write_markdown(results: list[EvalResult], path: Path) -> None:
                 f"**Latency:** {r.latency_ms}ms  ",
                 f"**Query log ID:** `{r.query_log_id or 'N/A'}`",
                 "",
+                *(
+                    [
+                        f"**Auto-check:** {r.auto_check}"
+                        + (
+                            f" — missing: {', '.join(r.expected_missing)}"
+                            if r.expected_missing
+                            else f" (found: {', '.join(r.question.expected_contains)})"
+                        ),
+                        "",
+                    ]
+                    if r.auto_check
+                    else []
+                ),
                 "**Manual review:**",
                 "",
                 "| Correct? | Citations valid? | Notes |",
