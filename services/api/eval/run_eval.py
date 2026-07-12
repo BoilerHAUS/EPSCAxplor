@@ -400,9 +400,14 @@ class EvalResult:
 
 
 def _submit_question(client: httpx.Client, api_url: str, question: str) -> dict[str, Any]:
+    headers = {}
+    token = os.getenv("QUERY_API_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     resp = client.post(
         f"{api_url}/query",
         json={"query": question},
+        headers=headers,
         timeout=60.0,
     )
     resp.raise_for_status()

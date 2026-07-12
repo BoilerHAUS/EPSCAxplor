@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     jwt_access_expiry_seconds: int = 900
     jwt_refresh_expiry_days: int = 7
     environment: str = "development"
+    # Interim /query protection (#85); real auth arrives in Phase 3 (#23).
+    query_api_token: str | None = None
+    query_rate_limit_per_minute: int = 30
     cors_origins: str = "http://localhost:3000"
 
 
