@@ -211,11 +211,15 @@ def _merge_union_results(
 
 
 async def _embed(text: str, settings: Settings) -> list[float]:
-    """Return a 768-dim embedding for *text* via the Ollama embeddings API."""
+    """Return a 768-dim embedding for *text* via the Ollama embeddings API.
+
+    nomic-embed-text expects task prefixes: chunks are embedded with
+    "search_document: " at ingestion, queries with "search_query: " here.
+    """
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{settings.ollama_url}/api/embeddings",
-            json={"model": settings.ollama_embed_model, "prompt": text},
+            json={"model": settings.ollama_embed_model, "prompt": f"search_query: {text}"},
             timeout=30.0,
         )
         response.raise_for_status()

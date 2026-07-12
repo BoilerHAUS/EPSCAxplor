@@ -111,7 +111,7 @@ class TestEmbedSingleBatch:
         with patch("embed.httpx.AsyncClient", return_value=mock_client):
             await embed_chunks(chunks)
         payload = mock_client.post.call_args.kwargs["json"]
-        assert payload["input"] == ["first text", "second text"]
+        assert payload["input"] == ["search_document: first text", "search_document: second text"]
 
 
 class TestEmbedBatching:

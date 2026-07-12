@@ -53,7 +53,10 @@ async def embed_chunks(
     # at ~2 chars/token for dense markdown tables). Truncate embed input only; the full
     # text is preserved in the stored chunk for citation display.
     MAX_EMBED_CHARS = 2500
-    texts = [c.text[:MAX_EMBED_CHARS] for c in chunks]
+    # nomic-embed-text is trained with task prefixes; retrieval quality
+    # degrades measurably without them.  Must match the "search_query: "
+    # prefix applied at query time in services/api retrieval.
+    texts = [f"search_document: {c.text[:MAX_EMBED_CHARS]}" for c in chunks]
     embeddings: list[list[float]] = []
 
     async with httpx.AsyncClient(base_url=base_url, timeout=120.0) as client:
