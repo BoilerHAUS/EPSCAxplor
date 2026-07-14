@@ -82,7 +82,7 @@ prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
 | [#85](https://github.com/BoilerHAUS/EPSCAxplor/issues/85) | pr | [x] | fix(api): interim auth on /query — bearer token + rate limit (URGENT) |
 | [#86](https://github.com/BoilerHAUS/EPSCAxplor/issues/86) | pr | [x] | fix(rag): nomic task prefixes for embeddings (+ reingest) |
 | [#87](https://github.com/BoilerHAUS/EPSCAxplor/issues/87) | pr | [ ] | chore(ci): nightly smoke eval with auto-checked questions |
-| [#88](https://github.com/BoilerHAUS/EPSCAxplor/issues/88) | pr | [ ] | feat(api): wire query logging (query_log_id currently N/A) |
+| [#88](https://github.com/BoilerHAUS/EPSCAxplor/issues/88) | pr | [x] | feat(api): wire query logging (query_log_id currently N/A) |
 | [#89](https://github.com/BoilerHAUS/EPSCAxplor/issues/89) | pr | [ ] | feat(rag): structured rate lookup path for wage queries |
 | [#90](https://github.com/BoilerHAUS/EPSCAxplor/issues/90) | pr | [ ] | chore(ingestion): retire Docling + TPDS branch and committed node_modules |
 | [#91](https://github.com/BoilerHAUS/EPSCAxplor/issues/91) | pr | [ ] | chore(ci): monthly corpus drift check against epsca.org |
@@ -100,7 +100,7 @@ Goal: Secure, multi-tenant product ready for beta users.
 
 | # | type | status | title |
 |---|------|--------|-------|
-| [#23](https://github.com/BoilerHAUS/EPSCAxplor/issues/23) | pr | [ ] | feat(auth): implement JWT authentication with refresh token rotation |
+| [#23](https://github.com/BoilerHAUS/EPSCAxplor/issues/23) | pr | [x] | feat(auth): implement JWT authentication with refresh token rotation |
 | [#24](https://github.com/BoilerHAUS/EPSCAxplor/issues/24) | pr | [ ] | feat(auth): implement API key authentication for enterprise tier |
 | [#25](https://github.com/BoilerHAUS/EPSCAxplor/issues/25) | pr | [ ] | feat(api): implement subscription tier enforcement and rate limiting |
 | [#26](https://github.com/BoilerHAUS/EPSCAxplor/issues/26) | pr | [ ] | feat(api): implement GET /documents and GET /query-history endpoints |

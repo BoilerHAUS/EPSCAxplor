@@ -18,6 +18,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ### Changed
 - `/query` now requires a valid access JWT; `get_current_user` decodes the bearer token into tenant/user context, replacing the interim shared bearer token.
 - CORS now sends `allow_credentials` so the httpOnly refresh cookie can round-trip (requires exact, non-wildcard `CORS_ORIGINS`).
+- `/query` now returns a real `query_log_id` (previously `N/A`); query-log persistence moved into `src/db/query_logs.py` with unit coverage, and remains best-effort so a logging failure never fails the answer (#88).
 
 ### Removed
 - Interim `QUERY_API_TOKEN` shared-secret protection on `/query`, superseded by JWT auth (#85 → #23).
