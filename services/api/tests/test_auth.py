@@ -5,17 +5,21 @@ Replaces the interim shared-bearer-token tests (#85); that mechanism was removed
 
 from __future__ import annotations
 
+import contextlib
 import uuid
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.testclient import TestClient
 
 from src.auth import CurrentUser, enforce_rate_limit, get_current_user
+from src.auth.api_keys import generate_api_key
 from src.auth.dependencies import _request_log
 from src.auth.tokens import encode_access_token
 from src.config import Settings, get_settings
+from src.db.api_keys import ApiKeyRecord
 
 JWT_SECRET = "dependency-test-secret"
 
@@ -164,3 +168,66 @@ class TestRateLimit:
 
         clock["t"] += 61.0
         await enforce_rate_limit(FakeRequest(), settings)  # type: ignore[arg-type]
+
+
+@contextlib.asynccontextmanager
+async def _fake_connect(*_a: object, **_k: object) -> Any:
+    yield AsyncMock()
+
+
+def _api_key_record() -> ApiKeyRecord:
+    return ApiKeyRecord(
+        id=uuid.uuid4(), tenant_id=uuid.uuid4(), name="Prod key", is_active=True
+    )
+
+
+class TestApiKeyDependency:
+    """API-key branch of get_current_user (#24)."""
+
+    def test_valid_api_key_authenticates_with_null_user(self) -> None:
+        client = _auth_app(_settings())
+        record = _api_key_record()
+        with patch("src.auth.dependencies.connect", _fake_connect), patch(
+            "src.auth.dependencies.get_active_api_key_by_hash",
+            new=AsyncMock(return_value=record),
+        ), patch("src.auth.dependencies.touch_last_used", new=AsyncMock()) as touch:
+            resp = client.get(
+                "/guarded", headers={"Authorization": f"Bearer {generate_api_key()}"}
+            )
+        assert resp.status_code == 200
+        assert resp.json() == {"tenant": str(record.tenant_id), "user": "None"}
+        touch.assert_awaited_once()
+
+    def test_unknown_or_inactive_key_returns_401(self) -> None:
+        client = _auth_app(_settings())
+        with patch("src.auth.dependencies.connect", _fake_connect), patch(
+            "src.auth.dependencies.get_active_api_key_by_hash",
+            new=AsyncMock(return_value=None),
+        ):
+            resp = client.get(
+                "/guarded", headers={"Authorization": f"Bearer {generate_api_key()}"}
+            )
+        assert resp.status_code == 401
+
+    def test_last_used_failure_does_not_break_auth(self) -> None:
+        client = _auth_app(_settings())
+        with patch("src.auth.dependencies.connect", _fake_connect), patch(
+            "src.auth.dependencies.get_active_api_key_by_hash",
+            new=AsyncMock(return_value=_api_key_record()),
+        ), patch(
+            "src.auth.dependencies.touch_last_used",
+            new=AsyncMock(side_effect=RuntimeError("boom")),
+        ):
+            resp = client.get(
+                "/guarded", headers={"Authorization": f"Bearer {generate_api_key()}"}
+            )
+        assert resp.status_code == 200
+
+    def test_jwt_still_authenticates_alongside_api_keys(self) -> None:
+        # Regression: a non-prefixed token still goes through the JWT path.
+        settings = _settings()
+        client = _auth_app(settings)
+        resp = client.get(
+            "/guarded", headers={"Authorization": f"Bearer {_token(settings)}"}
+        )
+        assert resp.status_code == 200
