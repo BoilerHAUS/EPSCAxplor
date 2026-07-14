@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     refresh_cookie_secure: bool = True  # set False only for local http development
     refresh_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
     refresh_cookie_domain: str | None = None
-    # Per-client request cap on /query (#85). Tier-aware limits arrive in #25.
+    # Per-client burst cap on /query (#85); per-tenant tier quota is enforce_tier_limit (#25).
     query_rate_limit_per_minute: int = 30
     cors_origins: str = "http://localhost:3000"
 

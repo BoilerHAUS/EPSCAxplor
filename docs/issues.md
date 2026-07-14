@@ -102,7 +102,7 @@ Goal: Secure, multi-tenant product ready for beta users.
 |---|------|--------|-------|
 | [#23](https://github.com/BoilerHAUS/EPSCAxplor/issues/23) | pr | [x] | feat(auth): implement JWT authentication with refresh token rotation |
 | [#24](https://github.com/BoilerHAUS/EPSCAxplor/issues/24) | pr | [x] | feat(auth): implement API key authentication for enterprise tier |
-| [#25](https://github.com/BoilerHAUS/EPSCAxplor/issues/25) | pr | [ ] | feat(api): implement subscription tier enforcement and rate limiting |
+| [#25](https://github.com/BoilerHAUS/EPSCAxplor/issues/25) | pr | [x] | feat(api): implement subscription tier enforcement and rate limiting |
 | [#26](https://github.com/BoilerHAUS/EPSCAxplor/issues/26) | pr | [ ] | feat(api): implement GET /documents and GET /query-history endpoints |
 | [#27](https://github.com/BoilerHAUS/EPSCAxplor/issues/27) | pr | [ ] | feat(web): build Next.js frontend skeleton and API client |
 | [#28](https://github.com/BoilerHAUS/EPSCAxplor/issues/28) | pr | [ ] | feat(web): build chat interface with query submission and citation display |

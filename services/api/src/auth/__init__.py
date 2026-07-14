@@ -14,5 +14,11 @@ password primitives in ``src.auth.tokens`` / ``src.auth.passwords``.
 from __future__ import annotations
 
 from src.auth.dependencies import CurrentUser, enforce_rate_limit, get_current_user
+from src.auth.tier_limit import enforce_tier_limit
 
-__all__ = ["CurrentUser", "enforce_rate_limit", "get_current_user"]
+__all__ = [
+    "CurrentUser",
+    "enforce_rate_limit",
+    "enforce_tier_limit",
+    "get_current_user",
+]

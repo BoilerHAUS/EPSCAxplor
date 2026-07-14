@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from datetime import datetime
 from typing import Any
 
 import asyncpg
@@ -55,3 +56,15 @@ async def insert_query_log(
     )
     log_id: uuid.UUID = row["id"]
     return log_id
+
+
+async def count_queries_since(
+    conn: asyncpg.Connection, tenant_id: uuid.UUID, since: datetime
+) -> int:
+    """Count a tenant's queries since a timestamp (usage in the current period)."""
+    count = await conn.fetchval(
+        "SELECT count(*) FROM query_logs WHERE tenant_id = $1 AND created_at >= $2",
+        tenant_id,
+        since,
+    )
+    return int(count)

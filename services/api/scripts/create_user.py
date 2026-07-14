@@ -25,6 +25,8 @@ import uuid
 
 from src.auth.passwords import hash_password
 from src.db import connect
+from src.db.subscriptions import get_tenant_subscription
+from src.db.users import count_users_for_tenant
 
 DEFAULT_ROUNDS = 12
 ROLES = ("owner", "admin", "member")
@@ -52,6 +54,15 @@ async def _create_user(
         tenant_id = await conn.fetchval("SELECT id FROM tenants WHERE slug = $1", tenant_slug)
         if tenant_id is None:
             raise SystemExit(f"No tenant with slug {tenant_slug!r}; seed it first (migration 008).")
+        # Enforce the tenant's user_limit when a subscription sets one (fail-open otherwise).
+        sub = await get_tenant_subscription(conn, tenant_id)
+        if sub is not None and sub.user_limit is not None:
+            existing = await count_users_for_tenant(conn, tenant_id)
+            if existing >= sub.user_limit:
+                raise SystemExit(
+                    f"Tenant {tenant_slug!r} is at its user limit ({sub.user_limit}); "
+                    "upgrade the subscription tier to add more users."
+                )
         row = await conn.fetchrow(
             "INSERT INTO users (tenant_id, email, password_hash, role) "
             "VALUES ($1, $2, $3, $4) RETURNING id",
