@@ -401,6 +401,7 @@ EPSCAxplor already has the core RAG spine in place, but it is not pretending to 
 
 - FastAPI query endpoint with preprocessing, retrieval, generation, citation extraction, and query logging
 - JWT authentication with refresh-token rotation and reuse detection; `/query` requires a valid access token
+- API-key authentication for the enterprise tier (`Authorization: Bearer epsca_sk_…`)
 - Postgres and Qdrant persistence layers
 - Ingestion pipeline with conversion support for wage schedule PDFs
 - Tests across API and ingestion modules
@@ -409,7 +410,7 @@ EPSCAxplor already has the core RAG spine in place, but it is not pretending to 
 ### What is still incomplete
 
 - The Next.js frontend is still a scaffold
-- API-key auth (#24) and subscription tier enforcement (#25) are not built yet
+- Subscription tier enforcement and rate limiting (#25) are not built yet
 - Manual review of evaluation correctness and citation validity is still pending
 
 ### Known gaps already tracked in the repo
