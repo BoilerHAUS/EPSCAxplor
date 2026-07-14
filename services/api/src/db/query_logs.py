@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any
 
 import asyncpg
+from pydantic import BaseModel
 
 
 async def insert_query_log(
@@ -67,4 +68,50 @@ async def count_queries_since(
         tenant_id,
         since,
     )
+    return int(count)
+
+
+class QueryLogListItem(BaseModel):
+    """A query_logs row shaped for the /query-history response."""
+
+    id: uuid.UUID
+    query_text: str
+    response_text: str
+    model_used: str
+    citations: list[dict[str, Any]]
+    created_at: datetime
+
+
+async def list_query_logs(
+    conn: asyncpg.Connection, tenant_id: uuid.UUID, *, limit: int, offset: int
+) -> list[QueryLogListItem]:
+    """Return a tenant's queries, newest first (citations parsed from jsonb text)."""
+    rows = await conn.fetch(
+        "SELECT id, query_text, response_text, model_used, citations, created_at "
+        "FROM query_logs WHERE tenant_id = $1 "
+        "ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+        tenant_id,
+        limit,
+        offset,
+    )
+    items: list[QueryLogListItem] = []
+    for row in rows:
+        raw = row["citations"]
+        citations = json.loads(raw) if isinstance(raw, str) else (raw or [])
+        items.append(
+            QueryLogListItem(
+                id=row["id"],
+                query_text=row["query_text"],
+                response_text=row["response_text"],
+                model_used=row["model_used"],
+                citations=citations,
+                created_at=row["created_at"],
+            )
+        )
+    return items
+
+
+async def count_query_logs(conn: asyncpg.Connection, tenant_id: uuid.UUID) -> int:
+    """Count a tenant's total queries (for history pagination)."""
+    count = await conn.fetchval("SELECT count(*) FROM query_logs WHERE tenant_id = $1", tenant_id)
     return int(count)

@@ -403,6 +403,7 @@ EPSCAxplor already has the core RAG spine in place, but it is not pretending to 
 - JWT authentication with refresh-token rotation and reuse detection; `/query` requires a valid access token
 - API-key authentication for the enterprise tier (`Authorization: Bearer epsca_sk_…`)
 - Per-tenant subscription tier enforcement (monthly query quota) on `/query`
+- `GET /documents` (corpus registry) and tenant-scoped `GET /query-history` read endpoints
 - Postgres and Qdrant persistence layers
 - Ingestion pipeline with conversion support for wage schedule PDFs
 - Tests across API and ingestion modules
@@ -410,8 +411,7 @@ EPSCAxplor already has the core RAG spine in place, but it is not pretending to 
 
 ### What is still incomplete
 
-- The Next.js frontend is still a scaffold
-- Read endpoints (`GET /documents`, `/query-history`, #26) are not built yet
+- The Next.js frontend is still a scaffold (chat / corpus browser / history UI: #27–#30)
 - Billing (Stripe) that provisions subscriptions is Phase 4; tier enforcement is inert until then
 - Manual review of evaluation correctness and citation validity is still pending
 
