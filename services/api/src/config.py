@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -27,8 +28,13 @@ class Settings(BaseSettings):
     jwt_access_expiry_seconds: int = 900
     jwt_refresh_expiry_days: int = 7
     environment: str = "development"
-    # Interim /query protection (#85); real auth arrives in Phase 3 (#23).
-    query_api_token: str | None = None
+    # Password + refresh-cookie policy (#23).
+    bcrypt_rounds: int = 12
+    refresh_cookie_name: str = "epsca_refresh"
+    refresh_cookie_secure: bool = True  # set False only for local http development
+    refresh_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
+    refresh_cookie_domain: str | None = None
+    # Per-client request cap on /query (#85). Tier-aware limits arrive in #25.
     query_rate_limit_per_minute: int = 30
     cors_origins: str = "http://localhost:3000"
 

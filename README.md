@@ -272,9 +272,16 @@ Expected shape:
 
 ### Query request
 
+`/query` requires a JWT access token. Obtain one via `POST /auth/login`, then send it as a bearer token:
+
 ```bash
+ACCESS=$(curl -s -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "you@example.com", "password": "..."}' | jq -r .access_token)
+
 curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ACCESS" \
   -d '{
     "query": "Compare the overtime rules for IBEW Generation and Sheet Metal workers."
   }'
@@ -393,6 +400,7 @@ EPSCAxplor already has the core RAG spine in place, but it is not pretending to 
 ### What is built
 
 - FastAPI query endpoint with preprocessing, retrieval, generation, citation extraction, and query logging
+- JWT authentication with refresh-token rotation and reuse detection; `/query` requires a valid access token
 - Postgres and Qdrant persistence layers
 - Ingestion pipeline with conversion support for wage schedule PDFs
 - Tests across API and ingestion modules
@@ -401,7 +409,7 @@ EPSCAxplor already has the core RAG spine in place, but it is not pretending to 
 ### What is still incomplete
 
 - The Next.js frontend is still a scaffold
-- Auth is currently a Phase 1 stub, not enforced JWT auth
+- API-key auth (#24) and subscription tier enforcement (#25) are not built yet
 - Manual review of evaluation correctness and citation validity is still pending
 
 ### Known gaps already tracked in the repo

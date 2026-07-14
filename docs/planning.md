@@ -363,6 +363,34 @@ CREATE TABLE api_keys (
 CREATE INDEX idx_api_keys_tenant_id ON api_keys(tenant_id);
 ```
 
+#### `refresh_tokens` Table
+
+Added in #23 to back JWT refresh-token rotation. Refresh tokens are opaque, high-entropy
+strings; only their SHA-256 hash is stored (never plaintext, mirroring `api_keys.key_hash`).
+All tokens descended from one login share a `family_id`; rotating a token marks the old row
+`rotated` and inserts a child, and presenting an already-`rotated` token revokes the whole
+family (reuse detection).
+
+```sql
+CREATE TABLE refresh_tokens (
+    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID        NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+    tenant_id   UUID        NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    token_hash  TEXT        NOT NULL UNIQUE,            -- SHA-256 hex of the raw token
+    family_id   UUID        NOT NULL,                   -- rotation lineage
+    parent_id   UUID        REFERENCES refresh_tokens(id) ON DELETE SET NULL,
+    status      TEXT        NOT NULL DEFAULT 'active'
+                CHECK (status IN ('active', 'rotated', 'revoked')),
+    expires_at  TIMESTAMPTZ NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    rotated_at  TIMESTAMPTZ
+);
+
+CREATE INDEX idx_refresh_tokens_user_id    ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_family_id  ON refresh_tokens(family_id);
+CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+```
+
 #### `documents` Table
 
 The document registry tracks every ingested document. This is the source of truth for
@@ -1110,6 +1138,10 @@ into all downstream database queries and query logs.
 3. Returns a short-lived JWT (15 minutes) and a longer-lived refresh token (7 days)
 4. Frontend stores JWT in memory, refresh token in httpOnly cookie
 5. All subsequent requests include JWT as Bearer token
+6. `POST /auth/refresh` rotates the refresh token on every use (old token marked spent, new
+   one issued in the same family); replaying a spent token revokes the whole family. `POST
+   /auth/logout` revokes the family and clears the cookie. Passwords are bcrypt-hashed and the
+   JWT algorithm is pinned to HS256. Implemented in #23.
 
 **API key users (enterprise tier):**
 
