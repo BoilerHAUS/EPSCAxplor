@@ -45,3 +45,9 @@ async def get_user_by_id(conn: asyncpg.Connection, user_id: uuid.UUID) -> UserRe
 async def touch_last_login(conn: asyncpg.Connection, user_id: uuid.UUID) -> None:
     """Stamp ``last_login_at = NOW()`` for a successful login."""
     await conn.execute("UPDATE users SET last_login_at = NOW() WHERE id = $1", user_id)
+
+
+async def count_users_for_tenant(conn: asyncpg.Connection, tenant_id: uuid.UUID) -> int:
+    """Count active-or-not users under a tenant (for user_limit enforcement)."""
+    count = await conn.fetchval("SELECT count(*) FROM users WHERE tenant_id = $1", tenant_id)
+    return int(count)

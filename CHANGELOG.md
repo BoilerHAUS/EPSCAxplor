@@ -14,6 +14,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - `refresh_tokens` table (migration 007) and a seeded bootstrap `system` tenant (migration 008, which also fixes the previously unseeded `query_logs` tenant FK).
 - `scripts/create_user.py` operator CLI for creating tenant users with bcrypt-hashed passwords (no registration endpoint in Phase 3).
 - API key authentication for the enterprise tier (#24): keys are presented as `Authorization: Bearer epsca_sk_…`, stored only as SHA-256 hashes, and resolved by `get_current_user` to a tenant (with `user_id=None`). `scripts/create_api_key.py` mints them; the raw key is shown once. `last_used_at` is stamped best-effort.
+- Per-tenant subscription tier enforcement on `/query` (#25): a tenant that reaches its `subscriptions.query_limit_monthly` for the current period gets `429`. Enterprise (NULL limit) and tenants without a subscription are unlimited (fail-open, so it stays inert until billing lands in #32). `scripts/create_user.py` also enforces `user_limit`. This is the tier layer on top of the per-IP burst limiter from #85.
 - Initial repository structure and GitHub workflow configuration
 
 ### Changed
