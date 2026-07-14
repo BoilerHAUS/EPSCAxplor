@@ -3,15 +3,13 @@
 Wires together pre-processing, retrieval, context assembly, generation,
 citation extraction, query logging, and the structured response.
 
-Phase 1 notes:
-- Auth is a stub (no JWT enforcement).
-- Query log writes are best-effort: a FK violation on tenant_id (absent
-  system tenant in DB) will not fail the response; query_log_id is None.
+Query logging is best-effort: the row is written after the answer is produced,
+and a write failure is logged but never fails the response (``query_log_id`` is
+then ``None``). Auth (tenant/user context) comes from ``get_current_user``.
 """
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 import time
@@ -24,6 +22,8 @@ from pydantic import BaseModel, Field, field_validator
 
 from src.auth import CurrentUser, enforce_rate_limit, get_current_user
 from src.config import Settings, get_settings
+from src.db import connect
+from src.db.query_logs import insert_query_log
 from src.rag.citation_extractor import CitationRef, extract_citations
 from src.rag.context import assemble_context
 from src.rag.generator import DISCLAIMER, GeneratorResult, generate
@@ -101,35 +101,29 @@ async def _write_query_log(
     latency_ms: int,
     citations: list[dict[str, Any]],
 ) -> str | None:
-    """Insert a row into query_logs; return the new UUID or None on error."""
+    """Best-effort wrapper over ``insert_query_log``; returns the id or None.
+
+    A logging failure must never fail the user's query, so any error is logged
+    and swallowed. On success the real ``query_log_id`` is returned.
+    """
     try:
-        conn = await asyncpg.connect(database_url, timeout=5)
-        try:
-            row = await conn.fetchrow(
-                """
-                INSERT INTO query_logs (
-                    tenant_id, user_id, query_text, response_text, model_used,
-                    union_filter, doc_type_filter, chunks_retrieved,
-                    prompt_tokens, completion_tokens, latency_ms, citations
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-                RETURNING id::text
-                """,
-                tenant_id,
-                user_id,
-                query_text,
-                response_text,
-                model_used,
-                union_filter,
-                doc_type_filter,
-                chunks_retrieved,
-                prompt_tokens,
-                completion_tokens,
-                latency_ms,
-                json.dumps(citations),
+        async with connect(database_url) as conn:
+            log_id = await insert_query_log(
+                conn,
+                tenant_id=tenant_id,
+                user_id=user_id,
+                query_text=query_text,
+                response_text=response_text,
+                model_used=model_used,
+                union_filter=union_filter,
+                doc_type_filter=doc_type_filter,
+                chunks_retrieved=chunks_retrieved,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                latency_ms=latency_ms,
+                citations=citations,
             )
-            return row["id"] if row else None
-        finally:
-            await conn.close()
+        return str(log_id)
     except Exception:  # noqa: BLE001
         logger.warning("query_log write failed (best-effort)", exc_info=True)
         return None
