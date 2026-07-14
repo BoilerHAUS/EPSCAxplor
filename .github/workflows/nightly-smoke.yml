@@ -1,0 +1,62 @@
+name: Nightly Smoke Eval
+
+# Turns silent production breakage (expired tokens, wiped vectors, stale images)
+# into a red workflow within a day. Runs a 4-question subset of the gold set plus
+# a /health probe against the live API. Cost: ~4 Claude queries/day on Haiku.
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # 08:00 UTC daily
+  workflow_dispatch: {} # allow manual runs
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Smoke eval against production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      API_URL: ${{ vars.SMOKE_API_URL || 'https://api.epscaxplor.boilerhaus.org' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: services/api/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r services/api/requirements.txt
+
+      - name: Check smoke API key is set
+        env:
+          SMOKE_API_KEY: ${{ secrets.SMOKE_API_KEY }}
+        run: |
+          if [ -z "$SMOKE_API_KEY" ]; then
+            echo "::error::SMOKE_API_KEY secret is not set. Mint an epsca_sk_ key for an enterprise (unlimited) test tenant and add it as a repository secret."
+            exit 1
+          fi
+
+      - name: Health check
+        run: |
+          echo "GET $API_URL/health"
+          BODY=$(curl -sS --max-time 30 "$API_URL/health")
+          echo "$BODY"
+          echo "$BODY" | grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' || {
+            echo "::error::Health check failed — not all dependencies are green"
+            exit 1
+          }
+
+      - name: Run smoke eval
+        working-directory: services/api
+        env:
+          QUERY_API_TOKEN: ${{ secrets.SMOKE_API_KEY }}
+        run: |
+          python eval/run_eval.py \
+            --ids W10,R03,N06,C03 \
+            --fail-on-regression \
+            --output "$RUNNER_TEMP/smoke_results.md"

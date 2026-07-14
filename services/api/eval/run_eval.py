@@ -22,13 +22,10 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-try:
+if TYPE_CHECKING:
     import httpx
-except ImportError:
-    print("httpx not installed. Run: pip install httpx", file=sys.stderr)
-    sys.exit(1)
 
 DEFAULT_API_URL = "https://api.epscaxplor.boilerhaus.org"
 DEFAULT_OUTPUT = Path(__file__).parent.parent.parent.parent / "docs" / "evaluation" / "phase1_results.md"
@@ -354,6 +351,19 @@ GOLD_QUESTIONS: list[GoldQuestion] = [
 ]
 
 
+def filter_questions(ids: list[str]) -> list[GoldQuestion]:
+    """Return the gold questions matching ``ids``, preserving the requested order.
+
+    Raises ``ValueError`` if any id is unknown, so a typo in the smoke subset
+    fails loudly instead of silently narrowing the run.
+    """
+    by_id = {q.id: q for q in GOLD_QUESTIONS}
+    unknown = [i for i in ids if i not in by_id]
+    if unknown:
+        raise ValueError(f"Unknown question id(s): {', '.join(unknown)}")
+    return [by_id[i] for i in ids]
+
+
 # ---------------------------------------------------------------------------
 # API client
 # ---------------------------------------------------------------------------
@@ -399,6 +409,35 @@ class EvalResult:
         return any(phrase in self.answer.lower() for phrase in refusal_phrases)
 
 
+def find_regressions(results: list[EvalResult]) -> list[str]:
+    """Return human-readable regression messages for a smoke run.
+
+    A regression is any of:
+      - an API/transport error (the query never got a clean answer),
+      - an auto-check FAIL (a declared ``expected_contains`` string is missing),
+      - citations returned on a refusal question (out-of-corpus answers must
+        not cite sources).
+
+    An empty list means the smoke run is clean.
+    """
+    problems: list[str] = []
+    for r in results:
+        qid = r.question.id
+        if r.error:
+            problems.append(f"{qid}: API error — {r.error}")
+            # Skip further checks: an errored result has no answer to grade.
+            continue
+        if r.auto_check == "FAIL":
+            problems.append(
+                f"{qid}: auto-check FAIL — missing {', '.join(r.expected_missing)}"
+            )
+        if r.question.is_refusal and r.citation_count > 0:
+            problems.append(
+                f"{qid}: refusal question returned {r.citation_count} citation(s)"
+            )
+    return problems
+
+
 def _submit_question(client: httpx.Client, api_url: str, question: str) -> dict[str, Any]:
     headers = {}
     token = os.getenv("QUERY_API_TOKEN")
@@ -414,15 +453,22 @@ def _submit_question(client: httpx.Client, api_url: str, question: str) -> dict[
     return resp.json()
 
 
-def run_eval(api_url: str, output_path: Path) -> list[EvalResult]:
+def run_eval(
+    api_url: str,
+    output_path: Path,
+    questions: list[GoldQuestion] | None = None,
+) -> list[EvalResult]:
+    import httpx  # local import so unit tests can import this module without httpx
+
+    questions = questions if questions is not None else GOLD_QUESTIONS
     results: list[EvalResult] = []
 
-    print(f"Submitting {len(GOLD_QUESTIONS)} questions to {api_url}")
+    print(f"Submitting {len(questions)} questions to {api_url}")
     print("-" * 60)
 
     with httpx.Client() as client:
-        for i, gq in enumerate(GOLD_QUESTIONS, 1):
-            print(f"[{i:02d}/{len(GOLD_QUESTIONS)}] {gq.id} — {gq.question[:70]}...")
+        for i, gq in enumerate(questions, 1):
+            print(f"[{i:02d}/{len(questions)}] {gq.id} — {gq.question[:70]}...")
             start = time.monotonic()
             error = None
             raw: dict[str, Any] = {}
@@ -625,18 +671,48 @@ def main() -> None:
         help="Output markdown file path (default: %(default)s)",
     )
     parser.add_argument(
+        "--ids",
+        help="Comma-separated question ids to run, e.g. W10,R03,N06,C03 (default: all)",
+    )
+    parser.add_argument(
+        "--fail-on-regression",
+        action="store_true",
+        help=(
+            "Exit non-zero if any auto-check FAILs, an API error occurs, or a "
+            "refusal question returns citations (for the nightly smoke workflow)"
+        ),
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print questions without submitting to API",
     )
     args = parser.parse_args()
 
+    questions = GOLD_QUESTIONS
+    if args.ids:
+        ids = [i.strip() for i in args.ids.split(",") if i.strip()]
+        try:
+            questions = filter_questions(ids)
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            raise SystemExit(2) from exc
+
     if args.dry_run:
-        for gq in GOLD_QUESTIONS:
+        for gq in questions:
             print(f"[{gq.id}] ({gq.category}) {gq.question}")
         return
 
-    run_eval(args.api_url, args.output)
+    results = run_eval(args.api_url, args.output, questions)
+
+    if args.fail_on_regression:
+        problems = find_regressions(results)
+        if problems:
+            print("\nSMOKE EVAL FAILED — regressions detected:", file=sys.stderr)
+            for problem in problems:
+                print(f"  - {problem}", file=sys.stderr)
+            raise SystemExit(1)
+        print(f"\nSmoke eval passed: {len(results)} question(s), no regressions.")
 
 
 if __name__ == "__main__":
