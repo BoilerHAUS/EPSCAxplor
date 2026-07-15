@@ -106,7 +106,7 @@ Goal: Secure, multi-tenant product ready for beta users.
 | [#25](https://github.com/BoilerHAUS/EPSCAxplor/issues/25) | pr | [x] | feat(api): implement subscription tier enforcement and rate limiting |
 | [#26](https://github.com/BoilerHAUS/EPSCAxplor/issues/26) | pr | [x] | feat(api): implement GET /documents and GET /query-history endpoints |
 | [#27](https://github.com/BoilerHAUS/EPSCAxplor/issues/27) | pr | [x] | feat(web): build Next.js frontend skeleton and API client |
-| [#28](https://github.com/BoilerHAUS/EPSCAxplor/issues/28) | pr | [ ] | feat(web): build chat interface with query submission and citation display |
+| [#28](https://github.com/BoilerHAUS/EPSCAxplor/issues/28) | pr | [x] | feat(web): build chat interface with query submission and citation display |
 | [#29](https://github.com/BoilerHAUS/EPSCAxplor/issues/29) | pr | [ ] | feat(web): build corpus browser UI (document list and search) |
 | [#30](https://github.com/BoilerHAUS/EPSCAxplor/issues/30) | pr | [ ] | feat(web): build query history UI |
 | [#31](https://github.com/BoilerHAUS/EPSCAxplor/issues/31) | no-pr | [ ] | ops: Phase 3 smoke test — multi-tenant isolation and rate limiting verification |

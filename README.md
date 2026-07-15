@@ -20,7 +20,7 @@
   </p>
 
   <p>
-    <img src="https://img.shields.io/badge/status-phase%201%20POC-0f766e?style=for-the-badge" alt="Phase 1 POC badge" />
+    <img src="https://img.shields.io/badge/status-phase%203%20product%20layer-0f766e?style=for-the-badge" alt="Phase 3 product layer badge" />
     <img src="https://img.shields.io/badge/backend-FastAPI-059669?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI badge" />
     <img src="https://img.shields.io/badge/frontend-Next.js%2015-111111?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js badge" />
     <img src="https://img.shields.io/badge/vector-Qdrant-e11d48?style=for-the-badge" alt="Qdrant badge" />
@@ -69,14 +69,15 @@ EPSCAxplor is designed to make those answers:
 
 | Capability | Current implementation |
 | --- | --- |
-| API | FastAPI service with `/health` and `/query` |
+| API | FastAPI service: `/health`, `/query`, `/auth/*` (JWT + refresh rotation), `/documents`, `/query-history` |
+| Auth | JWT access tokens + httpOnly refresh cookies for users; `epsca_sk_…` API keys for the enterprise tier |
 | Retrieval | Qdrant similarity search with union, nuclear, scope, and date filters |
 | Generation | Claude Haiku for standard questions, Claude Sonnet for cross-union comparisons |
 | Embeddings | Ollama with `nomic-embed-text` |
 | Corpus ingestion | Download, PDF extraction, optional PDF-to-Markdown conversion, classification, chunking, embedding, storage |
 | Data model | PostgreSQL for documents, tenants, users, subscriptions, API keys, and query logs |
-| Frontend | Next.js app scaffold; current UI is still a placeholder |
-| Evaluation | 30-question Phase 1 POC evaluator targeting live API responses |
+| Frontend | Next.js login + chat UI on the EPSCAxplor design system: cited answers with `[SOURCE N]` markers, structured citation cards, and the mandatory legal disclaimer |
+| Evaluation | 30-question gold evaluator against the live API, plus a nightly auto-checked smoke eval in CI |
 
 ### Highlights
 
@@ -207,11 +208,13 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 ```bash
 cd apps/web
+cp .env.example .env.local   # sets NEXT_PUBLIC_API_URL=http://localhost:8000
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`. You will land on the login screen — create a user first with
+`python -m scripts.create_user` in `services/api` (there is no registration endpoint in Phase 3).
 
 ### 7. Run ingestion
 
@@ -247,6 +250,15 @@ Ingestion:
 cd services/ingestion
 . .venv/bin/activate
 pytest
+```
+
+Web:
+
+```bash
+cd apps/web
+npm test              # vitest unit/component suite
+npm run type-check
+npm run lint
 ```
 
 ## Query API
@@ -345,7 +357,8 @@ INGEST_WAGE_TABLE_PIPELINE=1 python3 run_pipeline.py --doc-type wage_schedule --
 
 ## Corpus snapshot
 
-The repository is currently in a **Phase 1 POC** state.
+The checked-in corpus is still the **Phase 1 POC snapshot**; expanding it toward the full
+target is tracked separately from the Phase 3 product-layer work.
 
 | Snapshot | Value |
 | --- | --- |
@@ -353,7 +366,7 @@ The repository is currently in a **Phase 1 POC** state.
 | Unions currently represented in the checked-in manifest | 3 |
 | Document types currently represented | Primary CAs, Nuclear Project Agreements, Wage Schedules |
 | Full project target from planning docs | ~58 documents across 18 unions |
-| Evaluation harness | 30 gold questions in `services/api/eval/run_eval.py` |
+| Evaluation harness | 30 gold questions in `services/api/eval/run_eval.py`; nightly auto-checked smoke subset via `.github/workflows/nightly-smoke.yml` |
 
 Table-heavy wage schedules are a first-class retrieval problem in this repo. The default path still supports PDF-to-Markdown conversion before chunking, and an opt-in Docling + TPDS branch now exists for wage schedules when you want row-aware table chunks plus saved normalization artifacts:
 
@@ -404,14 +417,16 @@ EPSCAxplor already has the core RAG spine in place, but it is not pretending to 
 - API-key authentication for the enterprise tier (`Authorization: Bearer epsca_sk_…`)
 - Per-tenant subscription tier enforcement (monthly query quota) on `/query`
 - `GET /documents` (corpus registry) and tenant-scoped `GET /query-history` read endpoints
+- Next.js frontend on the EPSCAxplor design system (dark-default, safety-amber accent, Manrope + IBM Plex Mono): login with silent-refresh session handling, typed API client, and a chat interface rendering cited answers, structured citation cards, and the mandatory legal disclaimer
+- Nightly smoke evaluation in CI against the production API
 - Postgres and Qdrant persistence layers
 - Ingestion pipeline with conversion support for wage schedule PDFs
-- Tests across API and ingestion modules
+- Tests across API, ingestion, and web modules
 - Deployment and operational runbooks
 
 ### What is still incomplete
 
-- The Next.js frontend is still a scaffold (chat / corpus browser / history UI: #27–#30)
+- Corpus browser and query-history UI (#29–#30)
 - Billing (Stripe) that provisions subscriptions is Phase 4; tier enforcement is inert until then
 - Manual review of evaluation correctness and citation validity is still pending
 
