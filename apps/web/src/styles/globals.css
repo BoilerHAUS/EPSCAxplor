@@ -1,0 +1,35 @@
+/* ==========================================================================
+   EPSCAxplor — Global stylesheet
+   Aggregates the design-system tokens (ported from the design-system export's
+   styles.css). fonts.css is intentionally omitted: Manrope and IBM Plex Mono
+   are self-hosted via next/font in app/layout.tsx instead of the Google
+   Fonts CDN. Dark theme is the default; set [data-theme="light"] on <html>
+   to opt into light mode.
+   ========================================================================== */
+
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+@import "./tokens/radii.css";
+@import "./tokens/shadows.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--surface-app);
+  color: var(--text-primary);
+  font: var(--text-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

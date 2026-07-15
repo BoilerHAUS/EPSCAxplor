@@ -28,6 +28,7 @@ node_modules/
 out/
 .turbo/
 *.tsbuildinfo
+coverage/
 
 # Corpus PDFs (downloaded at ingestion time, not version-controlled)
 services/ingestion/corpus/
@@ -54,3 +55,6 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Design system export (reference only, not committed)
+design-system.zip
