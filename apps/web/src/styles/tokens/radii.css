@@ -1,0 +1,14 @@
+/* ==========================================================================
+   EPSCAxplor — Corner radii
+   Deliberately restrained: this is a legal-reference tool, not a playful
+   consumer app. Sharper edges on structural surfaces (cards, panels, inputs);
+   pill radius reserved for tags/badges/chips only.
+   ========================================================================== */
+
+:root {
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-pill: 999px;
+}

@@ -1,0 +1,122 @@
+/* ==========================================================================
+   EPSCAxplor — Color tokens
+   Base neutral scale (near-black/near-white) + one industrial safety-amber
+   accent, used sparingly (primary actions, focus rings, citation markers).
+   Dark mode is the default surface; [data-theme="light"] overrides below.
+   ========================================================================== */
+
+:root {
+  /* ---- Base neutral scale -------------------------------------------- */
+  --gray-1000: #050505;
+  --gray-950: #0a0a0a;
+  --gray-900: #121212;
+  --gray-850: #181818;
+  --gray-800: #1e1e1e;
+  --gray-700: #2b2b2b;
+  --gray-600: #404040;
+  --gray-500: #6b6b6b;
+  --gray-400: #8f8f8f;
+  --gray-300: #b3b3b3;
+  --gray-200: #d4d4d4;
+  --gray-150: #e4e4e2;
+  --gray-100: #ececea;
+  --gray-50: #f6f5f2;
+  --white: #ffffff;
+
+  /* ---- Safety amber (industrial accent, sparing use) ------------------ */
+  --amber-700: #92400e;
+  --amber-600: #b45309;
+  --amber-500: #d97706;
+  --amber-400: #f59e0b;
+  --amber-300: #fbbf24;
+  --amber-200: #fde3b0;
+
+  /* ---- Semantic status ------------------------------------------------ */
+  --red-600: #b91c1c;
+  --red-500: #dc2626;
+  --red-400: #f87171;
+  --green-600: #15803d;
+  --green-500: #16a34a;
+  --green-400: #4ade80;
+  --blue-600: #1d4ed8;
+  --blue-500: #2563eb;
+  --blue-400: #60a5fa;
+
+  /* ---- Semantic aliases — DARK (default) ------------------------------ */
+  --surface-app: var(--gray-950);
+  --surface-sunken: var(--gray-1000);
+  --surface-card: var(--gray-900);
+  --surface-card-raised: var(--gray-850);
+  --surface-overlay: rgba(5, 5, 5, 0.72);
+  --surface-hover: rgba(255, 255, 255, 0.05);
+  --surface-active: rgba(255, 255, 255, 0.08);
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.14);
+  --border-strong: rgba(255, 255, 255, 0.24);
+
+  --text-primary: var(--gray-50);
+  --text-secondary: var(--gray-300);
+  --text-tertiary: var(--gray-500);
+  --text-disabled: var(--gray-600);
+  --text-on-accent: #1a1200;
+  --text-link: var(--amber-300);
+  --text-link-hover: var(--amber-200);
+
+  --accent-primary: var(--amber-400);
+  --accent-primary-hover: var(--amber-300);
+  --accent-primary-active: var(--amber-500);
+  --accent-subtle: rgba(245, 158, 11, 0.14);
+  --accent-border: rgba(245, 158, 11, 0.4);
+
+  --status-success: var(--green-500);
+  --status-success-subtle: rgba(22, 163, 74, 0.16);
+  --status-error: var(--red-500);
+  --status-error-subtle: rgba(220, 38, 38, 0.16);
+  --status-info: var(--blue-500);
+  --status-info-subtle: rgba(37, 99, 235, 0.16);
+  --status-warning: var(--amber-400);
+  --status-warning-subtle: rgba(245, 158, 11, 0.14);
+
+  --focus-ring: var(--amber-400);
+}
+
+/* ---- Semantic aliases — LIGHT theme override --------------------------- */
+[data-theme="light"] {
+  --surface-app: var(--gray-50);
+  --surface-sunken: var(--gray-100);
+  --surface-card: var(--white);
+  --surface-card-raised: var(--white);
+  --surface-overlay: rgba(10, 10, 10, 0.5);
+  --surface-hover: rgba(10, 10, 10, 0.04);
+  --surface-active: rgba(10, 10, 10, 0.07);
+
+  --border-subtle: rgba(10, 10, 10, 0.08);
+  --border-default: rgba(10, 10, 10, 0.13);
+  --border-strong: rgba(10, 10, 10, 0.22);
+
+  --text-primary: var(--gray-950);
+  --text-secondary: var(--gray-600);
+  --text-tertiary: var(--gray-500);
+  --text-disabled: var(--gray-300);
+  --text-on-accent: #1a1200;
+  --text-link: var(--amber-600);
+  --text-link-hover: var(--amber-700);
+
+  --accent-primary: var(--amber-500);
+  --accent-primary-hover: var(--amber-600);
+  --accent-primary-active: var(--amber-700);
+  --accent-subtle: rgba(217, 119, 6, 0.1);
+  --accent-border: rgba(217, 119, 6, 0.35);
+
+  --status-success-subtle: rgba(22, 163, 74, 0.1);
+  --status-error-subtle: rgba(220, 38, 38, 0.1);
+  --status-info-subtle: rgba(37, 99, 235, 0.1);
+  --status-warning-subtle: rgba(245, 158, 11, 0.1);
+
+  --focus-ring: var(--amber-500);
+}
+
+/* Default a/hover so the editor never falls back to browser blue */
+a { color: var(--text-link); }
+a:hover { color: var(--text-link-hover); }

@@ -81,7 +81,7 @@ prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
 |---|------|--------|-------|
 | [#85](https://github.com/BoilerHAUS/EPSCAxplor/issues/85) | pr | [x] | fix(api): interim auth on /query — bearer token + rate limit (URGENT) |
 | [#86](https://github.com/BoilerHAUS/EPSCAxplor/issues/86) | pr | [x] | fix(rag): nomic task prefixes for embeddings (+ reingest) |
-| [#87](https://github.com/BoilerHAUS/EPSCAxplor/issues/87) | pr | [ ] | chore(ci): nightly smoke eval with auto-checked questions |
+| [#87](https://github.com/BoilerHAUS/EPSCAxplor/issues/87) | pr | [x] | chore(ci): nightly smoke eval with auto-checked questions |
 | [#88](https://github.com/BoilerHAUS/EPSCAxplor/issues/88) | pr | [x] | feat(api): wire query logging (query_log_id currently N/A) |
 | [#89](https://github.com/BoilerHAUS/EPSCAxplor/issues/89) | pr | [ ] | feat(rag): structured rate lookup path for wage queries |
 | [#90](https://github.com/BoilerHAUS/EPSCAxplor/issues/90) | pr | [ ] | chore(ingestion): retire Docling + TPDS branch and committed node_modules |
@@ -91,6 +91,7 @@ prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
 | [#77](https://github.com/BoilerHAUS/EPSCAxplor/issues/77) | pr | [x] | fix(rag): agreement_scope filter excludes unscoped unions in cross-union queries (C01) |
 | [#78](https://github.com/BoilerHAUS/EPSCAxplor/issues/78) | pr | [ ] | fix(rag): hybrid retrieval for narrative recall gaps (O07/W02/T03/N02) |
 | [#79](https://github.com/BoilerHAUS/EPSCAxplor/issues/79) | pr | [ ] | fix(ingestion): CA chunks missing section metadata — model mislabels section numbers (O01/O04) |
+| [#104](https://github.com/BoilerHAUS/EPSCAxplor/issues/104) | pr | [ ] | fix(auth): CSRF protection on cookie-authenticated /auth/refresh and /auth/logout |
 
 ---
 
@@ -104,7 +105,7 @@ Goal: Secure, multi-tenant product ready for beta users.
 | [#24](https://github.com/BoilerHAUS/EPSCAxplor/issues/24) | pr | [x] | feat(auth): implement API key authentication for enterprise tier |
 | [#25](https://github.com/BoilerHAUS/EPSCAxplor/issues/25) | pr | [x] | feat(api): implement subscription tier enforcement and rate limiting |
 | [#26](https://github.com/BoilerHAUS/EPSCAxplor/issues/26) | pr | [x] | feat(api): implement GET /documents and GET /query-history endpoints |
-| [#27](https://github.com/BoilerHAUS/EPSCAxplor/issues/27) | pr | [ ] | feat(web): build Next.js frontend skeleton and API client |
+| [#27](https://github.com/BoilerHAUS/EPSCAxplor/issues/27) | pr | [x] | feat(web): build Next.js frontend skeleton and API client |
 | [#28](https://github.com/BoilerHAUS/EPSCAxplor/issues/28) | pr | [ ] | feat(web): build chat interface with query submission and citation display |
 | [#29](https://github.com/BoilerHAUS/EPSCAxplor/issues/29) | pr | [ ] | feat(web): build corpus browser UI (document list and search) |
 | [#30](https://github.com/BoilerHAUS/EPSCAxplor/issues/30) | pr | [ ] | feat(web): build query history UI |
