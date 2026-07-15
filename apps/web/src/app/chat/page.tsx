@@ -10,10 +10,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnswerCard } from "@/components/AnswerCard";
+import { AppHeader } from "@/components/AppHeader";
 import { CitationList } from "@/components/CitationList";
 import { LegalDisclaimer } from "@/components/LegalDisclaimer";
 import { QueryInput } from "@/components/QueryInput";
-import { Button } from "@/components/ui/Button";
 import { ApiError, apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth";
 import type { QueryResponse } from "@/lib/types";
@@ -39,7 +39,7 @@ function errorMessage(error: unknown): string {
 }
 
 export default function ChatPage() {
-  const { status, logout } = useAuth();
+  const { status } = useAuth();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [pending, setPending] = useState(false);
@@ -119,28 +119,7 @@ export default function ChatPage() {
         fontFamily: "var(--font-sans)",
       }}
     >
-      <header
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "12px 20px",
-          borderBottom: "1px solid var(--border-subtle)",
-        }}
-      >
-        <div
-          style={{
-            font: "800 18px var(--font-sans)",
-            color: "var(--text-primary)",
-            letterSpacing: "var(--tracking-tight)",
-          }}
-        >
-          EPSCA<span style={{ color: "var(--accent-primary)" }}>xplor</span>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => void logout()}>
-          Sign out
-        </Button>
-      </header>
+      <AppHeader />
 
       <div ref={threadRef} style={{ flex: 1, overflowY: "auto", padding: "24px 0" }}>
         <div
