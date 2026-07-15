@@ -12,6 +12,7 @@ const { mockReplace, mockLogout, mockUseAuth } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace }),
+  usePathname: () => "/chat",
 }));
 
 vi.mock("@/lib/auth", () => ({
