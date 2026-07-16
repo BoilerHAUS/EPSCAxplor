@@ -21,6 +21,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Corpus browser (#29): `/documents` lists the corpus registry in a table (union, type, title, effective date, chunk count, ingestion date, expiry status via `StatusPill`) with server-side union / document-type / hide-expired filters on `GET /documents` and local text search. Shared `AppHeader` with Chat/Documents navigation now used by both authenticated pages.
 - Query history UI (#30): `/history` lists the tenant's past queries newest-first from `GET /query-history`, each row showing query text, timestamp, model, and citation count, expanding to the full answer, citations, and disclaimer (same components as live chat). "Load more" pagination via limit/offset; History added to the shared navigation.
 - The API Docker image now ships the operator CLIs (`scripts/`), so `create_user` / `create_api_key` run via `docker exec` or the Dokploy Terminal against the container's own `DATABASE_URL`, without a bind mount. Added a `services/api/.dockerignore` to keep bytecode/test artifacts out of the image.
+- `scripts.create_tenant` operator CLI (#31 setup): creates a tenant and, with `--query-limit-monthly` / `--user-limit`, an active subscription in the same step — so multi-tenant and rate-limit verification tenants can be provisioned without hand-written SQL. Rejects a duplicate slug. Tenants were previously only created by migration 008 (the bootstrap `system` tenant).
 - Initial repository structure and GitHub workflow configuration
 
 ### Changed
