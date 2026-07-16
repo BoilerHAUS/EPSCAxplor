@@ -25,6 +25,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Initial repository structure and GitHub workflow configuration
 
 ### Changed
+- Hardened the production deploy pipeline (#40): `deploy-prod.yml` now runs the full reusable validation gate (pytest/vitest/ingestion, matching dev) instead of a lint-only subset, serializes releases with a `deploy-prod` concurrency group, and adds a post-deploy `verify` job that polls `PROD_API_URL/health` for up to ~5 minutes — so a green release means the API is actually live and healthy, not just that Dokploy accepted the webhook. Requires a new `PROD_API_URL` repository variable.
 - `/query` now requires a valid access JWT; `get_current_user` decodes the bearer token into tenant/user context, replacing the interim shared bearer token.
 - CORS now sends `allow_credentials` so the httpOnly refresh cookie can round-trip (requires exact, non-wildcard `CORS_ORIGINS`).
 - `/query` now returns a real `query_log_id` (previously `N/A`); query-log persistence moved into `src/db/query_logs.py` with unit coverage, and remains best-effort so a logging failure never fails the answer (#88).
