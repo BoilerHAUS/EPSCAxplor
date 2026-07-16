@@ -32,6 +32,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check required release variables
+        env:
+          PROD_API_URL: ${{ vars.PROD_API_URL }}
+        run: |
+          # PROD_API_URL is baked into the web bundle below (NEXT_PUBLIC_* is
+          # inlined at build time), so a missing value would silently ship a
+          # frontend that calls the wrong origin. Fail before building.
+          if [ -z "$PROD_API_URL" ]; then
+            echo "::error::PROD_API_URL repository variable is not set — the web image needs it as a build arg"
+            exit 1
+          fi
+          echo "Web build will target API at $PROD_API_URL"
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -58,6 +71,10 @@ jobs:
         with:
           context: apps/web
           push: true
+          # NEXT_PUBLIC_API_URL is inlined into the client bundle at build time;
+          # Dokploy only pulls this image, so the value must be baked here.
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.PROD_API_URL }}
           tags: |
             ${{ env.IMAGE_PREFIX }}-web:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}-web:${{ github.ref_name }}
