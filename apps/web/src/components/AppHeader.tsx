@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/auth";
 const NAV_ITEMS = [
   { href: "/chat", label: "Chat" },
   { href: "/documents", label: "Documents" },
+  { href: "/history", label: "History" },
 ] as const;
 
 export function AppHeader() {
