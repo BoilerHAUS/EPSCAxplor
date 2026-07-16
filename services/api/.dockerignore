@@ -1,0 +1,19 @@
+# Python bytecode / caches (keep compiled cruft out of the image)
+**/__pycache__/
+**/*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Tests and coverage — not needed at runtime
+tests/
+.coverage
+htmlcov/
+
+# Local env / tooling
+.venv/
+venv/
+*.env
+.env*
+Dockerfile
+.dockerignore
