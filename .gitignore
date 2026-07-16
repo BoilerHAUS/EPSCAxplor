@@ -48,6 +48,9 @@ services/ingestion/corpus_table_artifacts/
 *.swp
 *.swo
 
+# Local preview server config (Claude Code), not shared
+.claude/launch.json
+
 # OS
 .DS_Store
 Thumbs.db
