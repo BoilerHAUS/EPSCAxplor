@@ -25,7 +25,7 @@ describe("AppHeader", () => {
     vi.clearAllMocks();
   });
 
-  it("links to chat and documents", () => {
+  it("links to chat, documents, and history", () => {
     render(<AppHeader />);
     expect((screen.getByRole("link", { name: "Chat" }) as HTMLAnchorElement).href).toContain(
       "/chat",
@@ -33,6 +33,9 @@ describe("AppHeader", () => {
     expect(
       (screen.getByRole("link", { name: "Documents" }) as HTMLAnchorElement).href,
     ).toContain("/documents");
+    expect(
+      (screen.getByRole("link", { name: "History" }) as HTMLAnchorElement).href,
+    ).toContain("/history");
   });
 
   it("marks the active route", () => {
