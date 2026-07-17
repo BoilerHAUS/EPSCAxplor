@@ -89,7 +89,8 @@ prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
 | [#75](https://github.com/BoilerHAUS/EPSCAxplor/issues/75) | pr | [ ] | chore(ci): harden Dokploy deploys — pin GIT_SHA images and verify deployment status |
 | [#76](https://github.com/BoilerHAUS/EPSCAxplor/issues/76) | no-pr | [ ] | ops: rotate Dokploy GHCR token before Oct 9, 2026 |
 | [#77](https://github.com/BoilerHAUS/EPSCAxplor/issues/77) | pr | [x] | fix(rag): agreement_scope filter excludes unscoped unions in cross-union queries (C01) |
-| [#78](https://github.com/BoilerHAUS/EPSCAxplor/issues/78) | pr | [ ] | fix(rag): hybrid retrieval for narrative recall gaps (O07/W02/T03/N02) |
+| [#78](https://github.com/BoilerHAUS/EPSCAxplor/issues/78) | pr | [x] | fix(rag): provision-term recall pass for narrative recall gaps (PR #125; prod-verified 2026-07-17 — O07/W02/N02 fixed; T03 terse-table residual → #126) |
+| [#126](https://github.com/BoilerHAUS/EPSCAxplor/issues/126) | pr | [ ] | fix(rag): terse rate-table chunks not retrieved by dense provision pass (T03 subsistence $135/$120) |
 | [#79](https://github.com/BoilerHAUS/EPSCAxplor/issues/79) | pr | [ ] | fix(ingestion): CA chunks missing section metadata — model mislabels section numbers (O01/O04) |
 | [#115](https://github.com/BoilerHAUS/EPSCAxplor/issues/115) | pr | [x] | fix(rag): nuclear-context queries don't surface nuclear_pa (NPA) docs in citations (dedicated NPA pass, PR #117; prod-verified 2026-07-17 — union-scoped nuclear queries cite nuclear_pa) |
 | [#104](https://github.com/BoilerHAUS/EPSCAxplor/issues/104) | pr | [ ] | fix(auth): CSRF protection on cookie-authenticated /auth/refresh and /auth/logout |
