@@ -8,6 +8,15 @@
 > the six CA/NPA documents). Remaining failures are narrative-retrieval issues, not
 > wage issues; each is noted per-question and tracked as a GitHub issue.
 
+> **Issue #78 re-eval (2026-07-17, post-fix, PR #125):** the four narrative/table
+> recall gaps were re-run against prod after the provision-recall pass shipped.
+> **O07 No→Yes** (UA §24.1 double-time now retrieved & cited), **W02 Partial→Yes**
+> (IBEW §600F 12%/6% foreperson differential now retrieved), **N02 Partial→Yes**
+> (IBEW NPA now retrieved; Darlington provisions surfaced). **T03 remains Partial** —
+> §26.2(b) eligibility is now cited but the terse $135 North / $120 South rate table
+> still isn't retrieved (dense retrieval's weak spot on terse tables); tracked as
+> #126. query_log_ids: O07 `4ee681be`, W02 `09bd76b4`, T03 `4a728e47`, N02 `97b30f63`.
+
 ## Acceptance Criteria
 
 | Criterion | Threshold | Result |
