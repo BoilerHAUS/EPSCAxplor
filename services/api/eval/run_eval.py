@@ -45,6 +45,9 @@ class GoldQuestion:
     is_refusal: bool = False
     is_cross_union: bool = False
     is_nuclear: bool = False
+    # Assert the answer stays grounded: a non-empty citation list is required.
+    # Inverse of is_refusal; guards the union-less nuclear path that #119 broke.
+    expect_citations: bool = False
 
 
 GOLD_QUESTIONS: list[GoldQuestion] = [
@@ -338,6 +341,17 @@ GOLD_QUESTIONS: list[GoldQuestion] = [
         question="What special conditions apply to Boilermakers working at Darlington under their Nuclear Project Agreement?",
         is_nuclear=True,
     ),
+    # Regression guard for #119 (added 2026-07-17): a union-LESS nuclear query.
+    # It names a nuclear site (Bruce Power) but no union, so it exercises the
+    # un-scoped retrieval path every other gold question skips. The #119 prod bug
+    # zeroed citations on exactly this shape (hedged-but-grounded answer), so we
+    # assert the answer stays cited via expect_citations.
+    GoldQuestion(
+        id="N07", category="Nuclear Project Specific", union="N/A (union-less)",
+        question="What are the shift premiums for Bruce Power nuclear work?",
+        is_nuclear=True,
+        expect_citations=True,
+    ),
     GoldQuestion(
         id="R03", category="Refusal", union="N/A (out of corpus)",
         question="What is the wage rate for Elevator Constructors under EPSCA agreements?",
@@ -416,7 +430,9 @@ def find_regressions(results: list[EvalResult]) -> list[str]:
       - an API/transport error (the query never got a clean answer),
       - an auto-check FAIL (a declared ``expected_contains`` string is missing),
       - citations returned on a refusal question (out-of-corpus answers must
-        not cite sources).
+        not cite sources),
+      - zero citations on an ``expect_citations`` question (a grounded answer
+        that lost its sources — the #119 refusal-stripper failure shape).
 
     An empty list means the smoke run is clean.
     """
@@ -434,6 +450,11 @@ def find_regressions(results: list[EvalResult]) -> list[str]:
         if r.question.is_refusal and r.citation_count > 0:
             problems.append(
                 f"{qid}: refusal question returned {r.citation_count} citation(s)"
+            )
+        if r.question.expect_citations and r.citation_count == 0:
+            problems.append(
+                f"{qid}: expected a grounded answer but got 0 citations "
+                "(out-of-corpus refusal-stripper regression? see #119)"
             )
     return problems
 
@@ -527,6 +548,7 @@ def _write_json(results: list[EvalResult], path: Path) -> None:
                 "is_nuclear": r.question.is_nuclear,
                 "is_cross_union": r.question.is_cross_union,
                 "is_refusal": r.question.is_refusal,
+                "expect_citations": r.question.expect_citations,
             },
         })
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
