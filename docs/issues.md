@@ -93,7 +93,7 @@ prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
 | [#79](https://github.com/BoilerHAUS/EPSCAxplor/issues/79) | pr | [ ] | fix(ingestion): CA chunks missing section metadata — model mislabels section numbers (O01/O04) |
 | [#115](https://github.com/BoilerHAUS/EPSCAxplor/issues/115) | pr | [x] | fix(rag): nuclear-context queries don't surface nuclear_pa (NPA) docs in citations (dedicated NPA pass, PR #117; prod-verified 2026-07-17 — union-scoped nuclear queries cite nuclear_pa) |
 | [#104](https://github.com/BoilerHAUS/EPSCAxplor/issues/104) | pr | [ ] | fix(auth): CSRF protection on cookie-authenticated /auth/refresh and /auth/logout |
-| [#119](https://github.com/BoilerHAUS/EPSCAxplor/issues/119) | pr | [ ] | fix(api): out-of-corpus refusal stripper zeroes citations on partially-grounded answers (found verifying #115) |
+| [#119](https://github.com/BoilerHAUS/EPSCAxplor/issues/119) | pr | [x] | fix(api): out-of-corpus refusal stripper zeroes citations on partially-grounded answers (found verifying #115; removed refusal stripper — rely solely on [SOURCE N] extraction, PR #121) |
 
 ---
 
