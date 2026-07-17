@@ -91,8 +91,9 @@ prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
 | [#77](https://github.com/BoilerHAUS/EPSCAxplor/issues/77) | pr | [x] | fix(rag): agreement_scope filter excludes unscoped unions in cross-union queries (C01) |
 | [#78](https://github.com/BoilerHAUS/EPSCAxplor/issues/78) | pr | [ ] | fix(rag): hybrid retrieval for narrative recall gaps (O07/W02/T03/N02) |
 | [#79](https://github.com/BoilerHAUS/EPSCAxplor/issues/79) | pr | [ ] | fix(ingestion): CA chunks missing section metadata — model mislabels section numbers (O01/O04) |
-| [#115](https://github.com/BoilerHAUS/EPSCAxplor/issues/115) | pr | [x] | fix(rag): nuclear-context queries don't surface nuclear_pa (NPA) docs in citations (fixed via dedicated NPA retrieval pass, PR #117; prod `:latest` smoke re-check pending) |
+| [#115](https://github.com/BoilerHAUS/EPSCAxplor/issues/115) | pr | [x] | fix(rag): nuclear-context queries don't surface nuclear_pa (NPA) docs in citations (dedicated NPA pass, PR #117; prod-verified 2026-07-17 — union-scoped nuclear queries cite nuclear_pa) |
 | [#104](https://github.com/BoilerHAUS/EPSCAxplor/issues/104) | pr | [ ] | fix(auth): CSRF protection on cookie-authenticated /auth/refresh and /auth/logout |
+| [#119](https://github.com/BoilerHAUS/EPSCAxplor/issues/119) | pr | [ ] | fix(api): out-of-corpus refusal stripper zeroes citations on partially-grounded answers (found verifying #115) |
 
 ---
 
