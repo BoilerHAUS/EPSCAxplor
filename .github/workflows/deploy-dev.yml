@@ -49,6 +49,12 @@ jobs:
         with:
           context: apps/web
           push: true
+          # The production services pull the :latest tag, and NEXT_PUBLIC_API_URL
+          # is inlined into the client bundle at build time, so :latest must be
+          # built with the API origin baked in (sourced from PROD_API_URL — the
+          # single deployed environment). Empty falls back to same-origin.
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.PROD_API_URL }}
           tags: |
             ${{ env.IMAGE_PREFIX }}-web:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}-web:latest
