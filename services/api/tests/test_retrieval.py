@@ -28,6 +28,7 @@ from src.rag.retrieval import (
     _MIN_PRIMARY_SLOTS,
     _NUCLEAR_PA_PER_UNION,
     _NUCLEAR_PA_SLOTS,
+    _PROVISION_MAX_TERMS,
     COLLECTION,
     TOP_K,
     ChunkResult,
@@ -1465,3 +1466,439 @@ class TestRetrieveNuclearQuery:
 
         assert mock_qdrant.query_points.await_count == 2
         assert [c.point_id for c in results] == ["ca-1"]
+
+
+def _doc_type_must_not_values(filt: Filter) -> list[str]:
+    """Return document_type values excluded via must_not."""
+    return [
+        str(c.match.value)  # type: ignore[union-attr]
+        for c in filt.must_not or []
+        if isinstance(c, FieldCondition) and c.key == "document_type"
+    ]
+
+
+class TestRetrieveProvisionRecall:
+    """Provision-recall pass: re-embedding focused terms surfaces the definitive
+    clause into `leading` for narrative/table recall gaps (issue #78)."""
+
+    def _make_hit(
+        self,
+        point_id: str,
+        document_type: str = "primary_ca",
+        union: str = "United Association",
+    ) -> ScoredPoint:
+        hit = MagicMock(spec=ScoredPoint)
+        hit.id = point_id
+        hit.score = 0.85
+        hit.payload = {
+            "document_id": str(uuid.uuid4()),
+            "source_filename": "test.pdf",
+            "union_name": union,
+            "document_type": document_type,
+            "agreement_scope": None,
+            "effective_date": "2025-05-01",
+            "expiry_date": None,
+            "article_number": None,
+            "article_title": None,
+            "section_number": None,
+            "page_number": None,
+            "is_table": document_type == "wage_schedule",
+            "text": "text",
+        }
+        return hit
+
+    @pytest.mark.asyncio
+    async def test_provision_query_triggers_extra_call_and_leads(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+        prov_hit = self._make_hit("prov-1")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([prov_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "What is the double-time rate provision for United Association workers?",
+                union_filters=["United Association"],
+                provision_terms=["double time overtime rate"],
+                settings=settings,
+            )
+
+        # Primary pass + one provision-term pass.
+        assert mock_qdrant.query_points.await_count == 2
+        # Provision chunk leads so it is guaranteed a place in context/citations.
+        assert results[0].point_id == "prov-1"
+        assert results[1].point_id == "ca-1"
+
+    @pytest.mark.asyncio
+    async def test_provision_pass_inherits_date_guards(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+        prov_hit = self._make_hit("prov-1")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([prov_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "double-time rate provision",
+                union_filters=["United Association"],
+                provision_terms=["double time overtime rate"],
+                settings=settings,
+            )
+
+        prov_filter = mock_qdrant.query_points.await_args_list[1].kwargs["query_filter"]
+        assert _has_date_guard(prov_filter, "expiry_date")
+        assert _has_date_guard(prov_filter, "effective_date")
+        assert _union_filter_value(prov_filter) == "United Association"
+
+    @pytest.mark.asyncio
+    async def test_provision_pass_excludes_npa_when_not_nuclear(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+        prov_hit = self._make_hit("prov-1")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([prov_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "foreman wage premium",
+                union_filters=["IBEW"],
+                include_nuclear_pa=False,
+                provision_terms=["foreperson wage differential"],
+                settings=settings,
+            )
+
+        prov_filter = mock_qdrant.query_points.await_args_list[1].kwargs["query_filter"]
+        assert "nuclear_pa" in _doc_type_must_not_values(prov_filter)
+
+    @pytest.mark.asyncio
+    async def test_provision_pass_allows_npa_when_nuclear(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+        npa_prov_hit = self._make_hit("prov-npa-1", "nuclear_pa", "IBEW")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),   # primary
+                    _make_query_response([npa_prov_hit]),  # provision term
+                    _make_query_response([]),         # nuclear pass (no extra)
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "additional provisions at Darlington",
+                union_filters=["IBEW"],
+                include_nuclear_pa=True,
+                provision_terms=["Darlington"],
+                settings=settings,
+            )
+
+        prov_filter = mock_qdrant.query_points.await_args_list[1].kwargs["query_filter"]
+        # include_nuclear_pa=True → NPA not excluded, so an NPA-typed provision
+        # chunk (the Darlington LOU) is eligible and leads.
+        assert "nuclear_pa" not in _doc_type_must_not_values(prov_filter)
+        assert results[0].point_id == "prov-npa-1"
+
+    @pytest.mark.asyncio
+    async def test_provision_pass_applies_null_tolerant_scope_filter(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+        prov_hit = self._make_hit("prov-1")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([prov_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "IBEW generation foreman differential",
+                union_filters=["IBEW"],
+                agreement_scope="generation",
+                provision_terms=["foreperson wage differential"],
+                settings=settings,
+            )
+
+        prov_filter = mock_qdrant.query_points.await_args_list[1].kwargs["query_filter"]
+        guard = _scope_guard(prov_filter)
+        assert guard is not None
+        should = guard.should or []
+        assert should[0].is_null is True  # type: ignore[union-attr]
+        assert should[1].match.value == "generation"  # type: ignore[union-attr]
+
+    @pytest.mark.asyncio
+    async def test_cross_union_provision_query_fans_out_per_union(
+        self, settings: Settings
+    ) -> None:
+        ibew_ca = self._make_hit("ibew-ca", union="IBEW")
+        ua_ca = self._make_hit("ua-ca", union="United Association")
+        ibew_prov = self._make_hit("ibew-prov", union="IBEW")
+        ua_prov = self._make_hit("ua-prov", union="United Association")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ibew_ca]),   # primary IBEW
+                    _make_query_response([ua_ca]),     # primary UA
+                    _make_query_response([ibew_prov]),  # provision IBEW
+                    _make_query_response([ua_prov]),    # provision UA
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "Compare double-time provisions for IBEW and United Association",
+                union_filters=["IBEW", "United Association"],
+                provision_terms=["double time overtime rate"],
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 4
+        prov_calls = mock_qdrant.query_points.await_args_list[2:]
+        prov_unions = [
+            _union_filter_value(call.kwargs["query_filter"]) for call in prov_calls
+        ]
+        assert prov_unions == ["IBEW", "United Association"]
+        # Provision chunks from both unions lead the merged results.
+        assert [c.point_id for c in results[:2]] == ["ibew-prov", "ua-prov"]
+
+    @pytest.mark.asyncio
+    async def test_term_cap_bounds_provision_qdrant_calls(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+        prov_hits = [self._make_hit(f"prov-{i}") for i in range(_PROVISION_MAX_TERMS)]
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[_make_query_response([ca_hit])]
+                + [_make_query_response([h]) for h in prov_hits]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            # Supply more terms than the cap; only the first _PROVISION_MAX_TERMS
+            # are embedded/searched.
+            await retrieve(
+                "many provision terms",
+                union_filters=["IBEW"],
+                provision_terms=[f"term {i}" for i in range(_PROVISION_MAX_TERMS + 2)],
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 1 + _PROVISION_MAX_TERMS
+
+    @pytest.mark.asyncio
+    async def test_provision_npa_and_wage_all_lead_and_floor_survives(
+        self, settings: Settings
+    ) -> None:
+        """Worst case: provision + nuclear + wage all fire.  All three lead in
+        order (provision → NPA → wage) and the primary-CA floor still holds."""
+        ca_hits = [self._make_hit(f"ca-{i}") for i in range(TOP_K)]
+        prov_hit = self._make_hit("prov-1")
+        npa_hits = [
+            self._make_hit(f"npa-{i}", "nuclear_pa") for i in range(_NUCLEAR_PA_SLOTS)
+        ]
+        wage_hits = [self._make_hit(f"ws-{i}", "wage_schedule") for i in range(5)]
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response(ca_hits),    # primary
+                    _make_query_response([prov_hit]),  # provision term
+                    _make_query_response(npa_hits),   # nuclear pass
+                    _make_query_response(wage_hits),  # wage pass
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "Darlington journeyperson double-time premium for IBEW",
+                union_filters=["IBEW"],
+                include_nuclear_pa=True,
+                is_wage_query=True,
+                provision_terms=["double time overtime rate"],
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 4
+        assert len(results) == TOP_K
+        doc_types = [c.document_type for c in results]
+        assert doc_types.count("primary_ca") >= _MIN_PRIMARY_SLOTS
+        assert "nuclear_pa" in doc_types
+        assert "wage_schedule" in doc_types
+        ids = [c.point_id for c in results]
+        # Ordering contract: provision → NPA → wage.
+        assert ids.index("prov-1") < ids.index("npa-0")
+        assert ids.index("npa-0") < ids.index("ws-0")
+
+    @pytest.mark.asyncio
+    async def test_wage_survives_max_provision_and_npa_crowding(
+        self, settings: Settings
+    ) -> None:
+        """Regression lock (review HIGH): with provision + NPA + wage all firing
+        at high hit counts, round-robin interleaving keeps the guaranteed wage
+        table in the window — plain concatenation would let provision + NPA fill
+        every leading slot and drop wage entirely."""
+        ca_hits = [self._make_hit(f"ca-{i}") for i in range(TOP_K)]
+        # Two provision terms → up to 4 distinct provision hits after merge.
+        prov_a = [self._make_hit("prov-0"), self._make_hit("prov-1")]
+        prov_b = [self._make_hit("prov-2"), self._make_hit("prov-3")]
+        npa_hits = [
+            self._make_hit(f"npa-{i}", "nuclear_pa") for i in range(_NUCLEAR_PA_SLOTS)
+        ]
+        wage_hits = [self._make_hit(f"ws-{i}", "wage_schedule") for i in range(5)]
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response(ca_hits),    # primary
+                    _make_query_response(prov_a),     # provision term 1
+                    _make_query_response(prov_b),     # provision term 2
+                    _make_query_response(npa_hits),   # nuclear pass
+                    _make_query_response(wage_hits),  # wage pass
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "Darlington foreman premium double-time rate for IBEW",
+                union_filters=["IBEW"],
+                include_nuclear_pa=True,
+                is_wage_query=True,
+                provision_terms=[
+                    "foreperson wage differential",
+                    "double time overtime rate",
+                ],
+                settings=settings,
+            )
+
+        assert len(results) == TOP_K
+        doc_types = [c.document_type for c in results]
+        # All three guaranteed passes keep representation; wage is not starved.
+        assert "wage_schedule" in doc_types
+        assert "nuclear_pa" in doc_types
+        assert any(c.point_id.startswith("prov-") for c in results)
+        assert doc_types.count("primary_ca") >= _MIN_PRIMARY_SLOTS
+
+    @pytest.mark.asyncio
+    async def test_provision_pass_with_no_hits_degrades_to_primary(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),  # primary
+                    _make_query_response([]),        # provision: no hits
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "subsistence allowance for a union with no such table",
+                union_filters=["IBEW"],
+                provision_terms=["subsistence allowance"],
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 2
+        assert [c.point_id for c in results] == ["ca-1"]
+
+    @pytest.mark.asyncio
+    async def test_no_provision_terms_uses_single_qdrant_call(
+        self, settings: Settings
+    ) -> None:
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "What are the layoff notice requirements?",
+                provision_terms=None,
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 1
