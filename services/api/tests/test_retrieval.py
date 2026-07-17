@@ -25,12 +25,15 @@ from qdrant_client.models import (
 
 from src.config import Settings
 from src.rag.retrieval import (
+    _MIN_PRIMARY_SLOTS,
+    _NUCLEAR_PA_PER_UNION,
+    _NUCLEAR_PA_SLOTS,
     COLLECTION,
     TOP_K,
     ChunkResult,
     _chunk_classification,
     _merge_union_results,
-    _merge_with_wage_priority,
+    _merge_with_priority,
     _point_to_chunk,
     _reserve_baseline_slots,
     _wage_rank_boost,
@@ -662,43 +665,43 @@ def _make_chunk(point_id: str, document_type: str = "primary_ca") -> ChunkResult
     )
 
 
-class TestMergeWithWagePriority:
-    def test_wage_chunks_lead_in_output(self) -> None:
+class TestMergeWithPriority:
+    def test_leading_chunks_lead_in_output(self) -> None:
         primary = [_make_chunk("ca-1"), _make_chunk("ca-2")]
-        wage = [_make_chunk("ws-1", "wage_schedule"), _make_chunk("ws-2", "wage_schedule")]
-        result = _merge_with_wage_priority(primary, wage)
+        leading = [_make_chunk("ws-1", "wage_schedule"), _make_chunk("ws-2", "wage_schedule")]
+        result = _merge_with_priority(primary, leading)
         assert result[0].point_id == "ws-1"
         assert result[1].point_id == "ws-2"
 
     def test_primary_chunks_fill_remaining_slots(self) -> None:
         primary = [_make_chunk("ca-1"), _make_chunk("ca-2")]
-        wage = [_make_chunk("ws-1", "wage_schedule")]
-        result = _merge_with_wage_priority(primary, wage)
+        leading = [_make_chunk("ws-1", "wage_schedule")]
+        result = _merge_with_priority(primary, leading)
         assert result[1].point_id == "ca-1"
         assert result[2].point_id == "ca-2"
 
     def test_deduplicates_by_point_id(self) -> None:
         shared = _make_chunk("shared-1", "wage_schedule")
         primary = [shared, _make_chunk("ca-1")]
-        wage = [shared, _make_chunk("ws-1", "wage_schedule")]
-        result = _merge_with_wage_priority(primary, wage)
+        leading = [shared, _make_chunk("ws-1", "wage_schedule")]
+        result = _merge_with_priority(primary, leading)
         ids = [c.point_id for c in result]
         assert ids.count("shared-1") == 1
 
     def test_respects_limit(self) -> None:
         primary = [_make_chunk(f"ca-{i}") for i in range(8)]
-        wage = [_make_chunk(f"ws-{i}", "wage_schedule") for i in range(5)]
-        result = _merge_with_wage_priority(primary, wage, limit=10)
+        leading = [_make_chunk(f"ws-{i}", "wage_schedule") for i in range(5)]
+        result = _merge_with_priority(primary, leading, limit=10)
         assert len(result) == 10
 
-    def test_empty_wage_returns_primary(self) -> None:
+    def test_empty_leading_returns_primary(self) -> None:
         primary = [_make_chunk("ca-1"), _make_chunk("ca-2")]
-        result = _merge_with_wage_priority(primary, [])
+        result = _merge_with_priority(primary, [])
         assert [c.point_id for c in result] == ["ca-1", "ca-2"]
 
-    def test_empty_primary_returns_wage(self) -> None:
-        wage = [_make_chunk("ws-1", "wage_schedule")]
-        result = _merge_with_wage_priority([], wage)
+    def test_empty_primary_returns_leading(self) -> None:
+        leading = [_make_chunk("ws-1", "wage_schedule")]
+        result = _merge_with_priority([], leading)
         assert result[0].point_id == "ws-1"
 
 
@@ -999,3 +1002,466 @@ class TestRetrieveWageQuery:
             )
 
         assert mock_qdrant.query_points.await_count == 1
+
+
+def _doc_type_values(filt: Filter) -> list[str]:
+    """Return the values of every top-level document_type FieldCondition in must."""
+    return [
+        str(c.match.value)  # type: ignore[union-attr]
+        for c in filt.must or []
+        if isinstance(c, FieldCondition) and c.key == "document_type"
+    ]
+
+
+def _scope_guard(filt: Filter) -> Filter | None:
+    """Return the null-tolerant agreement_scope guard sub-filter, if present."""
+    for c in filt.must or []:
+        if isinstance(c, Filter) and any(
+            isinstance(s, FieldCondition) and s.key == "agreement_scope"
+            for s in (c.should or [])
+        ):
+            return c
+    return None
+
+
+def _has_date_guard(filt: Filter, key: str) -> bool:
+    """True if *filt*'s must contains a should-guard over the given date key."""
+    return any(
+        isinstance(c, Filter)
+        and any(
+            isinstance(s, FieldCondition) and s.key == key for s in (c.should or [])
+        )
+        for c in filt.must or []
+    )
+
+
+class TestRetrieveNuclearQuery:
+    """include_nuclear_pa runs a dedicated NPA pass so NPA chunks are
+    guaranteed representation alongside the primary CA (issue #115)."""
+
+    def _make_hit(
+        self,
+        point_id: str,
+        document_type: str = "primary_ca",
+        union: str = "IBEW",
+    ) -> ScoredPoint:
+        hit = MagicMock(spec=ScoredPoint)
+        hit.id = point_id
+        hit.score = 0.85
+        hit.payload = {
+            "document_id": str(uuid.uuid4()),
+            "source_filename": "test.pdf",
+            "union_name": union,
+            "document_type": document_type,
+            "agreement_scope": None,
+            "effective_date": "2025-05-01",
+            "expiry_date": None,
+            "article_number": None,
+            "article_title": None,
+            "section_number": None,
+            "page_number": None,
+            "is_table": False,
+            "text": "text",
+        }
+        return hit
+
+    @pytest.mark.asyncio
+    async def test_nuclear_query_triggers_second_qdrant_call(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+        npa_hit = self._make_hit("npa-1", "nuclear_pa")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([npa_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "What overtime provisions apply at the Darlington nuclear project?",
+                union_filters=["IBEW"],
+                include_nuclear_pa=True,
+                settings=settings,
+            )
+
+        # Primary pass + guaranteed NPA pass.
+        assert mock_qdrant.query_points.await_count == 2
+        # NPA chunk leads so it is guaranteed to appear in context/citations.
+        assert results[0].point_id == "npa-1"
+        assert results[1].point_id == "ca-1"
+
+    @pytest.mark.asyncio
+    async def test_nuclear_pass_filters_to_nuclear_pa_doc_type_and_union(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+        npa_hit = self._make_hit("npa-1", "nuclear_pa")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([npa_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "shift premiums for Bruce Power nuclear work",
+                union_filters=["IBEW"],
+                include_nuclear_pa=True,
+                settings=settings,
+            )
+
+        npa_filter = mock_qdrant.query_points.await_args_list[1].kwargs["query_filter"]
+        assert _doc_type_values(npa_filter) == ["nuclear_pa"]
+        assert _union_filter_value(npa_filter) == "IBEW"
+
+    @pytest.mark.asyncio
+    async def test_nuclear_pass_uses_slot_limit(self, settings: Settings) -> None:
+        ca_hit = self._make_hit("ca-1")
+        npa_hit = self._make_hit("npa-1", "nuclear_pa")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([npa_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "nuclear project agreement premium rates",
+                include_nuclear_pa=True,
+                settings=settings,
+            )
+
+        npa_call = mock_qdrant.query_points.await_args_list[1]
+        assert npa_call.kwargs["limit"] == _NUCLEAR_PA_SLOTS
+
+    @pytest.mark.asyncio
+    async def test_cross_union_nuclear_query_fans_out_per_union(
+        self, settings: Settings
+    ) -> None:
+        ibew_ca = self._make_hit("ibew-ca", union="IBEW")
+        ua_ca = self._make_hit("ua-ca", union="United Association")
+        ibew_npa = self._make_hit("ibew-npa", "nuclear_pa", "IBEW")
+        ua_npa = self._make_hit("ua-npa", "nuclear_pa", "United Association")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ibew_ca]),   # primary IBEW
+                    _make_query_response([ua_ca]),     # primary UA
+                    _make_query_response([ibew_npa]),  # nuclear IBEW
+                    _make_query_response([ua_npa]),    # nuclear UA
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "Compare Darlington provisions for IBEW and United Association",
+                union_filters=["IBEW", "United Association"],
+                include_nuclear_pa=True,
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 4
+        npa_calls = mock_qdrant.query_points.await_args_list[2:]
+        npa_unions = [
+            _union_filter_value(call.kwargs["query_filter"]) for call in npa_calls
+        ]
+        assert npa_unions == ["IBEW", "United Association"]
+        # NPA chunks from both unions lead the merged results.
+        assert [c.point_id for c in results[:2]] == ["ibew-npa", "ua-npa"]
+
+    @pytest.mark.asyncio
+    async def test_nuclear_and_wage_query_guarantees_both(
+        self, settings: Settings
+    ) -> None:
+        """A nuclear rate query runs primary + NPA pass + wage pass, and both
+        the NPA and wage chunks lead the primary CA content."""
+        ca_hit = self._make_hit("ca-1")
+        npa_hit = self._make_hit("npa-1", "nuclear_pa")
+        wage_hit = self._make_hit("ws-1", "wage_schedule")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),    # primary
+                    _make_query_response([npa_hit]),   # nuclear pass
+                    _make_query_response([wage_hit]),  # wage pass
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "Darlington journeyperson premium rate for IBEW",
+                union_filters=["IBEW"],
+                include_nuclear_pa=True,
+                is_wage_query=True,
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 3
+        ids = [c.point_id for c in results]
+        assert {"npa-1", "ws-1", "ca-1"} <= set(ids)
+        # Both guaranteed passes lead the primary CA chunk.
+        assert ids.index("npa-1") < ids.index("ca-1")
+        assert ids.index("ws-1") < ids.index("ca-1")
+        # Nuclear leads wage (deterministic ordering).
+        assert ids.index("npa-1") < ids.index("ws-1")
+
+    @pytest.mark.asyncio
+    async def test_nuclear_pass_applies_null_tolerant_scope_filter(
+        self, settings: Settings
+    ) -> None:
+        ca_hit = self._make_hit("ca-1")
+        npa_hit = self._make_hit("npa-1", "nuclear_pa")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([npa_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "Darlington generation nuclear premium for IBEW",
+                union_filters=["IBEW"],
+                include_nuclear_pa=True,
+                agreement_scope="generation",
+                settings=settings,
+            )
+
+        npa_filter = mock_qdrant.query_points.await_args_list[1].kwargs["query_filter"]
+        guard = _scope_guard(npa_filter)
+        assert guard is not None
+        should = guard.should or []
+        assert should[0].is_null is True  # type: ignore[union-attr]
+        assert should[1].match.value == "generation"  # type: ignore[union-attr]
+
+    @pytest.mark.asyncio
+    async def test_non_nuclear_query_uses_single_qdrant_call(
+        self, settings: Settings
+    ) -> None:
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "What are the general holiday provisions?",
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 1
+
+    @pytest.mark.asyncio
+    async def test_nuclear_pass_applies_expiry_and_effective_guards(
+        self, settings: Settings
+    ) -> None:
+        """The guaranteed NPA pass must carry the same expiry/effective-date
+        guards as the primary pass, or a superseded NPA could be surfaced as
+        current."""
+        ca_hit = self._make_hit("ca-1")
+        npa_hit = self._make_hit("npa-1", "nuclear_pa")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),
+                    _make_query_response([npa_hit]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "Darlington nuclear premium for IBEW",
+                union_filters=["IBEW"],
+                include_nuclear_pa=True,
+                settings=settings,
+            )
+
+        npa_filter = mock_qdrant.query_points.await_args_list[1].kwargs["query_filter"]
+        assert _has_date_guard(npa_filter, "expiry_date")
+        assert _has_date_guard(npa_filter, "effective_date")
+
+    @pytest.mark.asyncio
+    async def test_primary_ca_survives_crowding_single_union_nuclear_wage(
+        self, settings: Settings
+    ) -> None:
+        """A nuclear rate query fills most leading slots (NPA + wage), but the
+        primary CA floor must still survive in the context window."""
+        ca_hits = [self._make_hit(f"ca-{i}") for i in range(TOP_K)]
+        npa_hits = [
+            self._make_hit(f"npa-{i}", "nuclear_pa") for i in range(_NUCLEAR_PA_SLOTS)
+        ]
+        wage_hits = [self._make_hit(f"ws-{i}", "wage_schedule") for i in range(5)]
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response(ca_hits),    # primary
+                    _make_query_response(npa_hits),   # nuclear pass
+                    _make_query_response(wage_hits),  # wage pass
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "Darlington journeyperson premium rate for IBEW",
+                union_filters=["IBEW"],
+                include_nuclear_pa=True,
+                is_wage_query=True,
+                settings=settings,
+            )
+
+        assert len(results) == TOP_K
+        doc_types = [c.document_type for c in results]
+        assert doc_types.count("primary_ca") >= _MIN_PRIMARY_SLOTS
+        assert "nuclear_pa" in doc_types
+        assert "wage_schedule" in doc_types
+
+    @pytest.mark.asyncio
+    async def test_primary_ca_survives_crowding_cross_union_nuclear_wage(
+        self, settings: Settings
+    ) -> None:
+        """The worst case: two unions + both flags produce TOP_K leading chunks
+        (NPA fan-out + wage fan-out).  Without the primary reserve this yields
+        zero CA context; the floor guarantees the base agreements survive."""
+        ibew_ca = [self._make_hit(f"ibew-ca-{i}", union="IBEW") for i in range(5)]
+        ua_ca = [
+            self._make_hit(f"ua-ca-{i}", union="United Association") for i in range(5)
+        ]
+        ibew_npa = [
+            self._make_hit(f"ibew-npa-{i}", "nuclear_pa", "IBEW")
+            for i in range(_NUCLEAR_PA_PER_UNION)
+        ]
+        ua_npa = [
+            self._make_hit(f"ua-npa-{i}", "nuclear_pa", "United Association")
+            for i in range(_NUCLEAR_PA_PER_UNION)
+        ]
+        ibew_ws = [
+            self._make_hit(f"ibew-ws-{i}", "wage_schedule", "IBEW") for i in range(3)
+        ]
+        ua_ws = [
+            self._make_hit(f"ua-ws-{i}", "wage_schedule", "United Association")
+            for i in range(3)
+        ]
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response(ibew_ca),   # primary IBEW
+                    _make_query_response(ua_ca),     # primary UA
+                    _make_query_response(ibew_npa),  # nuclear IBEW
+                    _make_query_response(ua_npa),    # nuclear UA
+                    _make_query_response(ibew_ws),   # wage IBEW
+                    _make_query_response(ua_ws),     # wage UA
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "Compare Darlington journeyperson rates for IBEW and United Association",
+                union_filters=["IBEW", "United Association"],
+                include_nuclear_pa=True,
+                is_wage_query=True,
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 6
+        assert len(results) == TOP_K
+        doc_types = [c.document_type for c in results]
+        assert doc_types.count("primary_ca") >= _MIN_PRIMARY_SLOTS
+        assert "nuclear_pa" in doc_types
+        assert "wage_schedule" in doc_types
+
+    @pytest.mark.asyncio
+    async def test_nuclear_query_with_no_npa_docs_degrades_to_primary(
+        self, settings: Settings
+    ) -> None:
+        """A union with no NPA documents: the nuclear pass returns nothing and
+        results fall back cleanly to the primary CA (no crash, no empty slot)."""
+        ca_hit = self._make_hit("ca-1")
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([ca_hit]),  # primary
+                    _make_query_response([]),        # nuclear pass: no NPA docs
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "Labourers nuclear site provisions",
+                union_filters=["Labourers"],
+                include_nuclear_pa=True,
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 2
+        assert [c.point_id for c in results] == ["ca-1"]
