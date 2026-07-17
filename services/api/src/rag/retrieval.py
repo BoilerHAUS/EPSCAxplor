@@ -43,6 +43,21 @@ from src.config import Settings
 COLLECTION: str = "epsca_chunks"
 TOP_K: int = 10
 
+# Guaranteed Nuclear Project Agreement chunks surfaced on nuclear-context
+# queries (issue #115).  NPAs modify a base CA, so a handful of NPA chunks
+# alongside the primary CA covers the nuclear-specific provisions without
+# starving the CA context window.
+_NUCLEAR_PA_SLOTS: int = 3
+# Per-union NPA slots when a nuclear query spans multiple unions, and the
+# merged cap across all detected unions.
+_NUCLEAR_PA_PER_UNION: int = 2
+_NUCLEAR_PA_MERGED_LIMIT: int = 4
+# Floor on primary-CA chunks preserved when guaranteed secondary passes (NPA
+# and/or wage) would otherwise fill the whole context window.  The base CA the
+# NPA/wage chunks modify must stay present — a nuclear + cross-union rate query
+# can produce enough leading chunks to displace every primary chunk otherwise.
+_MIN_PRIMARY_SLOTS: int = 3
+
 
 class ChunkResult(BaseModel):
     """A single retrieved chunk with its Qdrant payload and similarity score."""
@@ -62,6 +77,37 @@ class ChunkResult(BaseModel):
     page_number: int | None
     is_table: bool
     text: str
+
+
+def _expiry_guard(now: datetime) -> Filter:
+    """``OR(expiry_date IS NULL, expiry_date >= now)`` — exclude expired docs.
+
+    Open-ended documents (null expiry_date) are always valid; documents with a
+    future expiry_date have not yet expired.  ``is_expired`` is not stored in
+    the Qdrant payload, so expiry is reconstructed from ``expiry_date`` here.
+    """
+    return Filter(
+        should=[
+            FieldCondition(key="expiry_date", is_null=True),
+            FieldCondition(key="expiry_date", range=DatetimeRange(gte=now)),
+        ]
+    )
+
+
+def _effective_guard(now: datetime) -> Filter:
+    """``OR(effective_date IS NULL, effective_date <= now, wage_schedule)``.
+
+    Excludes documents not yet in effect.  wage_schedule is exempt — multi-year
+    rate tables are dated independently of the agreement lifecycle and are
+    always retrieval-eligible.
+    """
+    return Filter(
+        should=[
+            FieldCondition(key="effective_date", is_null=True),
+            FieldCondition(key="effective_date", range=DatetimeRange(lte=now)),
+            FieldCondition(key="document_type", match=MatchValue(value="wage_schedule")),
+        ]
+    )
 
 
 def build_filter(
@@ -90,33 +136,7 @@ def build_filter(
         A ``qdrant_client.models.Filter`` ready for use in a search request.
     """
     now = datetime.now(UTC)
-
-    # Expiry guard: open-ended documents (null expiry_date) are always valid;
-    # documents with a future expiry_date have not yet expired.
-    expiry_guard = Filter(
-        should=[
-            FieldCondition(key="expiry_date", is_null=True),
-            FieldCondition(
-                key="expiry_date",
-                range=DatetimeRange(gte=now),
-            ),
-        ]
-    )
-
-    # Effective-date guard: exclude documents not yet in effect.
-    # wage_schedule is exempt — multi-year tables are always retrieval-eligible.
-    effective_guard = Filter(
-        should=[
-            FieldCondition(key="effective_date", is_null=True),
-            FieldCondition(
-                key="effective_date",
-                range=DatetimeRange(lte=now),
-            ),
-            FieldCondition(key="document_type", match=MatchValue(value="wage_schedule")),
-        ]
-    )
-
-    must: list[Condition] = [expiry_guard, effective_guard]
+    must: list[Condition] = [_expiry_guard(now), _effective_guard(now)]
     must_not: list[Condition] = []
 
     if union_filter:
@@ -429,26 +449,154 @@ async def _query_wage_schedules(
     return [_point_to_chunk(hit) for hit in selected]
 
 
-def _merge_with_wage_priority(
+async def _query_nuclear_pa(
+    qdrant: AsyncQdrantClient,
+    *,
+    vector: list[float],
+    union_filter: str | None,
+    agreement_scope: str | None = None,
+    limit: int = _NUCLEAR_PA_SLOTS,
+) -> list[ChunkResult]:
+    """Return top Nuclear Project Agreement chunks by similarity.
+
+    NPA chunks read like CA narrative but cover a smaller slice of the corpus,
+    so on nuclear-context queries they are reliably out-ranked by the primary
+    CA and never reach the top-k (issue #115).  This dedicated pass — mirroring
+    ``_query_wage_schedules`` — guarantees NPA provisions appear in context
+    alongside the primary CA.  Unlike wage schedules, NPAs need no
+    deterministic re-rank: plain cosine order over the ``nuclear_pa`` subset is
+    sufficient.
+
+    NPAs are real agreements with lifecycle expiry (unlike the deliberate
+    wage-schedule exemption), and this pass guarantees a leading slot — so it
+    honours the same expiry/effective-date guards as the primary pass, or a
+    superseded NPA could be surfaced as current.
+    """
+    now = datetime.now(UTC)
+    must: list[Condition] = [
+        _expiry_guard(now),
+        _effective_guard(now),
+        FieldCondition(key="document_type", match=MatchValue(value="nuclear_pa")),
+    ]
+    if union_filter:
+        must.append(
+            FieldCondition(key="union_name", match=MatchValue(value=union_filter))
+        )
+    if agreement_scope:
+        # Null-tolerant, mirroring build_filter: NPAs are typically scope-less,
+        # so a hard match would drop them; the guard keeps unscoped NPAs
+        # eligible while still honouring an explicit generation/transmission
+        # scope on the rare scoped NPA.
+        must.append(
+            Filter(
+                should=[
+                    FieldCondition(key="agreement_scope", is_null=True),
+                    FieldCondition(
+                        key="agreement_scope", match=MatchValue(value=agreement_scope)
+                    ),
+                ]
+            )
+        )
+    response = await qdrant.query_points(
+        collection_name=COLLECTION,
+        query=vector,
+        query_filter=Filter(must=must),
+        limit=limit,
+        with_payload=True,
+    )
+    return [_point_to_chunk(hit) for hit in response.points]
+
+
+def _merge_with_priority(
     primary: list[ChunkResult],
-    wage: list[ChunkResult],
+    leading: list[ChunkResult],
     *,
     limit: int = TOP_K,
 ) -> list[ChunkResult]:
-    """Combine primary and wage results, deduplicating by point_id.
+    """Combine primary results with guaranteed *leading* chunks, deduplicating
+    by point_id.
 
-    Wage chunks lead so they are always present in the context window.
+    ``leading`` chunks come from dedicated secondary passes (wage schedules,
+    Nuclear Project Agreements) that consistently score below CA narrative
+    text, so they are placed first to guarantee a place in the context window.
     Remaining slots are filled from the primary results.
     """
     seen: set[str] = set()
     merged: list[ChunkResult] = []
-    for chunk in [*wage, *primary]:
+    for chunk in [*leading, *primary]:
         if chunk.point_id not in seen:
             seen.add(chunk.point_id)
             merged.append(chunk)
         if len(merged) >= limit:
             break
     return merged
+
+
+async def _collect_wage_chunks(
+    qdrant: AsyncQdrantClient,
+    *,
+    vector: list[float],
+    query: str,
+    union_filters: list[str],
+    agreement_scope: str | None,
+) -> list[ChunkResult]:
+    """Run the wage-schedule secondary pass, fanning out per union for
+    multi-union queries so each union's re-ranked wage chunks are represented
+    instead of one union's high-cosine tables monopolizing the wage slots.
+    """
+    if len(union_filters) > 1:
+        wage_sets = [
+            await _query_wage_schedules(
+                qdrant,
+                vector=vector,
+                query=query,
+                union_filter=union_filter,
+                agreement_scope=agreement_scope,
+                limit=3,
+            )
+            for union_filter in union_filters
+        ]
+        return _merge_union_results(wage_sets, limit=6)
+    union_filter = union_filters[0] if union_filters else None
+    return await _query_wage_schedules(
+        qdrant,
+        vector=vector,
+        query=query,
+        union_filter=union_filter,
+        agreement_scope=agreement_scope,
+    )
+
+
+async def _collect_nuclear_pa_chunks(
+    qdrant: AsyncQdrantClient,
+    *,
+    vector: list[float],
+    union_filters: list[str],
+    agreement_scope: str | None,
+) -> list[ChunkResult]:
+    """Run the NPA secondary pass, fanning out per union for multi-union
+    nuclear queries so each named union's NPA chunks are represented — and NPAs
+    from unions not named in the query are not pulled in by an unfiltered pass.
+    """
+    if len(union_filters) > 1:
+        npa_sets = [
+            await _query_nuclear_pa(
+                qdrant,
+                vector=vector,
+                union_filter=union_filter,
+                agreement_scope=agreement_scope,
+                limit=_NUCLEAR_PA_PER_UNION,
+            )
+            for union_filter in union_filters
+        ]
+        return _merge_union_results(npa_sets, limit=_NUCLEAR_PA_MERGED_LIMIT)
+    union_filter = union_filters[0] if union_filters else None
+    return await _query_nuclear_pa(
+        qdrant,
+        vector=vector,
+        union_filter=union_filter,
+        agreement_scope=agreement_scope,
+    )
 
 
 async def retrieve(
@@ -468,8 +616,11 @@ async def retrieve(
             single detected union behaves like the previous single-filter path.
             Multiple detected unions trigger one filtered retrieval per union,
             then a deterministic merged result list.
-        include_nuclear_pa: Include Nuclear Project Agreement chunks when
-            ``True``.  Defaults to ``False``; set to ``True`` when the query
+        include_nuclear_pa: When ``True``, make NPA chunks eligible in the
+            primary pass and run a secondary retrieval pass restricted to
+            Nuclear Project Agreement chunks, prepending those so NPA
+            provisions are guaranteed to appear alongside the primary CA
+            (issue #115).  Defaults to ``False``; set to ``True`` when the query
             contains nuclear-site context (see ``preprocess.detect_nuclear``).
         agreement_scope: Restrict to ``"generation"`` or ``"transmission"``
             for IBEW / Labourers queries.
@@ -509,32 +660,36 @@ async def retrieve(
             agreement_scope=agreement_scope,
         )
 
-    if not is_wage_query:
-        return primary
-
-    if len(unique_union_filters) > 1:
-        # Cross-union rate queries: fan out per union (mirroring the primary
-        # pass) so each union's re-ranked wage chunks are represented instead
-        # of one union's high-cosine tables monopolizing the wage slots.
-        wage_sets = [
-            await _query_wage_schedules(
+    # Secondary guaranteed passes.  Wage tables and NPAs both score below CA
+    # narrative and get crowded out of the primary top-k, so each detected type
+    # gets a dedicated pass whose chunks lead the merged context window.  NPAs
+    # are collected before wage chunks so nuclear provisions lead on a query
+    # that is both nuclear- and rate-focused.
+    leading: list[ChunkResult] = []
+    if include_nuclear_pa:
+        leading.extend(
+            await _collect_nuclear_pa_chunks(
+                qdrant,
+                vector=vector,
+                union_filters=unique_union_filters,
+                agreement_scope=agreement_scope,
+            )
+        )
+    if is_wage_query:
+        leading.extend(
+            await _collect_wage_chunks(
                 qdrant,
                 vector=vector,
                 query=query,
-                union_filter=union_filter,
+                union_filters=unique_union_filters,
                 agreement_scope=agreement_scope,
-                limit=3,
             )
-            for union_filter in unique_union_filters
-        ]
-        wage_chunks = _merge_union_results(wage_sets, limit=6)
-    else:
-        union_filter = unique_union_filters[0] if unique_union_filters else None
-        wage_chunks = await _query_wage_schedules(
-            qdrant,
-            vector=vector,
-            query=query,
-            union_filter=union_filter,
-            agreement_scope=agreement_scope,
         )
-    return _merge_with_wage_priority(primary, wage_chunks)
+
+    if not leading:
+        return primary
+    # Reserve a floor of primary-CA slots so the base agreement is never fully
+    # displaced by the guaranteed NPA/wage chunks — a nuclear cross-union rate
+    # query can otherwise produce TOP_K leading chunks and zero CA context.
+    reserve = min(_MIN_PRIMARY_SLOTS, len(primary))
+    return _merge_with_priority(primary, leading[: TOP_K - reserve])
