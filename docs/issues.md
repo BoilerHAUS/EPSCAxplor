@@ -91,6 +91,7 @@ prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
 | [#77](https://github.com/BoilerHAUS/EPSCAxplor/issues/77) | pr | [x] | fix(rag): agreement_scope filter excludes unscoped unions in cross-union queries (C01) |
 | [#78](https://github.com/BoilerHAUS/EPSCAxplor/issues/78) | pr | [ ] | fix(rag): hybrid retrieval for narrative recall gaps (O07/W02/T03/N02) |
 | [#79](https://github.com/BoilerHAUS/EPSCAxplor/issues/79) | pr | [ ] | fix(ingestion): CA chunks missing section metadata — model mislabels section numbers (O01/O04) |
+| [#115](https://github.com/BoilerHAUS/EPSCAxplor/issues/115) | pr | [ ] | fix(rag): nuclear-context queries don't surface nuclear_pa (NPA) docs in citations |
 | [#104](https://github.com/BoilerHAUS/EPSCAxplor/issues/104) | pr | [ ] | fix(auth): CSRF protection on cookie-authenticated /auth/refresh and /auth/logout |
 
 ---
@@ -109,7 +110,7 @@ Goal: Secure, multi-tenant product ready for beta users.
 | [#28](https://github.com/BoilerHAUS/EPSCAxplor/issues/28) | pr | [x] | feat(web): build chat interface with query submission and citation display |
 | [#29](https://github.com/BoilerHAUS/EPSCAxplor/issues/29) | pr | [x] | feat(web): build corpus browser UI (document list and search) |
 | [#30](https://github.com/BoilerHAUS/EPSCAxplor/issues/30) | pr | [x] | feat(web): build query history UI |
-| [#31](https://github.com/BoilerHAUS/EPSCAxplor/issues/31) | no-pr | [ ] | ops: Phase 3 smoke test — multi-tenant isolation and rate limiting verification |
+| [#31](https://github.com/BoilerHAUS/EPSCAxplor/issues/31) | no-pr | [x] | ops: Phase 3 smoke test — multi-tenant isolation and rate limiting verification (passed against prod 2026-07-17; nuclear-retrieval gap filed as #115) |
 | [#40](https://github.com/BoilerHAUS/EPSCAxplor/issues/40) | pr | [x] | chore(ci): create deploy-prod.yml workflow for version tag deploys |
 
 ---
