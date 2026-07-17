@@ -166,9 +166,19 @@ async def test_query_response_has_citations(
     assert response.citations[0].union_name == "IBEW"
 
 
-async def test_r01_style_refusal_strips_spurious_citations(
+async def test_r01_partially_grounded_refusal_keeps_cited_sources(
     test_settings: Settings, stub_user: CurrentUser
 ) -> None:
+    """#119: an answer that opens with a refusal phrase but still cites
+    resolvable [SOURCE N] markers is partially grounded — those citations must
+    be kept.
+
+    This exact shape was stripped under #57; #119 reverses that so a working
+    retrieval is never made to look broken (zero citations). Pure refusals with
+    no source markers still yield empty citations — see
+    test_r02_refusal_without_source_markers_returns_empty_citations and
+    test_pure_refusal_without_markers_still_returns_no_citations.
+    """
     chunks = [
         make_chunk(union_name="United Association", text="Employer pension contributions clause."),
         make_chunk(
@@ -204,7 +214,9 @@ async def test_r01_style_refusal_strips_spurious_citations(
             settings=test_settings,
         )
 
-    assert response.citations == []
+    assert [c.source_number for c in response.citations] == [1, 2]
+    assert response.citations[0].union_name == "United Association"
+    assert response.citations[1].union_name == "Sheet Metal Workers"
 
 
 async def test_same_union_partial_answer_keeps_citations(
@@ -266,6 +278,76 @@ async def test_r02_refusal_without_source_markers_returns_empty_citations(
             QueryRequest(
                 query="What is the grievance arbitration process for IBEW Transmission workers at Bruce Power?"
             ),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    assert response.citations == []
+
+
+async def test_r03_nuclear_refusal_with_source_marker_keeps_citation(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    """#119 regression (live prod evidence, 2026-07-17).
+
+    A union-less nuclear query whose answer opens with a refusal but cites a
+    resolvable [SOURCE N] must keep that citation instead of returning zero.
+    The same query *with a union named* already worked (union_filters path);
+    this locks the union-less path.
+    """
+    chunk = make_chunk(
+        union_name="Labourers",
+        text="Shift differentials for Labourers are set out in Article 27.",
+    )
+    gen_result = make_generator_result(
+        answer=(
+            "The provided documents do not contain information about shift premiums "
+            "for Bruce Power nuclear work.\n\n"
+            "The only shift differential information in the provided documents appears "
+            "in [SOURCE 1], which covers Labourers shift differentials under Article 27, "
+            "but this does not reference Bruce Power specifically."
+        )
+    )
+
+    with _pipeline_patches(
+        [chunk],
+        gen_result,
+        known_unions=["IBEW", "Sheet Metal Workers", "United Association", "Labourers"],
+        title_map={"doc-001": "Labourers 2025-2030 Collective Agreement"},
+    ):
+        response = await query_handler(
+            QueryRequest(query="What are the shift premiums for Bruce Power nuclear work?"),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    assert len(response.citations) == 1
+    assert response.citations[0].source_number == 1
+    assert response.citations[0].union_name == "Labourers"
+
+
+async def test_pure_refusal_without_markers_still_returns_no_citations(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    """#57 intent preserved: a union-less pure refusal with no [SOURCE N]
+    markers still yields empty citations — there is nothing grounded to cite."""
+    chunk = make_chunk(union_name="United Association", text="Some unrelated clause.")
+    gen_result = make_generator_result(
+        answer=(
+            "The provided documents do not contain information about parental leave "
+            "top-up for Boilermakers.\n\n"
+            "You would need the agreement covering that bargaining unit to answer this."
+        )
+    )
+
+    with _pipeline_patches(
+        [chunk],
+        gen_result,
+        known_unions=["IBEW", "United Association", "Sheet Metal Workers"],
+        title_map={"doc-001": "United Association 2025-2030 Collective Agreement"},
+    ):
+        response = await query_handler(
+            QueryRequest(query="What is the parental leave top-up for Boilermakers?"),
             current_user=stub_user,
             settings=test_settings,
         )
