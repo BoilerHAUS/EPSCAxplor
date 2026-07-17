@@ -58,6 +58,17 @@ _NUCLEAR_PA_MERGED_LIMIT: int = 4
 # can produce enough leading chunks to displace every primary chunk otherwise.
 _MIN_PRIMARY_SLOTS: int = 3
 
+# Provision-recall (issue #78): focused key terms are re-embedded and searched
+# against the existing vectors to surface the definitive clause that plain
+# cosine on the full query misses.  Per-term Qdrant limit, a smaller per-term
+# limit when fanning out across unions, the cap on chunks fed to ``leading``,
+# and a hard cap on terms embedded per query (bounds the extra Ollama embeds +
+# Qdrant round-trips this pass adds).
+_PROVISION_PER_TERM: int = 3
+_PROVISION_PER_UNION: int = 2
+_PROVISION_MERGED_LIMIT: int = 4
+_PROVISION_MAX_TERMS: int = 3
+
 
 class ChunkResult(BaseModel):
     """A single retrieved chunk with its Qdrant payload and similarity score."""
@@ -507,6 +518,44 @@ async def _query_nuclear_pa(
     return [_point_to_chunk(hit) for hit in response.points]
 
 
+async def _query_provision_vectors(
+    qdrant: AsyncQdrantClient,
+    *,
+    term_vectors: list[list[float]],
+    union_filter: str | None,
+    include_nuclear_pa: bool,
+    agreement_scope: str | None = None,
+    per_term_limit: int = _PROVISION_PER_TERM,
+) -> list[ChunkResult]:
+    """Return chunks recalled by searching pre-embedded provision-term vectors.
+
+    Plain cosine on the full user query lands near "related" sections, not the
+    definitive clause (issue #78).  Each vector is a short focused phrase (e.g.
+    "double time overtime rate", "subsistence allowance") embedded by the
+    caller; the per-term hits are interleaved so no single term monopolises the
+    budget.  Reuses ``build_filter`` via ``_query_qdrant`` so expiry/effective/
+    union/scope guards and nuclear eligibility are inherited — the pass is
+    doc-type-agnostic within eligibility because the definitive chunk may be
+    primary_ca (O07/W02/T03) or nuclear_pa (N02).
+
+    Takes pre-computed vectors (not raw terms) so the caller embeds each term
+    once and reuses it across per-union fan-out queries.
+    """
+    term_sets: list[list[ChunkResult]] = []
+    for vector in term_vectors:
+        term_sets.append(
+            await _query_qdrant(
+                qdrant,
+                vector=vector,
+                union_filter=union_filter,
+                include_nuclear_pa=include_nuclear_pa,
+                agreement_scope=agreement_scope,
+                limit=per_term_limit,
+            )
+        )
+    return _merge_union_results(term_sets, limit=_PROVISION_MERGED_LIMIT)
+
+
 def _merge_with_priority(
     primary: list[ChunkResult],
     leading: list[ChunkResult],
@@ -599,6 +648,48 @@ async def _collect_nuclear_pa_chunks(
     )
 
 
+async def _collect_provision_chunks(
+    qdrant: AsyncQdrantClient,
+    *,
+    terms: list[str],
+    settings: Settings,
+    union_filters: list[str],
+    include_nuclear_pa: bool,
+    agreement_scope: str | None,
+) -> list[ChunkResult]:
+    """Run the provision-recall pass, fanning out per union for multi-union
+    queries so each named union's specific provision is represented — and
+    provisions from unions not named in the query are not pulled in by an
+    unfiltered pass.
+
+    Each term is embedded once (capped at ``_PROVISION_MAX_TERMS`` to bound the
+    added Ollama round-trips) and the resulting vectors are reused across the
+    per-union fan-out, so a K-union query still embeds only the distinct terms.
+    """
+    term_vectors = [await _embed(term, settings) for term in terms[:_PROVISION_MAX_TERMS]]
+    if len(union_filters) > 1:
+        provision_sets = [
+            await _query_provision_vectors(
+                qdrant,
+                term_vectors=term_vectors,
+                union_filter=union_filter,
+                include_nuclear_pa=include_nuclear_pa,
+                agreement_scope=agreement_scope,
+                per_term_limit=_PROVISION_PER_UNION,
+            )
+            for union_filter in union_filters
+        ]
+        return _merge_union_results(provision_sets, limit=_PROVISION_MERGED_LIMIT)
+    union_filter = union_filters[0] if union_filters else None
+    return await _query_provision_vectors(
+        qdrant,
+        term_vectors=term_vectors,
+        union_filter=union_filter,
+        include_nuclear_pa=include_nuclear_pa,
+        agreement_scope=agreement_scope,
+    )
+
+
 async def retrieve(
     query: str,
     *,
@@ -606,6 +697,7 @@ async def retrieve(
     include_nuclear_pa: bool = False,
     agreement_scope: str | None = None,
     is_wage_query: bool = False,
+    provision_terms: list[str] | None = None,
     settings: Settings,
 ) -> list[ChunkResult]:
     """Embed *query* and retrieve the top-k matching chunks from Qdrant.
@@ -627,6 +719,11 @@ async def retrieve(
         is_wage_query: When ``True``, run a secondary wage_schedule-focused
             retrieval pass and prepend those chunks so tabular rate data is
             guaranteed to appear in the context window.
+        provision_terms: Focused key phrases (from
+            ``preprocess.detect_provision_terms``) re-embedded as secondary
+            query vectors to recall a specific provision that plain cosine on
+            the full query misses (issue #78).  When non-empty, these chunks
+            lead the context window ahead of the NPA and wage passes.
         settings: Application settings providing Qdrant and Ollama URLs.
 
     Returns:
@@ -660,14 +757,27 @@ async def retrieve(
             agreement_scope=agreement_scope,
         )
 
-    # Secondary guaranteed passes.  Wage tables and NPAs both score below CA
-    # narrative and get crowded out of the primary top-k, so each detected type
-    # gets a dedicated pass whose chunks lead the merged context window.  NPAs
-    # are collected before wage chunks so nuclear provisions lead on a query
-    # that is both nuclear- and rate-focused.
-    leading: list[ChunkResult] = []
+    # Secondary guaranteed passes.  Provision-recall terms, NPAs, and wage
+    # tables all get crowded out of the primary top-k, so each gets a dedicated
+    # pass whose chunks lead the merged context window.  The passes are
+    # round-robin interleaved (not concatenated): the first chunk of each still
+    # leads in priority order (provision → NPA → wage), but no earlier pass can
+    # starve a later one out of the window — e.g. provision + NPA hits filling
+    # every slot and dropping the guaranteed wage table on a rate query.
+    leading_sets: list[list[ChunkResult]] = []
+    if provision_terms:
+        leading_sets.append(
+            await _collect_provision_chunks(
+                qdrant,
+                terms=provision_terms,
+                settings=settings,
+                union_filters=unique_union_filters,
+                include_nuclear_pa=include_nuclear_pa,
+                agreement_scope=agreement_scope,
+            )
+        )
     if include_nuclear_pa:
-        leading.extend(
+        leading_sets.append(
             await _collect_nuclear_pa_chunks(
                 qdrant,
                 vector=vector,
@@ -676,7 +786,7 @@ async def retrieve(
             )
         )
     if is_wage_query:
-        leading.extend(
+        leading_sets.append(
             await _collect_wage_chunks(
                 qdrant,
                 vector=vector,
@@ -686,10 +796,11 @@ async def retrieve(
             )
         )
 
-    if not leading:
+    if not any(leading_sets):
         return primary
     # Reserve a floor of primary-CA slots so the base agreement is never fully
-    # displaced by the guaranteed NPA/wage chunks — a nuclear cross-union rate
+    # displaced by the guaranteed leading chunks — a nuclear cross-union rate
     # query can otherwise produce TOP_K leading chunks and zero CA context.
     reserve = min(_MIN_PRIMARY_SLOTS, len(primary))
-    return _merge_with_priority(primary, leading[: TOP_K - reserve])
+    leading = _merge_union_results(leading_sets, limit=TOP_K - reserve)
+    return _merge_with_priority(primary, leading)

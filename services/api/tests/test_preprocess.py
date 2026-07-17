@@ -3,6 +3,7 @@ from src.rag.preprocess import (
     QueryContext,
     classify_complexity,
     detect_nuclear,
+    detect_provision_terms,
     detect_scope,
     detect_union,
     detect_unions,
@@ -268,6 +269,85 @@ class TestDetectWageQuery:
         assert detect_wage_query("vacation entitlement after 5 years") is False
 
 
+class TestDetectProvisionTerms:
+    """Focused query-expansion terms for specific-provision recall (#78)."""
+
+    def test_empty_query_returns_empty_list(self) -> None:
+        assert detect_provision_terms("") == []
+
+    def test_no_trigger_returns_empty_list(self) -> None:
+        assert detect_provision_terms("What are the layoff notice requirements?") == []
+
+    def test_returns_list_type(self) -> None:
+        assert isinstance(detect_provision_terms("subsistence allowance"), list)
+
+    # O07 — double-time / overtime-rate provision
+    def test_double_time_hyphen_query_returns_overtime_term(self) -> None:
+        terms = detect_provision_terms(
+            "What is the double-time rate provision for United Association workers?"
+        )
+        assert any("double time" in t.lower() for t in terms)
+
+    def test_double_time_no_hyphen_triggers(self) -> None:
+        assert detect_provision_terms("double time pay rules") != []
+
+    # W02 — foreperson wage differential / premium
+    def test_foreman_premium_query_returns_differential_term(self) -> None:
+        terms = detect_provision_terms(
+            "What is the foreman wage premium for IBEW Generation electricians?"
+        )
+        assert any("differential" in t.lower() for t in terms)
+
+    def test_differential_keyword_triggers(self) -> None:
+        assert detect_provision_terms("foreperson differential percentage") != []
+
+    def test_bare_premium_without_foreman_does_not_trigger(self) -> None:
+        # A radiation/shift "premium" (no foreman token) must NOT pull the
+        # foreperson-differential clause — avoids regressing N04-style queries.
+        assert (
+            detect_provision_terms(
+                "Do workers receive a premium for working on a nuclear project site?"
+            )
+            == []
+        )
+
+    def test_differential_without_foreman_does_not_trigger(self) -> None:
+        # "differential" in an engineering sense (no foreman token) must NOT
+        # pull the foreperson clause (e.g. "differential pressure" nuclear work).
+        assert detect_provision_terms("differential pressure testing steps") == []
+
+    # T03 — subsistence allowance table
+    def test_subsistence_query_returns_allowance_term(self) -> None:
+        terms = detect_provision_terms(
+            "What is the subsistence allowance for Sheet Metal workers away from home?"
+        )
+        assert any("subsistence" in t.lower() for t in terms)
+
+    # N02 — nuclear site-specific provision
+    def test_darlington_query_returns_site_name(self) -> None:
+        terms = detect_provision_terms(
+            "What additional provisions apply to IBEW electricians working at Darlington?"
+        )
+        assert "Darlington" in terms
+
+    def test_bruce_power_query_returns_site_name(self) -> None:
+        assert "Bruce" in detect_provision_terms("Bruce Power nuclear site provisions")
+
+    def test_bruce_as_given_name_does_not_trigger(self) -> None:
+        # Only the "Bruce Power" phrase fires (mirrors _NUCLEAR_PATTERNS); the
+        # bare given name "Bruce" must not.
+        assert detect_provision_terms("What does Bruce recommend for scheduling?") == []
+
+    def test_case_insensitive(self) -> None:
+        assert detect_provision_terms("DOUBLE TIME provisions") != []
+
+    def test_dedupes_overlapping_triggers(self) -> None:
+        # "foreman premium" and "differential" both map to the foreperson
+        # expansion; the merged list must contain no duplicates.
+        terms = detect_provision_terms("foreman premium and foreperson differential")
+        assert len(terms) == len(set(terms))
+
+
 class TestQueryContext:
     def test_default_values(self) -> None:
         ctx = QueryContext(
@@ -298,6 +378,27 @@ class TestQueryContext:
         assert ctx.agreement_scope == "generation"
         assert ctx.is_cross_union is True
         assert ctx.is_wage_query is True
+
+    def test_provision_terms_defaults_to_empty(self) -> None:
+        ctx = QueryContext(
+            union_filters=[],
+            include_nuclear_pa=False,
+            agreement_scope=None,
+            is_cross_union=False,
+            is_wage_query=False,
+        )
+        assert ctx.provision_terms == []
+
+    def test_provision_terms_can_be_set(self) -> None:
+        ctx = QueryContext(
+            union_filters=[],
+            include_nuclear_pa=False,
+            agreement_scope=None,
+            is_cross_union=False,
+            is_wage_query=False,
+            provision_terms=["double time overtime rate"],
+        )
+        assert ctx.provision_terms == ["double time overtime rate"]
 
 
 class TestPreprocess:
@@ -366,3 +467,14 @@ class TestPreprocess:
     def test_returns_query_context_type(self) -> None:
         ctx = preprocess("overtime rates", KNOWN_UNIONS)
         assert isinstance(ctx, QueryContext)
+
+    def test_provision_query_sets_provision_terms(self) -> None:
+        ctx = preprocess(
+            "What is the double-time rate provision for United Association workers?",
+            KNOWN_UNIONS,
+        )
+        assert ctx.provision_terms != []
+
+    def test_non_provision_query_leaves_provision_terms_empty(self) -> None:
+        ctx = preprocess("How many vacation days after 5 years?", KNOWN_UNIONS)
+        assert ctx.provision_terms == []

@@ -10,7 +10,7 @@ Performs lightweight query analysis before embedding and retrieval:
 import functools
 import re
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 NUCLEAR_KEYWORDS: list[str] = [
     "nuclear",
@@ -114,6 +114,55 @@ _WAGE_KEYWORDS: list[str] = [
     "total package",
 ]
 
+# Focused query-expansion terms for specific-provision recall (issue #78).
+# Plain cosine on the full user query lands near "related" sections, not the
+# definitive clause; re-embedding a short, focused phrase pulls the specific
+# provision (a narrative clause or a terse table) back into retrieval range.
+# Each rule maps a trigger pattern to the expansion phrase(s) the retrieval
+# layer embeds as secondary query vectors. Expansions are DATA (eval-tunable) —
+# adjust phrasing here without touching retrieval logic.
+_PROVISION_TERM_RULES: list[tuple[re.Pattern[str], tuple[str, ...]]] = [
+    # O07 — double-time / overtime-rate provision (UA CA Art. 24.1).
+    (
+        re.compile(r"\bdouble[\s-]?time\b", re.IGNORECASE),
+        ("double time overtime rate",),
+    ),
+    # W02 — foreperson wage differential / premium (IBEW CA §600 F). Requires a
+    # foreman token to co-occur with "premium" or "differential" so a
+    # shift/radiation "premium" or a "differential pressure" (nuclear) query
+    # does not pull the foreperson clause.
+    (
+        re.compile(
+            r"\bfore(?:man|person|woman)\b.*\b(?:premium|differential)\b"
+            r"|\b(?:premium|differential)\b.*\bfore(?:man|person|woman)\b",
+            re.IGNORECASE,
+        ),
+        ("foreperson wage differential", "foreman premium percentage"),
+    ),
+    # T03 — subsistence allowance table (SM CA §26.2(b)).
+    (
+        re.compile(r"\bsubsistence\b", re.IGNORECASE),
+        ("subsistence allowance",),
+    ),
+    # N02 — nuclear site-specific provisions (e.g. IBEW NPA Darlington LOU).
+    # These tokens also set include_nuclear_pa (see _NUCLEAR_PATTERNS), so the
+    # site-specific LOU is filter-eligible when the term pass runs. "Bruce"
+    # matches the "Bruce Power" phrase (not a bare word) to mirror
+    # _NUCLEAR_PATTERNS and avoid firing on the given name "Bruce".
+    (
+        re.compile(r"\bDarlington\b", re.IGNORECASE),
+        ("Darlington",),
+    ),
+    (
+        re.compile(r"\bPickering\b", re.IGNORECASE),
+        ("Pickering",),
+    ),
+    (
+        re.compile(r"Bruce Power", re.IGNORECASE),
+        ("Bruce",),
+    ),
+]
+
 
 class QueryContext(BaseModel):
     """Structured output of query pre-processing."""
@@ -123,6 +172,7 @@ class QueryContext(BaseModel):
     agreement_scope: str | None
     is_cross_union: bool
     is_wage_query: bool
+    provision_terms: list[str] = Field(default_factory=list)
 
     @property
     def union_filter(self) -> str | None:
@@ -216,6 +266,25 @@ def detect_wage_query(query: str) -> bool:
     return any(kw in lower for kw in _WAGE_KEYWORDS)
 
 
+def detect_provision_terms(query: str) -> list[str]:
+    """Return focused query-expansion terms for specific-provision recall.
+
+    Some provisions (double-time rules, foreperson differentials, subsistence
+    tables, nuclear-site LOUs) exist in the corpus but are missed by plain
+    cosine on the full query, which surfaces related sections rather than the
+    specific clause (issue #78). Each matched rule contributes a short focused
+    phrase that the retrieval layer re-embeds as a secondary query vector.
+    Terms are returned de-duplicated, preserving rule order; an empty list
+    means no provision-recall pass is needed.
+    """
+    terms: list[str] = []
+    for pattern, expansions in _PROVISION_TERM_RULES:
+        if pattern.search(query):
+            terms.extend(expansions)
+    # De-duplicate, preserving first-seen order (mirrors retrieve()'s dict trick).
+    return list(dict.fromkeys(terms))
+
+
 def preprocess(query: str, known_unions: list[str]) -> QueryContext:
     """Analyse *query* and return a populated QueryContext.
 
@@ -235,4 +304,5 @@ def preprocess(query: str, known_unions: list[str]) -> QueryContext:
         agreement_scope=detect_scope(query),
         is_cross_union=classify_complexity(query) or len(detected_unions) > 1,
         is_wage_query=detect_wage_query(query),
+        provision_terms=detect_provision_terms(query),
     )
