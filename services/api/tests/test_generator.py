@@ -53,6 +53,16 @@ def test_cross_union_prompt_ends_with_comparison_addendum() -> None:
     assert "note the absence" in prompt
 
 
+def test_standard_prompt_forbids_inferring_section_from_body() -> None:
+    # #79: the model mislabelled sections (O01 §801→"802", O04 appendix→"48.1")
+    # by guessing numbers out of the quoted body text. The prompt must pin
+    # section numbers to the source's citation header only.
+    prompt = build_system_prompt(is_cross_union=False)
+    assert "citation header" in prompt
+    assert "infer a section number" in prompt
+    assert "invent a number" in prompt
+
+
 # ─── DISCLAIMER ───────────────────────────────────────────────────────────────
 
 

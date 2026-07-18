@@ -56,6 +56,24 @@ _MARKDOWN_HEADER_RE = re.compile(r"^#{2,3}\s+(.+)$")
 # Section/clause numbers at the start of a line: "1.01", "12.03", "4.02a"
 _SECTION_RE = re.compile(r"^(\d+\.\d+[a-z]?)\s")
 
+# EPSCA also numbers many sections as bare 3-digit margin numbers whose first
+# item letter opens the clause on the same line ("801 A. …", "806 A. …"); the
+# section title sits stacked in the left margin of the following lines.  Anchor
+# on that "NNN <ItemLetter>." shape so ordinary sentences that merely open with
+# a 3-digit number — addresses ("801 Yonge St…"), counts ("250 Ontario…"),
+# phone/area numbers ("911 …"), years ("2025 …") — are never stamped as a
+# section (#79, O01).  Deliberately narrower than "NNN Title": a bare
+# "NNN. Title" form is not matched, as it collides with numbered-list items.
+_MARGIN_SECTION_RE = re.compile(r"^(\d{3})\s+[A-Z]\.")
+
+# Appendix headings ("Appendix B", "APPENDIX B — 7 Day Coverage", "Appendix IV").
+# Matched at line start so they reset the running article+section context and
+# their clauses stop inheriting the previous article's numbering (#79, O04).
+# Identifier captured case-insensitively (extraction may down-case a heading);
+# prose that merely opens with the word ("Appendix to the agreement …") is
+# rejected in _match_appendix by its multi-letter lower-case shape.
+_APPENDIX_RE = re.compile(r"^appendix\s+([A-Z0-9]{1,4})\b(.*)$", re.IGNORECASE)
+
 # Sentence-ending punctuation followed by whitespace or end-of-string
 _SENTENCE_END_RE = re.compile(r"[.!?](?=\s|$)")
 
@@ -93,6 +111,43 @@ def _format_table(rows: TableRows) -> str:
     return "\n".join(lines)
 
 
+def _match_section(line: str) -> str | None:
+    """Return the section number a line introduces, or ``None``.
+
+    Recognizes both decimal sections ("12.03") and EPSCA's 3-digit margin
+    sections ("806 A."); decimal is preferred when a line could match both so a
+    value like "100.5 …" is never truncated to a 3-digit "100".
+    """
+    decimal = _SECTION_RE.match(line)
+    if decimal:
+        return decimal.group(1)
+    margin = _MARGIN_SECTION_RE.match(line)
+    if margin:
+        return margin.group(1)
+    return None
+
+
+def _match_appendix(line: str) -> tuple[str, str | None] | None:
+    """Return ``(identifier, title)`` when *line* is an appendix heading, else None.
+
+    Matches "Appendix B", "APPENDIX B — 7 Day Coverage", etc.  A lowercase-word
+    identifier (e.g. "Appendix to the agreement …") is rejected so a prose
+    sentence that merely opens with the word is not mistaken for a heading.
+    """
+    match = _APPENDIX_RE.match(line)
+    if not match:
+        return None
+    identifier = match.group(1)
+    # A label is a single letter, a number, or an upper-case roman numeral.
+    # Reject multi-letter lower-case tokens so prose ("Appendix to the
+    # agreement …") is not mistaken for a heading, while still accepting a
+    # lower-case single letter from a down-cased heading ("appendix c").
+    if identifier.isalpha() and len(identifier) > 1 and not identifier.isupper():
+        return None
+    title = match.group(2).strip(" —–-")
+    return identifier.upper(), (title or None)
+
+
 def _build_section_narrative(
     blocks: list[TextBlock | TableBlock],
 ) -> dict[tuple[str | None, str], str]:
@@ -121,9 +176,14 @@ def _build_section_narrative(
                 current_article = f"Article {article_match.group(1)}"
                 current_section = None
                 continue
-            section_match = _SECTION_RE.match(line)
-            if section_match:
-                current_section = section_match.group(1)
+            appendix = _match_appendix(line)
+            if appendix is not None:
+                current_article = f"Appendix {appendix[0]}"
+                current_section = None
+                continue
+            section = _match_section(line)
+            if section is not None:
+                current_section = section
             if current_section is not None:
                 narrative.setdefault((current_article, current_section), []).append(line)
     return {key: "\n".join(lines) for key, lines in narrative.items()}
@@ -256,11 +316,11 @@ def _split_into_sections(
     current_lines: list[tuple[str, int]] = []
 
     for line, page in lines:
-        match = _SECTION_RE.match(line)
-        if match:
+        section = _match_section(line)
+        if section is not None:
             if current_lines:
                 groups.append((current_section, current_lines))
-            current_section = match.group(1)
+            current_section = section
             current_lines = [(line, page)]
         else:
             current_lines.append((line, page))
@@ -492,6 +552,7 @@ def chunk_document(doc: ClassifiedDocument) -> list[Chunk]:
                     continue
 
                 article_match = _ARTICLE_RE.match(line)
+                appendix = None if article_match else _match_appendix(line)
                 if article_match:
                     # Flush the previous article before starting the new one
                     _flush()
@@ -500,10 +561,18 @@ def chunk_document(doc: ClassifiedDocument) -> list[Chunk]:
                     title = article_match.group(2)
                     current_article_title = title.strip() if title else None
                     current_section_number = None
+                elif appendix is not None:
+                    # An appendix heading is a top-level boundary: flush the
+                    # prior article so appendix clauses don't inherit its
+                    # article/section numbering (#79, O04).
+                    _flush()
+                    current_article_number = f"Appendix {appendix[0]}"
+                    current_article_title = appendix[1]
+                    current_section_number = None
                 else:
-                    section_match = _SECTION_RE.match(line)
-                    if section_match:
-                        current_section_number = section_match.group(1)
+                    section = _match_section(line)
+                    if section is not None:
+                        current_section_number = section
 
                 # Always add the line (including the heading itself) so the
                 # heading text appears at the top of the first chunk for context
