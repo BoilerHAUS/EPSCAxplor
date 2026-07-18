@@ -12,10 +12,15 @@
 > recall gaps were re-run against prod after the provision-recall pass shipped.
 > **O07 No→Yes** (UA §24.1 double-time now retrieved & cited), **W02 Partial→Yes**
 > (IBEW §600F 12%/6% foreperson differential now retrieved), **N02 Partial→Yes**
-> (IBEW NPA now retrieved; Darlington provisions surfaced). **T03 remains Partial** —
-> §26.2(b) eligibility is now cited but the terse $135 North / $120 South rate table
-> still isn't retrieved (dense retrieval's weak spot on terse tables); tracked as
-> #126. query_log_ids: O07 `4ee681be`, W02 `09bd76b4`, T03 `4a728e47`, N02 `97b30f63`.
+> (IBEW NPA now retrieved; Darlington provisions surfaced). **T03 was Partial** —
+> §26.2(b) eligibility was cited but the terse $135 North / $120 South rate table
+> wasn't retrieved (dense retrieval's weak spot on terse tables); tracked as #126.
+> query_log_ids: O07 `4ee681be`, W02 `09bd76b4`, T03 `4a728e47`, N02 `97b30f63`.
+>
+> **T03 re-eval (2026-07-18, post-#126, PR #128):** after the chunk-lead-in fix and a
+> `primary_ca` reingest, **T03 Partial→Yes** — the answer now returns the full §26.2
+> and §27.4 subsistence tables ($135 North / $120 South, 2025→2029) cited to their
+> sections. All four #78 recall gaps (O07/W02/T03/N02) are now grounded and cited.
 
 ## Acceptance Criteria
 
@@ -1604,7 +1609,7 @@ Fill in after reviewing all answers:
 | O08 | Overtime & Hours | United Association | Yes | Yes | §23. |
 | T01 | Travel & Board | IBEW | Yes | Yes | Article 1101 A(i) options and 1100 A travel rates ($33. |
 | T02 | Travel & Board | IBEW | Yes | Yes | 110 road-driven km threshold and regular-residence definition verbatim. |
-| T03 | Travel & Board | Sheet Metal | Partial | Yes | Eligibility conditions all verified, but the subsistence rate tables DO exist in CA §26. |
+| T03 | Travel & Board | Sheet Metal | Yes | Yes | Fixed via #126 (PR #128) + reingest, prod-verified 2026-07-18 — full §26.2/§27.4 subsistence tables ($135 N / $120 S) now retrieved & cited. |
 | T04 | Travel & Board | Sheet Metal | Yes | Yes | Zone structure, rates table, Google Maps measurement, $60 provision, and 26. |
 | T05 | Travel & Board | United Association | Yes | Yes | §28. |
 | N01 | Nuclear Project Specific | IBEW | Yes | Yes | §806 verified including the unapproved-absence / Nuclear Project Committee clause. |
