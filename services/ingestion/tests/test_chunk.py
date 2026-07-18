@@ -111,6 +111,146 @@ class TestTableChunks:
         assert len(table_chunks) == 2
 
 
+class TestTableLeadIn:
+    """A terse table chunk inherits the narrative that names it (#126).
+
+    Regression for T03: the SM CA subsistence rate table extracts as its own
+    TableBlock whose text calls it "Room and Board Rates" — the word the user
+    queries with ("subsistence allowance") lives only in the *preceding*
+    narrative, so the table chunk was never retrieved.
+    """
+
+    def _subsistence_blocks(self) -> list[TextBlock | TableBlock]:
+        narrative = TextBlock(
+            text=(
+                "26.2 The following conditions apply for room and board.\n"
+                "(b) An employee may exercise their option not to stay in camp "
+                "and shall receive a subsistence allowance as follows: the "
+                "Province is divided into a Northern region and a Southern "
+                "region for the payment of subsistence allowance."
+            ),
+            page_number=32,
+        )
+        table = TableBlock(
+            rows=(
+                ("Year", "North of French", "South of French"),
+                ("2025-05-01", "$135", "$120"),
+                ("2026-05-01", "$140", "$125"),
+            ),
+            page_number=33,
+        )
+        return [narrative, table]
+
+    def test_table_inherits_naming_term_from_preceding_narrative(self) -> None:
+        chunks = chunk_document(_make_doc(self._subsistence_blocks()))
+        table_chunk = next(c for c in chunks if c.is_table)
+        assert "subsistence allowance" in table_chunk.text.lower()
+
+    def test_table_still_contains_amounts(self) -> None:
+        chunks = chunk_document(_make_doc(self._subsistence_blocks()))
+        table_chunk = next(c for c in chunks if c.is_table)
+        assert "$135" in table_chunk.text
+        assert "$120" in table_chunk.text
+
+    def test_table_inherits_section_number_from_lead_in(self) -> None:
+        chunks = chunk_document(_make_doc(self._subsistence_blocks()))
+        table_chunk = next(c for c in chunks if c.is_table)
+        assert table_chunk.section_number == "26.2"
+
+    def test_table_remains_single_atomic_chunk(self) -> None:
+        chunks = chunk_document(_make_doc(self._subsistence_blocks()))
+        table_chunks = [c for c in chunks if c.is_table]
+        assert len(table_chunks) == 1
+        assert table_chunks[0].is_table is True
+
+    def test_lead_in_is_bounded_to_section_head(self) -> None:
+        # The section opening (which names the table) is prepended; text far past
+        # the budget is excluded so the table chunk doesn't absorb a whole article.
+        narrative = TextBlock(
+            text=(
+                "26.2 Employees receive a subsistence allowance as follows. "
+                + _long_text(500)
+                + " TAILMARKER far past the lead-in budget."
+            ),
+            page_number=1,
+        )
+        table = TableBlock(
+            rows=(("Year", "North"), ("2025-05-01", "$135")), page_number=1
+        )
+        chunks = chunk_document(_make_doc([narrative, table]))
+        table_chunk = next(c for c in chunks if c.is_table)
+        assert "subsistence allowance" in table_chunk.text.lower()
+        assert "TAILMARKER" not in table_chunk.text
+
+    def test_table_keys_off_its_own_leading_cell_section(self) -> None:
+        # A table whose leading cell carries its section number inherits that
+        # section even with no preceding narrative line (extractor ordering).
+        table = TableBlock(
+            rows=(("26.2 Room and Board Rates", ""), ("2025-05-01", "$135")),
+            page_number=1,
+        )
+        chunks = chunk_document(_make_doc([table]))
+        table_chunk = next(c for c in chunks if c.is_table)
+        assert table_chunk.section_number == "26.2"
+
+    def test_self_labeled_table_before_its_narrative_still_gets_lead_in(self) -> None:
+        # The real §27.4 case: pdfplumber emits the TableBlock BEFORE the
+        # narrative that names it.  The order-independent first-pass map + the
+        # table's own section label recover the lead-in regardless of block order.
+        table = TableBlock(
+            rows=(("27.4 Room and Board Rates", ""), ("2025-05-01", "$135")),
+            page_number=1,
+        )
+        narrative = TextBlock(
+            text=(
+                "27.4 The following conditions apply. (b) An employee shall "
+                "receive a subsistence allowance as follows for the Northern and "
+                "Southern regions."
+            ),
+            page_number=1,
+        )
+        chunks = chunk_document(_make_doc([table, narrative]))
+        table_chunk = next(c for c in chunks if c.is_table)
+        assert table_chunk.section_number == "27.4"
+        assert "subsistence allowance" in table_chunk.text.lower()
+
+    def test_unlabeled_table_before_its_narrative_has_no_lead_in(self) -> None:
+        # Documented limitation: a table with no section label in its header row,
+        # emitted before its narrative, has no reliable section signal, so it
+        # gets no lead-in — no worse than before the fix (the #126 target tables
+        # self-label their section in the header cell).
+        table = TableBlock(
+            rows=(("Year", "Rate"), ("2025-05-01", "$135")), page_number=1
+        )
+        narrative = TextBlock(
+            text="27.4 conditions apply; a subsistence allowance is paid.",
+            page_number=1,
+        )
+        chunks = chunk_document(_make_doc([table, narrative]))
+        table_chunk = next(c for c in chunks if c.is_table)
+        assert "subsistence" not in table_chunk.text.lower()
+        assert table_chunk.section_number is None
+
+    def test_blank_header_corner_does_not_match_data_cell_as_section(self) -> None:
+        # A blank top-left header must not let a data cell like "2025.05" be
+        # mistaken for a section number (row-0-only scan).
+        table = TableBlock(
+            rows=(("", "North"), ("2025.05", "$135")), page_number=1
+        )
+        chunks = chunk_document(_make_doc([table]))
+        table_chunk = next(c for c in chunks if c.is_table)
+        assert table_chunk.section_number is None
+
+    def test_isolated_table_gets_no_lead_in(self) -> None:
+        table = TableBlock(
+            rows=(("Year", "North"), ("2025-05-01", "$135")), page_number=1
+        )
+        chunks = chunk_document(_make_doc([table]))
+        table_chunk = next(c for c in chunks if c.is_table)
+        assert table_chunk.text.startswith("Year")
+        assert table_chunk.section_number is None
+
+
 class TestArticleBoundaryDetection:
     def test_article_heading_starts_new_chunk(self) -> None:
         """Two articles → at least two chunks when each fits in the token limit."""
