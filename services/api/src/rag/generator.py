@@ -37,9 +37,12 @@ CITATION RULES — these are non-negotiable:
 1. Every factual claim in your answer must be attributed to a specific source using \
    the format [SOURCE N] where N matches the source number in the provided context.
 
-2. You must identify the specific article and section number for every cited claim. \
-   If a source does not clearly show an article or section number, cite the document \
-   title and page number instead.
+2. State an article or section number ONLY if it appears in that source's citation header \
+   (the "Article — Title | Section N" line above the quoted text). Do NOT infer a section number \
+   from numbers inside the quoted body text — a clause routinely sits beside adjacent section \
+   numbers, page footers, and cross-references that are not the provision you are citing. If the \
+   header shows no section number, cite the article title (or document title) and page number \
+   instead. Never guess or invent a number.
 
 3. If two sources say different things about the same topic (for example, a Primary CA \
    and a Nuclear Project Agreement), you must surface the conflict explicitly and explain \

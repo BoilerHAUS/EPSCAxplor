@@ -638,3 +638,170 @@ class TestWageScheduleChunking:
         assert len(chunks) >= 1
         assert chunks[0].article_number == "Article 1"
         assert chunks[0].article_title == "SCOPE"
+
+
+class TestMarginSectionNumbers:
+    """EPSCA numbers many sections as 3-digit margin numbers ("801 A.", "806 A.")
+    rather than decimal N.NN, with the section title stacked in the left margin.
+    These must be recognized so the chunk carries the correct section_number for
+    citation (#79, O01 — rest-period items §801 B/C were mislabelled §802 because
+    the chunk had no section metadata and the model guessed from adjacent text).
+    """
+
+    def test_margin_section_number_is_stamped(self) -> None:
+        body = _long_text(300)
+        text = (
+            "ARTICLE 8 — HOURS OF WORK AND OVERTIME\n"
+            f"806 A. Overtime is paid at time and a half. {body}\n"
+            f"807 A. Double time applies on Sundays. {body}"
+        )
+        chunks = chunk_document(_make_doc([TextBlock(text=text, page_number=21)]))
+        section_numbers = {c.section_number for c in chunks if c.section_number}
+        assert "806" in section_numbers
+        assert "807" in section_numbers
+
+    def test_margin_section_groups_trailing_item_lines(self) -> None:
+        # The O01 shape: items B and C belong to section 801, but decimal-only
+        # detection left them section-less, so the model guessed the nearby 802.
+        # With 3-digit recognition the whole 801 group inherits "801".
+        body = _long_text(300)
+        text = (
+            "ARTICLE 8 — HOURS OF WORK AND OVERTIME\n"
+            f"806 A. Overtime is paid at time and a half. {body}\n"
+            "801 A. For employees working normal hours a rest period is allotted.\n"
+            "B. A ten minute rest period is allotted before overtime. REST_ITEM_B\n"
+            "C. A fifteen minute rest period is allotted during overtime. REST_ITEM_C\n"
+            f"802 A. Reporting pay applies when sent home. {body}"
+        )
+        chunks = chunk_document(_make_doc([TextBlock(text=text, page_number=21)]))
+        c_chunk = next(c for c in chunks if "REST_ITEM_C" in c.text)
+        assert c_chunk.section_number == "801"
+
+    def test_three_digit_value_line_is_not_a_section(self) -> None:
+        # A line beginning with a 3-digit number followed by lowercase prose is a
+        # value ("500 hours…"), not a section header — must not be stamped.
+        body = _long_text(300)
+        text = (
+            "ARTICLE 8 — HOURS\n"
+            f"8.01 The workweek is capped. {body}\n"
+            f"500 hours of accumulated overtime may be banked. {body}"
+        )
+        chunks = chunk_document(_make_doc([TextBlock(text=text, page_number=1)]))
+        assert "500" not in {c.section_number for c in chunks}
+
+    def test_four_digit_year_line_is_not_a_section(self) -> None:
+        body = _long_text(300)
+        text = (
+            "ARTICLE 8 — HOURS\n"
+            f"8.01 A clause about hours. {body}\n"
+            f"2025 Annual Review of the hours schedule occurs. {body}"
+        )
+        chunks = chunk_document(_make_doc([TextBlock(text=text, page_number=1)]))
+        sections = {c.section_number for c in chunks}
+        assert "202" not in sections
+        assert "2025" not in sections
+
+    def test_sentence_opening_with_three_digit_number_is_not_a_section(self) -> None:
+        # Ordinary narrative that opens with a 3-digit number and a capitalized
+        # word — an address, a count, an emergency/phone number — must NOT be
+        # stamped as a margin section. EPSCA sections always open with an item
+        # letter ("801 A."), so these "NNN Word" lines are prose (#79 review).
+        body = _long_text(300)
+        text = (
+            "ARTICLE 8 — HOURS\n"
+            f"8.01 Hours of work are capped. {body}\n"
+            "801 Yonge Street is the union hall address for all members.\n"
+            "911 Emergency contact numbers are posted at every gate.\n"
+            f"250 Ontario workers are covered by this clause. {body}"
+        )
+        chunks = chunk_document(_make_doc([TextBlock(text=text, page_number=1)]))
+        sections = {c.section_number for c in chunks}
+        assert "801" not in sections
+        assert "911" not in sections
+        assert "250" not in sections
+
+
+class TestAppendixBoundary:
+    """Appendix clauses carry no ARTICLE/section heading, so they used to
+    accumulate under the previous article and inherit a stale section number
+    (#79, O04 — an appendix hours-of-work clause was stamped §48.1, which is
+    actually Duration).  An appendix heading must reset the running context.
+    """
+
+    def _duration_then_appendix(self) -> list[TextBlock]:
+        # Oversized Duration section so it splits and must carry its own number,
+        # proving the appendix boundary doesn't suppress real section stamping.
+        dur = _long_text(520)
+        app = _long_text(300)
+        text = (
+            "ARTICLE 48 — DURATION\n"
+            f"48.1 This agreement remains in effect until April 30, 2030. {dur}\n"
+            "Appendix B 7 Day Coverage\n"
+            f"(a) Regularly scheduled hours of ten hours per day. APPENDIX_MARKER {app}"
+        )
+        return [TextBlock(text=text, page_number=51)]
+
+    def test_appendix_clause_does_not_inherit_stale_section(self) -> None:
+        chunks = chunk_document(_make_doc(self._duration_then_appendix()))
+        app_chunk = next(c for c in chunks if "APPENDIX_MARKER" in c.text)
+        assert app_chunk.section_number is None
+
+    def test_appendix_clause_gets_appendix_article_number(self) -> None:
+        chunks = chunk_document(_make_doc(self._duration_then_appendix()))
+        app_chunk = next(c for c in chunks if "APPENDIX_MARKER" in c.text)
+        assert app_chunk.article_number == "Appendix B"
+
+    def test_appendix_title_parsed_from_heading(self) -> None:
+        chunks = chunk_document(_make_doc(self._duration_then_appendix()))
+        app_chunk = next(c for c in chunks if "APPENDIX_MARKER" in c.text)
+        assert app_chunk.article_title == "7 Day Coverage"
+
+    def test_preceding_duration_section_still_stamped(self) -> None:
+        chunks = chunk_document(_make_doc(self._duration_then_appendix()))
+        dur_chunk = next(c for c in chunks if "remains in effect" in c.text)
+        assert dur_chunk.section_number == "48.1"
+
+    def test_midtext_appendix_reference_does_not_reset_context(self) -> None:
+        # A cross-reference ("See Appendix B …") mid-clause is not a heading and
+        # must not reset the article/section context.
+        body = _long_text(300)
+        text = (
+            "ARTICLE 5 — WAGES\n"
+            f"5.01 Rates are listed. See Appendix B for the full schedule. {body}\n"
+            f"5.02 Additional rate provisions apply. {body}"
+        )
+        chunks = chunk_document(_make_doc([TextBlock(text=text, page_number=1)]))
+        assert all(
+            c.article_number == "Article 5" for c in chunks if not c.is_table
+        )
+
+    def test_lowercase_appendix_heading_still_resets_and_normalizes(self) -> None:
+        # Extraction can down-case a heading; "appendix c" must still reset the
+        # context and normalize to "Appendix C" (#79 review: case symmetry with
+        # ARTICLE, which is matched case-insensitively).
+        dur = _long_text(520)
+        app = _long_text(300)
+        text = (
+            "ARTICLE 48 — DURATION\n"
+            f"48.1 This agreement remains in effect until April 30, 2030. {dur}\n"
+            "appendix c wrap around\n"
+            f"(a) A return trip is provided each cycle. LC_APPENDIX_MARKER {app}"
+        )
+        chunks = chunk_document(_make_doc([TextBlock(text=text, page_number=60)]))
+        app_chunk = next(c for c in chunks if "LC_APPENDIX_MARKER" in c.text)
+        assert app_chunk.article_number == "Appendix C"
+        assert app_chunk.section_number is None
+
+    def test_appendix_prose_reference_is_not_a_heading(self) -> None:
+        # A sentence that merely begins with the word "Appendix" followed by a
+        # multi-letter lower-case word is prose, not a heading — must not reset.
+        body = _long_text(300)
+        text = (
+            "ARTICLE 5 — WAGES\n"
+            f"5.01 Rates are listed here. {body}\n"
+            f"Appendix to the agreement, the parties note the following. {body}"
+        )
+        chunks = chunk_document(_make_doc([TextBlock(text=text, page_number=1)]))
+        assert all(
+            c.article_number == "Article 5" for c in chunks if not c.is_table
+        )
