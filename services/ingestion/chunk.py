@@ -32,6 +32,15 @@ CHARS_PER_TOKEN: int = 4  # English-text approximation (~4 chars per token)
 _MAX_CHARS = MAX_CHUNK_TOKENS * CHARS_PER_TOKEN   # 2 000
 _OVERLAP_CHARS = OVERLAP_TOKENS * CHARS_PER_TOKEN  # 200
 
+# When a table is emitted as its own chunk, prepend up to this many characters of
+# its section's narrative so a terse table (e.g. a rate table whose own text never
+# says "subsistence") stays retrievable by the terms that introduce it (#126).
+# Sized to reach the naming term even when a long lead-in (e.g. a "regular
+# residence" footnote) sits between the section heading and the term, and kept
+# well under embed.py's MAX_EMBED_CHARS (2500) so the table's own rows still reach
+# the embedding window.
+_TABLE_LEAD_IN_CHARS: int = 1600
+
 # ─── Regex patterns ───────────────────────────────────────────────────────────
 
 # EPSCA article headings: "ARTICLE 12 — OVERTIME", "ARTICLE 3", "ARTICLE 1 – SCOPE"
@@ -82,6 +91,60 @@ def _format_table(rows: TableRows) -> str:
         cells = [str(cell or "").strip() for cell in row]
         lines.append(" | ".join(cells))
     return "\n".join(lines)
+
+
+def _build_section_narrative(
+    blocks: list[TextBlock | TableBlock],
+) -> dict[tuple[str | None, str], str]:
+    """Accumulate each numbered section's full narrative, keyed by
+    ``(article_number, section_number)``.
+
+    Built in a first pass over *all* text blocks so a table can inherit its
+    section's naming text even when the extractor emits the TableBlock *before*
+    the narrative that names it — pdfplumber does not guarantee reading order,
+    so the immediately-preceding text is unreliable (issue #126).  Keying
+    includes the article so a section number reused across articles (e.g. a
+    restated appendix schedule) never blends narrative from the wrong article.
+    """
+    narrative: dict[tuple[str | None, str], list[str]] = {}
+    current_article: str | None = None
+    current_section: str | None = None
+    for block in blocks:
+        if not isinstance(block, TextBlock):
+            continue
+        for raw_line in block.text.split("\n"):
+            line = raw_line.strip()
+            if not line:
+                continue
+            article_match = _ARTICLE_RE.match(line)
+            if article_match:
+                current_article = f"Article {article_match.group(1)}"
+                current_section = None
+                continue
+            section_match = _SECTION_RE.match(line)
+            if section_match:
+                current_section = section_match.group(1)
+            if current_section is not None:
+                narrative.setdefault((current_article, current_section), []).append(line)
+    return {key: "\n".join(lines) for key, lines in narrative.items()}
+
+
+def _table_section_key(rows: TableRows, current_section: str | None) -> str | None:
+    """Return the section a table belongs to.
+
+    Prefers a section number embedded in the table's own leading (header) cell
+    (e.g. ``"26.2 Room and Board Rates"``); falls back to the section in effect
+    where the table appears.  Only the first row is inspected, so a blank header
+    corner does not let a look-alike data cell (e.g. ``"2025.05"``) be mistaken
+    for a section number.
+    """
+    if rows:
+        for cell in rows[0]:
+            text = str(cell).strip() if cell else ""
+            if text:
+                match = _SECTION_RE.match(text)
+                return match.group(1) if match else current_section
+    return current_section
 
 
 def _find_sentence_boundary(text: str, near: int) -> int:
@@ -377,9 +440,14 @@ def chunk_document(doc: ClassifiedDocument) -> list[Chunk]:
         _process_wage_schedule(doc.extracted.blocks, raw)
         return [replace(c, chunk_index=i) for i, c in enumerate(raw)]
 
-    # Running article context shared between text and table blocks
+    # First pass: collect each section's full narrative so a table can inherit
+    # the terms that name it regardless of the extractor's block ordering (#126).
+    section_narrative = _build_section_narrative(doc.extracted.blocks)
+
+    # Running article/section context shared between text and table blocks
     current_article_number: str | None = None
     current_article_title: str | None = None
+    current_section_number: str | None = None
 
     # Lines accumulated for the current article: (text, page_number)
     article_lines: list[tuple[str, int]] = []
@@ -391,17 +459,28 @@ def chunk_document(doc: ClassifiedDocument) -> list[Chunk]:
 
     for block in doc.extracted.blocks:
         if isinstance(block, TableBlock):
-            # Flush pending article text before emitting the table chunk
+            # Prepend the table's section narrative so a terse table (whose own
+            # text may never name what it lists — e.g. a rate table headed "Room
+            # and Board Rates" that users query as "subsistence allowance") stays
+            # retrievable, and inherit that section's number for citation (#126).
             _flush()
             table_text = _format_table(block.rows)
+            section = _table_section_key(block.rows, current_section_number)
+            lead_in = (
+                section_narrative.get((current_article_number, section), "")[
+                    :_TABLE_LEAD_IN_CHARS
+                ].strip()
+                if section is not None
+                else ""
+            )
             raw.append(
                 Chunk(
-                    text=table_text,
+                    text=f"{lead_in}\n\n{table_text}" if lead_in else table_text,
                     page_number=block.page_number,
                     is_table=True,
                     article_number=current_article_number,
                     article_title=current_article_title,
-                    section_number=None,
+                    section_number=section,
                     chunk_index=0,
                 )
             )
@@ -420,6 +499,11 @@ def chunk_document(doc: ClassifiedDocument) -> list[Chunk]:
                     current_article_number = f"Article {num_str}"
                     title = article_match.group(2)
                     current_article_title = title.strip() if title else None
+                    current_section_number = None
+                else:
+                    section_match = _SECTION_RE.match(line)
+                    if section_match:
+                        current_section_number = section_match.group(1)
 
                 # Always add the line (including the heading itself) so the
                 # heading text appears at the top of the first chunk for context
