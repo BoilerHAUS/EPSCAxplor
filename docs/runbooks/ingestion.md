@@ -15,8 +15,6 @@ default — see "Wage schedule ingestion" below.
 - Ollama running with `nomic-embed-text` pulled: `ollama pull nomic-embed-text`
 - Qdrant container running and accessible
 - `python3 -m pip install -r requirements.txt`
-- `npm install` inside `services/ingestion` for the TPDS bridge (only if using the
-  legacy Docling + TPDS branch)
 - `.env.local` configured with `QDRANT_URL` and `OLLAMA_BASE_URL`
 
 ## Run
@@ -37,7 +35,6 @@ python3 run_pipeline.py --doc-type wage_schedule --dry-run
 | download | download.py | Fetch PDFs from corpus_manifest.yaml |
 | extract | extract.py | Extract text from PDFs with pdfplumber |
 | wage parse | epsca_wage_parser.py | Default deterministic parser for wage schedules |
-| wage-table | wage_tables.py | Optional Docling + TPDS branch (legacy, behind flag) |
 | classify | classify.py | Assign doc_type (primary_ca, nuclear_pa, etc.) |
 | chunk | chunk.py | Split by article/section boundaries |
 | embed | embed.py | Generate 768-dim vectors via Ollama |
@@ -67,8 +64,9 @@ with `document_type: wage_schedule` are parsed deterministically by
 4. Notes pages (overtime rules, union fund breakdowns) and rate-page footnotes
    become separate narrative chunks, each prefixed with the local's identity.
 
-Disable with `INGEST_EPSCA_WAGE_PARSER=0` (falls back to the Docling/legacy paths
-below). Any parse failure automatically falls back as well.
+Disable with `INGEST_EPSCA_WAGE_PARSER=0` (falls back to the legacy
+Markdown/pdfplumber path). Any parse failure automatically falls back as well.
+(The former Docling + TPDS wage-table branch was retired in #90.)
 
 ### Reingesting wage schedules (issues #55 / #59)
 
@@ -85,21 +83,3 @@ POSTGRES_DSN="postgresql://epsca_user:<password>@127.0.0.1:5433/epsca?sslmode=di
 reingest fully replaces the previous chunks (no stale points when the chunk count
 shrinks). Then rerun the Phase 1 eval (`services/api/eval/run_eval.py`) and review
 the wage questions (W01–W12) in `docs/evaluation/phase1_results.md`.
-
-## Legacy wage-table branch (Docling + TPDS)
-
-When the EPSCA-form parser is disabled or fails, and `INGEST_WAGE_TABLE_PIPELINE=1`
-is set, wage schedules are routed through:
-
-1. Docling table extraction
-2. artifact capture under `services/ingestion/corpus_table_artifacts/<pdf-stem>--<source-hash>/`
-   including `manifest.json`, `docling.document.json`, `docling.tables.json`,
-   `tpds.tables.json`, and `tpds.chunks.json`
-3. TPDS normalization (`normalizeFromDocling`)
-4. TPDS logical-table merge and continuation-header cleanup for adjacent multi-page wage-table fragments
-5. TPDS chunk generation (`buildTableChunks`) from the merged table
-6. normal embed/store stages using the TPDS-derived chunk text and metadata
-
-The artifact `manifest.json` is the first place to inspect when a wage-table
-run looks wrong. If that branch fails and `INGEST_WAGE_TABLE_FALLBACK` is not set
-to `0`, the pipeline falls back to the Markdown/pdfplumber path.

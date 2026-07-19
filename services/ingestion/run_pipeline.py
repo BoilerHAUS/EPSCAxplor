@@ -65,12 +65,7 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
     )
     from extract import ExtractedDocument, extract_markdown, extract_pdf
     from store import store_document
-    from wage_tables import (
-        WageTableConfig,
-        is_wage_schedule_entry,
-        process_wage_schedule_pdf,
-        should_use_wage_table_pipeline,
-    )
+    from wage_tables import is_wage_schedule_entry
 
     with CORPUS_MANIFEST.open() as f:
         manifest_data = yaml.safe_load(f) or {}
@@ -83,7 +78,6 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
     doc_count = 0
     total_chunks = 0
     t_start = time.monotonic()
-    wage_table_config = WageTableConfig.from_env()
 
     for entry in entries:
         pdf_path = resolve_corpus_path(entry, CORPUS_DIR)
@@ -164,33 +158,10 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
                 classified_and_chunks = _run_epsca_wage_path(pdf_path)
             except Exception as exc:  # noqa: BLE001 — any parse failure falls back
                 logger.warning("  epsca-form wage parser failed: %s", exc)
-                logger.warning("  falling back to Docling/legacy extraction path")
+                logger.warning("  falling back to legacy extraction path")
 
         if classified_and_chunks is not None:
             classified, chunks = classified_and_chunks
-        elif should_use_wage_table_pipeline(entry, wage_table_config):
-            try:
-                table_result = process_wage_schedule_pdf(pdf_path, wage_table_config)
-                classified = table_result.classified
-                chunks = table_result.chunks
-                logger.info(
-                    "  extract: %d Docling tables, %d pages",
-                    table_result.table_count,
-                    table_result.page_count,
-                )
-                logger.info(
-                    "  classify: %s / %s",
-                    classified.metadata.union_name,
-                    classified.metadata.document_type,
-                )
-                logger.info("  chunk: %d chunks (docling_tpds)", len(chunks))
-                logger.info("  artifacts: %s", table_result.artifacts.artifact_dir)
-            except Exception as exc:
-                if not wage_table_config.fallback_enabled:
-                    raise
-                logger.warning("  wage-table branch failed: %s", exc)
-                logger.warning("  falling back to legacy extraction path")
-                classified, chunks = _run_legacy_path(entry, pdf_path)
         else:
             classified, chunks = _run_legacy_path(entry, pdf_path)
 

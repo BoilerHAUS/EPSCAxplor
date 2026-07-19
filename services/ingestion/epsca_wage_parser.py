@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 def epsca_wage_parser_enabled() -> bool:
     """Deterministic EPSCA-form parsing is the default wage_schedule path.
 
-    Set INGEST_EPSCA_WAGE_PARSER=0 to fall back to the Docling/legacy paths.
+    Set INGEST_EPSCA_WAGE_PARSER=0 to fall back to the legacy extraction path.
     """
     raw = os.getenv("INGEST_EPSCA_WAGE_PARSER")
     if raw is None:
