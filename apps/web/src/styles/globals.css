@@ -21,6 +21,7 @@
 @import "./console.css";
 @import "./ledger.css";
 @import "./auth.css";
+@import "./forms.css";
 
 *,
 *::before,
