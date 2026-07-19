@@ -54,7 +54,7 @@ def test_login_success_returns_token_and_sets_httponly_cookie() -> None:
     assert f"{COOKIE}=raw-refresh-1" in set_cookie
     assert "HttpOnly" in set_cookie
     assert "Path=/auth" in set_cookie
-    assert "SameSite=lax" in set_cookie
+    assert "SameSite=strict" in set_cookie
 
 
 def test_login_bad_credentials_returns_401_without_cookie() -> None:
@@ -130,3 +130,146 @@ def test_logout_without_cookie_is_noop_204() -> None:
 
     assert resp.status_code == 204
     revoke.assert_not_awaited()
+
+
+# ─── CSRF origin guard on cookie-authenticated routes (#104) ─────────────────
+
+WEB_ORIGIN = "https://epscaxplor.boilerhaus.org"
+
+
+def _csrf_settings() -> Settings:
+    return _settings(cors_origins=WEB_ORIGIN)
+
+
+def test_refresh_with_cross_site_origin_returns_403_without_rotation() -> None:
+    client = _client(_csrf_settings())
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.rotate_refresh_token", new=AsyncMock()) as rotate:
+        resp = client.post("/auth/refresh", headers={"Origin": "https://evil.example"})
+
+    assert resp.status_code == 403
+    rotate.assert_not_awaited()
+
+
+def test_logout_with_cross_site_origin_returns_403_without_revocation() -> None:
+    client = _client(_csrf_settings())
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.revoke_refresh_token", new=AsyncMock()) as revoke:
+        resp = client.post("/auth/logout", headers={"Origin": "https://evil.example"})
+
+    assert resp.status_code == 403
+    revoke.assert_not_awaited()
+
+
+def test_refresh_with_allowed_origin_succeeds() -> None:
+    pair = TokenPair(access_token="a.2", refresh_token="raw-2", expires_in=900)
+    client = _client(_csrf_settings())
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.rotate_refresh_token", new=AsyncMock(return_value=pair)):
+        resp = client.post("/auth/refresh", headers={"Origin": WEB_ORIGIN})
+
+    assert resp.status_code == 200
+
+
+def test_logout_with_allowed_origin_succeeds() -> None:
+    client = _client(_csrf_settings())
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.revoke_refresh_token", new=AsyncMock()) as revoke:
+        resp = client.post("/auth/logout", headers={"Origin": WEB_ORIGIN})
+
+    assert resp.status_code == 204
+    revoke.assert_awaited_once()
+
+
+def test_allowed_origin_matching_ignores_case_and_trailing_slash() -> None:
+    pair = TokenPair(access_token="a.2", refresh_token="raw-2", expires_in=900)
+    client = _client(_settings(cors_origins=f"{WEB_ORIGIN}/"))
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.rotate_refresh_token", new=AsyncMock(return_value=pair)):
+        resp = client.post(
+            "/auth/refresh", headers={"Origin": "HTTPS://EPSCAxplor.BoilerHAUS.org"}
+        )
+
+    assert resp.status_code == 200
+
+
+def test_same_host_origin_succeeds_even_if_not_in_cors_list() -> None:
+    # Swagger UI / any same-origin caller: Origin equals the API's own host.
+    pair = TokenPair(access_token="a.2", refresh_token="raw-2", expires_in=900)
+    client = _client(_csrf_settings())
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.rotate_refresh_token", new=AsyncMock(return_value=pair)):
+        resp = client.post(
+            "/auth/refresh",
+            headers={"Origin": "http://testserver", "Host": "testserver"},
+        )
+
+    assert resp.status_code == 200
+
+
+def test_null_origin_returns_403() -> None:
+    # Sandboxed iframes / some redirect chains send the literal string "null";
+    # treat it as cross-site.
+    client = _client(_csrf_settings())
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.rotate_refresh_token", new=AsyncMock()) as rotate:
+        resp = client.post("/auth/refresh", headers={"Origin": "null"})
+
+    assert resp.status_code == 403
+    rotate.assert_not_awaited()
+
+
+def test_cross_site_fetch_metadata_without_origin_returns_403() -> None:
+    client = _client(_csrf_settings())
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.rotate_refresh_token", new=AsyncMock()) as rotate:
+        resp = client.post("/auth/refresh", headers={"Sec-Fetch-Site": "cross-site"})
+
+    assert resp.status_code == 403
+    rotate.assert_not_awaited()
+
+
+def test_same_site_fetch_metadata_without_origin_succeeds() -> None:
+    pair = TokenPair(access_token="a.2", refresh_token="raw-2", expires_in=900)
+    client = _client(_csrf_settings())
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.rotate_refresh_token", new=AsyncMock(return_value=pair)):
+        resp = client.post("/auth/refresh", headers={"Sec-Fetch-Site": "same-site"})
+
+    assert resp.status_code == 200
+
+
+def test_non_browser_client_without_origin_headers_still_works() -> None:
+    # curl / server-to-server clients send neither Origin nor Sec-Fetch-Site;
+    # they cannot carry a victim's cookie, so they pass the guard.
+    pair = TokenPair(access_token="a.2", refresh_token="raw-2", expires_in=900)
+    client = _client(_csrf_settings())
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.rotate_refresh_token", new=AsyncMock(return_value=pair)):
+        resp = client.post("/auth/refresh")
+
+    assert resp.status_code == 200
+
+
+def test_login_is_not_origin_guarded() -> None:
+    # Login is credentialed by the request body, not the cookie — out of #104's
+    # scope, and guarding it would break nothing-to-protect flows.
+    pair = TokenPair(access_token="a.1", refresh_token="raw-1", expires_in=900)
+    client = _client(_csrf_settings())
+    with patch("src.routes.auth.login", new=AsyncMock(return_value=pair)):
+        resp = client.post(
+            "/auth/login",
+            json={"email": "a@b.c", "password": "secret"},
+            headers={"Origin": "https://evil.example"},
+        )
+
+    assert resp.status_code == 200
+
+
+def test_refresh_cookie_defaults_to_samesite_strict() -> None:
+    pair = TokenPair(access_token="a.1", refresh_token="raw-1", expires_in=900)
+    client = _client(_settings())
+    with patch("src.routes.auth.login", new=AsyncMock(return_value=pair)):
+        resp = client.post("/auth/login", json={"email": "a@b.c", "password": "secret"})
+
+    assert "SameSite=strict" in resp.headers["set-cookie"]

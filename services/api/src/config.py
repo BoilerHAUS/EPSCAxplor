@@ -32,7 +32,9 @@ class Settings(BaseSettings):
     bcrypt_rounds: int = 12
     refresh_cookie_name: str = "epsca_refresh"
     refresh_cookie_secure: bool = True  # set False only for local http development
-    refresh_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
+    # "strict" — the SPA only ever sends the cookie via same-site XHR to /auth;
+    # it is never needed on top-level cross-site navigations (#104).
+    refresh_cookie_samesite: Literal["lax", "strict", "none"] = "strict"
     refresh_cookie_domain: str | None = None
     # Per-client burst cap on /query (#85); per-tenant tier quota is enforce_tier_limit (#25).
     query_rate_limit_per_minute: int = 30
