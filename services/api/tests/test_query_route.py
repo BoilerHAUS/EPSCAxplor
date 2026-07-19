@@ -459,3 +459,93 @@ def test_missing_query_field_returns_422(test_settings: Settings, stub_user: Cur
     del test_settings, stub_user
     with pytest.raises(ValidationError):
         QueryRequest.model_validate({})
+
+
+# ─── structured rate lookup wiring (issue #89) ───────────────────────────────
+
+
+async def test_rate_query_passes_rate_classification_to_retrieval(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    chunks = [make_chunk()]
+    mock_retrieve = AsyncMock(return_value=chunks)
+
+    with patch(
+        "src.routes.query._get_known_unions",
+        new=AsyncMock(return_value=["Labourers"]),
+    ), patch("src.routes.query.retrieve", new=mock_retrieve), patch(
+        "src.routes.query._get_title_map",
+        new=AsyncMock(return_value={}),
+    ), patch(
+        "src.routes.query.generate",
+        new=AsyncMock(return_value=make_generator_result()),
+    ), patch(
+        "src.routes.query._write_query_log",
+        new=AsyncMock(return_value=None),
+    ):
+        await query_handler(
+            QueryRequest(
+                query="What is the journeyperson rate for Labourers in Windsor?"
+            ),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    assert mock_retrieve.call_args.kwargs["rate_classification"] == "journeyman"
+
+
+async def test_pinned_chunk_sets_has_pinned_rate_on_generate(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    pinned_chunk = make_chunk().model_copy(update={"pinned": True})
+    mock_generate = AsyncMock(return_value=make_generator_result())
+
+    with patch(
+        "src.routes.query._get_known_unions",
+        new=AsyncMock(return_value=["Labourers"]),
+    ), patch(
+        "src.routes.query.retrieve",
+        new=AsyncMock(return_value=[pinned_chunk]),
+    ), patch(
+        "src.routes.query._get_title_map",
+        new=AsyncMock(return_value={}),
+    ), patch("src.routes.query.generate", new=mock_generate), patch(
+        "src.routes.query._write_query_log",
+        new=AsyncMock(return_value=None),
+    ):
+        await query_handler(
+            QueryRequest(
+                query="What is the journeyperson rate for Labourers in Windsor?"
+            ),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    assert mock_generate.call_args.kwargs["has_pinned_rate"] is True
+
+
+async def test_unpinned_chunks_leave_has_pinned_rate_false(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    mock_generate = AsyncMock(return_value=make_generator_result())
+
+    with patch(
+        "src.routes.query._get_known_unions",
+        new=AsyncMock(return_value=["IBEW"]),
+    ), patch(
+        "src.routes.query.retrieve",
+        new=AsyncMock(return_value=[make_chunk()]),
+    ), patch(
+        "src.routes.query._get_title_map",
+        new=AsyncMock(return_value={}),
+    ), patch("src.routes.query.generate", new=mock_generate), patch(
+        "src.routes.query._write_query_log",
+        new=AsyncMock(return_value=None),
+    ):
+        await query_handler(
+            QueryRequest(query="What are the overtime rules for IBEW?"),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    assert mock_generate.call_args.kwargs["has_pinned_rate"] is False

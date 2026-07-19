@@ -80,11 +80,32 @@ When comparing provisions across multiple unions:
   note the absence — do not assume the provision does not exist."""
 
 
-def build_system_prompt(is_cross_union: bool) -> str:
-    """Return the appropriate system prompt based on query complexity."""
+_PINNED_RATE_ADDENDUM = """
+
+PINNED RATE SOURCE RULES:
+
+One source is labelled "PINNED — STRUCTURED RATE LOOKUP". It was resolved by an exact \
+classification and location match against the wage schedule data — not by semantic \
+search — and its rate figures are authoritative for this query.
+- Quote the pinned source's wage figures verbatim: exact dollar values and effective \
+  dates, unmodified and unrounded.
+- If the question asks for the current rate, use the row marked "Currently in effect".
+- Other sources may add surrounding context (overtime rules, fund breakdowns, \
+  travel provisions) but must not override the pinned source's figures."""
+
+
+def build_system_prompt(is_cross_union: bool, has_pinned_rate: bool = False) -> str:
+    """Return the appropriate system prompt variant.
+
+    Each flag combination yields a stable prompt string, so every variant
+    remains an effective prompt-cache anchor.
+    """
+    prompt = _STANDARD_SYSTEM_PROMPT
     if is_cross_union:
-        return _STANDARD_SYSTEM_PROMPT + _COMPARISON_ADDENDUM
-    return _STANDARD_SYSTEM_PROMPT
+        prompt += _COMPARISON_ADDENDUM
+    if has_pinned_rate:
+        prompt += _PINNED_RATE_ADDENDUM
+    return prompt
 
 
 class GeneratorResult(BaseModel):
@@ -100,6 +121,7 @@ async def generate(
     context: str,
     *,
     is_cross_union: bool,
+    has_pinned_rate: bool = False,
     settings: Settings,
 ) -> GeneratorResult:
     """Call Claude with the query and assembled context, returning a GeneratorResult.
@@ -108,6 +130,8 @@ async def generate(
         query: Raw user question.
         context: Assembled source blocks from assemble_context().
         is_cross_union: Routes to Sonnet when True, Haiku when False.
+        has_pinned_rate: When True, append the pinned-rate rules so the model
+            quotes the structured rate lookup source verbatim (issue #89).
         settings: Application settings (API key, model IDs).
 
     Returns:
@@ -116,7 +140,7 @@ async def generate(
     model = (
         settings.claude_sonnet_model if is_cross_union else settings.claude_haiku_model
     )
-    system_prompt = build_system_prompt(is_cross_union)
+    system_prompt = build_system_prompt(is_cross_union, has_pinned_rate)
     user_content = f"{query}\n\n{context}" if context else query
 
     start = time.monotonic()

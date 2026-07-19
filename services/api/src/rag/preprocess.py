@@ -164,6 +164,29 @@ _PROVISION_TERM_RULES: list[tuple[re.Pattern[str], tuple[str, ...]]] = [
 ]
 
 
+# Classification families for the structured rate lookup (issue #89).  Keys
+# are the canonical family names retrieval's _chunk_classification produces
+# from chunk payloads; patterns are the query phrasings that select each
+# family.  Foreman and subforeman share one combined pattern (below) because
+# "sub foreman" / "sub - foreman" would otherwise match both families.
+_RATE_CLASSIFICATION_PATTERNS: dict[str, re.Pattern[str]] = {
+    "journeyman": re.compile(
+        r"\bjourney[\s-]*(?:man|person|woman)\b", re.IGNORECASE
+    ),
+    "apprentice": re.compile(r"\bapprentices?\b", re.IGNORECASE),
+    "welder": re.compile(r"\b(?:pipe)?welders?\b", re.IGNORECASE),
+    "probationary": re.compile(r"\bprobationary\b", re.IGNORECASE),
+    "material handler": re.compile(r"\bmaterial handlers?\b", re.IGNORECASE),
+}
+
+# One pattern for both foreman families: the optional captured "sub" prefix
+# (any run of space/hyphen separators) decides which family each mention
+# belongs to, so "sub  foreman" can never count as a plain foreman mention.
+_FOREMAN_FAMILY_RE = re.compile(
+    r"\b(?:(sub)[\s-]*)?fore(?:man|person|woman)\b", re.IGNORECASE
+)
+
+
 class QueryContext(BaseModel):
     """Structured output of query pre-processing."""
 
@@ -173,6 +196,7 @@ class QueryContext(BaseModel):
     is_cross_union: bool
     is_wage_query: bool
     provision_terms: list[str] = Field(default_factory=list)
+    rate_classification: str | None = None
 
     @property
     def union_filter(self) -> str | None:
@@ -285,6 +309,28 @@ def detect_provision_terms(query: str) -> list[str]:
     return list(dict.fromkeys(terms))
 
 
+def detect_rate_classification(query: str) -> str | None:
+    """Return the single classification family the query names, else None.
+
+    The structured rate lookup (issue #89) only activates when exactly one
+    classification family (journeyperson, foreman, apprentice, ...) appears in
+    the query.  Zero families means there is nothing to pin; two or more means
+    a comparison/premium question ("how much more does a foreman make than a
+    journeyperson") that needs multiple tables, so the existing re-ranked
+    vector pass must handle it.
+    """
+    matched = {
+        family
+        for family, pattern in _RATE_CLASSIFICATION_PATTERNS.items()
+        if pattern.search(query)
+    }
+    for match in _FOREMAN_FAMILY_RE.finditer(query):
+        matched.add("subforeman" if match.group(1) else "foreman")
+    if len(matched) == 1:
+        return matched.pop()
+    return None
+
+
 def preprocess(query: str, known_unions: list[str]) -> QueryContext:
     """Analyse *query* and return a populated QueryContext.
 
@@ -297,12 +343,22 @@ def preprocess(query: str, known_unions: list[str]) -> QueryContext:
         A QueryContext describing retrieval filters and model routing.
     """
     detected_unions = detect_unions(query, known_unions)
+    is_wage_query = detect_wage_query(query)
+    is_cross_union = classify_complexity(query) or len(detected_unions) > 1
 
     return QueryContext(
         union_filters=detected_unions,
         include_nuclear_pa=detect_nuclear(query),
         agreement_scope=detect_scope(query),
-        is_cross_union=classify_complexity(query) or len(detected_unions) > 1,
-        is_wage_query=detect_wage_query(query),
+        is_cross_union=is_cross_union,
+        is_wage_query=is_wage_query,
         provision_terms=detect_provision_terms(query),
+        # The structured rate lookup needs wage intent — a lone classification
+        # word ("foreman safety duties") is not a rate question — and must not
+        # pin a single union's table on a cross-union comparison.
+        rate_classification=(
+            detect_rate_classification(query)
+            if is_wage_query and not is_cross_union
+            else None
+        ),
     )
