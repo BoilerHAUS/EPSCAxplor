@@ -132,6 +132,7 @@ Goal: Paid product with billing and white-label capability.
 | [#37](https://github.com/BoilerHAUS/EPSCAxplor/issues/37) | no-pr | [ ] | ops: register production domain and update Traefik routing |
 | [#38](https://github.com/BoilerHAUS/EPSCAxplor/issues/38) | pr | [ ] | feat(web): build marketing site and add terms of service / privacy policy |
 | [#136](https://github.com/BoilerHAUS/EPSCAxplor/issues/136) | pr | [ ] | feat(web): redesign authenticated UI as an industrial reference console |
+| [#138](https://github.com/BoilerHAUS/EPSCAxplor/issues/138) | pr | [ ] | refactor(web): migrate Button/Input focus + hover to CSS :focus-visible |
 
 ---
 
