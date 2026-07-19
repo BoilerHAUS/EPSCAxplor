@@ -52,17 +52,18 @@ describe("Input", () => {
     expect(input.getAttribute("aria-invalid")).toBe("true");
   });
 
-  it("shows the accent border and focus ring while focused", () => {
+  it("relies on :focus-visible instead of inline focus styles", () => {
     render(<Input ariaLabel="Email" />);
     const input = screen.getByLabelText("Email");
 
     fireEvent.focus(input);
-    expect(input.style.border).toContain("var(--accent-primary)");
-    expect(input.style.boxShadow).toBe("var(--shadow-focus)");
+    // focus is handled by the global :focus-visible ring, not JS — the
+    // element gets no inline focus shadow, and the border is unchanged
+    expect(input.style.boxShadow).toBe("");
+    expect(input.style.border).toContain("var(--border-default)");
 
     fireEvent.blur(input);
-    expect(input.style.border).toContain("var(--border-default)");
-    expect(input.style.boxShadow).toBe("none");
+    expect(input.style.boxShadow).toBe("");
   });
 
   it("supports the small size and disabled state", () => {

@@ -1,11 +1,10 @@
 "use client";
 
 /**
- * Design-system Input, ported from the design-system export
- * (components/forms/Input.jsx + Input.d.ts). id / name / autoComplete /
- * required / ariaLabel are additions for real form usage.
+ * Design-system Input. The border reflects the error prop; keyboard focus
+ * shows the global :focus-visible ring (globals.css) rather than a JS-driven
+ * inline style — no focus state in the component.
  */
-import { useState } from "react";
 
 export interface InputProps {
   placeholder?: string;
@@ -37,7 +36,6 @@ export function Input({
   required,
   ariaLabel,
 }: InputProps) {
-  const [focused, setFocused] = useState(false);
   return (
     <div>
       <input
@@ -52,8 +50,6 @@ export function Input({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange?.(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
         style={{
           width: "100%",
           boxSizing: "border-box",
@@ -62,15 +58,8 @@ export function Input({
           fontFamily: "var(--font-sans)",
           color: "var(--text-primary)",
           background: "var(--surface-card)",
-          border: `1px solid ${
-            error
-              ? "var(--status-error)"
-              : focused
-                ? "var(--accent-primary)"
-                : "var(--border-default)"
-          }`,
+          border: `1px solid ${error ? "var(--status-error)" : "var(--border-default)"}`,
           borderRadius: "var(--radius-md)",
-          boxShadow: focused ? "var(--shadow-focus)" : "none",
           opacity: disabled ? 0.5 : 1,
         }}
       />

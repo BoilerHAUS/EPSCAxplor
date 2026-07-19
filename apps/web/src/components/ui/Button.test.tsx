@@ -37,37 +37,33 @@ describe("Button", () => {
   });
 
   it.each(["primary", "secondary", "ghost", "danger"] as const)(
-    "renders the %s variant",
+    "maps the %s variant to a class",
     (variant) => {
       render(<Button variant={variant}>Label</Button>);
-      expect(screen.getByRole("button").textContent).toBe("Label");
+      const button = screen.getByRole("button");
+      expect(button.textContent).toBe("Label");
+      expect(button.className).toContain(`btn--${variant}`);
     },
   );
 
-  it.each(["sm", "md", "lg"] as const)("renders the %s size", (size) => {
+  it.each(["sm", "md", "lg"] as const)("maps the %s size to a class", (size) => {
     render(<Button size={size}>Label</Button>);
-    expect(screen.getByRole("button").textContent).toBe("Label");
-  });
-
-  it("applies hover styling on mouse enter and clears it on leave", () => {
-    render(<Button variant="secondary">Label</Button>);
     const button = screen.getByRole("button");
-
-    fireEvent.mouseEnter(button);
-    expect(button.style.background).toBe("var(--surface-hover)");
-
-    fireEvent.mouseLeave(button);
-    expect(button.style.background).toBe("var(--surface-card)");
+    expect(button.textContent).toBe("Label");
+    expect(button.className).toContain(`btn--${size}`);
   });
 
-  it("shows the amber focus ring on focus and removes it on blur", () => {
+  it("keeps hover and focus in CSS — no inline style mutation", () => {
     render(<Button>Label</Button>);
     const button = screen.getByRole("button");
 
+    fireEvent.mouseEnter(button);
     fireEvent.focus(button);
-    expect(button.style.boxShadow).toBe("var(--shadow-focus)");
 
-    fireEvent.blur(button);
-    expect(button.style.boxShadow).toBe("none");
+    // hover (:hover) and focus (:focus-visible) are CSS-driven now; the
+    // component sets no inline background or box-shadow on these events
+    expect(button.className).toContain("btn");
+    expect(button.style.background).toBe("");
+    expect(button.style.boxShadow).toBe("");
   });
 });
