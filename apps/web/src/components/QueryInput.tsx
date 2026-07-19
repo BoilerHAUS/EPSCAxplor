@@ -33,7 +33,6 @@ export function QueryInput({
 }: QueryInputProps) {
   const [value, setValue] = useState("");
   const [union, setUnion] = useState<string>(ALL_UNIONS);
-  const [focused, setFocused] = useState(false);
 
   function submit() {
     const query = value.trim();
@@ -59,18 +58,8 @@ export function QueryInput({
           value={union}
           disabled={disabled}
           onChange={(e) => setUnion(e.target.value)}
-          style={{
-            alignSelf: "flex-start",
-            padding: "5px 10px",
-            font: "var(--text-small)",
-            fontFamily: "var(--font-sans)",
-            color: union === ALL_UNIONS ? "var(--text-tertiary)" : "var(--text-primary)",
-            background: "var(--surface-card)",
-            border: "1px solid var(--border-default)",
-            borderRadius: "var(--radius-md)",
-            outline: "none",
-            opacity: disabled ? 0.5 : 1,
-          }}
+          className="scope-select"
+          style={{ opacity: disabled ? 0.5 : 1 }}
         >
           <option value={ALL_UNIONS}>All unions</option>
           {unions.map((name) => (
@@ -86,57 +75,25 @@ export function QueryInput({
           e.preventDefault();
           submit();
         }}
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          gap: 10,
-          background: "var(--surface-card)",
-          border: `1px solid ${focused ? "var(--accent-primary)" : "var(--border-default)"}`,
-          borderRadius: "var(--radius-xl)",
-          boxShadow: focused ? "var(--shadow-focus)" : "var(--shadow-sm)",
-          padding: "10px 10px 10px 16px",
-          fontFamily: "var(--font-sans)",
-        }}
+        className="composer"
       >
+        <span className="composer__marker" aria-hidden="true">
+          ›
+        </span>
         <textarea
           value={value}
           placeholder={placeholder}
           disabled={disabled}
           rows={1}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          style={{
-            flex: 1,
-            resize: "none",
-            border: "none",
-            outline: "none",
-            background: "transparent",
-            color: "var(--text-primary)",
-            font: "var(--text-body)",
-            fontFamily: "var(--font-sans)",
-            padding: "6px 0",
-          }}
+          className="composer__field"
         />
         <button
           type="submit"
           disabled={disabled || !value.trim()}
           aria-label="Send"
-          style={{
-            width: 34,
-            height: 34,
-            flexShrink: 0,
-            borderRadius: "var(--radius-md)",
-            border: "none",
-            background: "var(--accent-primary)",
-            color: "var(--text-on-accent)",
-            cursor: disabled || !value.trim() ? "not-allowed" : "pointer",
-            opacity: disabled || !value.trim() ? 0.4 : 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="composer__send"
         >
           <svg
             width="16"

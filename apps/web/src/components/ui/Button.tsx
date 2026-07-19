@@ -98,7 +98,6 @@ export function Button({
     lineHeight: 1,
     whiteSpace: "nowrap",
     transition: "background 120ms ease-out, filter 120ms ease-out",
-    outline: "none",
   };
 
   return (

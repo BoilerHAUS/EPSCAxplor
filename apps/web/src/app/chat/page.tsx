@@ -10,7 +10,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnswerCard } from "@/components/AnswerCard";
-import { AppHeader } from "@/components/AppHeader";
+import { AppShell } from "@/components/AppShell";
 import { CitationList } from "@/components/CitationList";
 import { LegalDisclaimer } from "@/components/LegalDisclaimer";
 import { QueryInput } from "@/components/QueryInput";
@@ -24,6 +24,14 @@ type MessageInput =
   | { kind: "error"; text: string };
 
 type Message = MessageInput & { id: number };
+
+// Starter prompts shown in the empty state — real domain questions, not
+// fabricated stats. Clicking one submits it.
+const EXAMPLE_QUERIES = [
+  "What is the IBEW Generation overtime rate?",
+  "Foreman-to-worker ratio at Darlington",
+  "Sheet Metal shift premium for nuclear work",
+];
 
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -110,138 +118,75 @@ export default function ChatPage() {
   }
 
   return (
-    <main
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        background: "var(--surface-app)",
-        fontFamily: "var(--font-sans)",
-      }}
-    >
-      <AppHeader />
+    <AppShell>
+      <div className="chat">
+        <div ref={threadRef} className="chat__thread">
+          <div role="log" aria-live="polite" className="chat__inner chat__list">
+            {messages.length === 0 ? (
+              <div className="console-empty">
+                <div className="u-label">Reference console</div>
+                <div className="console-empty__title">Ask across every EPSCA agreement</div>
+                <p className="console-empty__body">
+                  Ask a question about overtime, wages, foreman ratios, or nuclear project
+                  provisions across any EPSCA union agreement.
+                </p>
+                <div className="console-empty__examples">
+                  {EXAMPLE_QUERIES.map((example) => (
+                    <button
+                      key={example}
+                      type="button"
+                      className="example-chip"
+                      onClick={() => void handleSubmit(example)}
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
-      <div ref={threadRef} style={{ flex: 1, overflowY: "auto", padding: "24px 0" }}>
-        <div
-          role="log"
-          aria-live="polite"
-          style={{
-            maxWidth: "var(--container-chat)",
-            margin: "0 auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: 16,
-            padding: "0 20px",
-          }}
-        >
-          {messages.length === 0 ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "60px 20px",
-                color: "var(--text-tertiary)",
-                font: "var(--text-body)",
-              }}
-            >
-              Ask a question about overtime, wages, foreman ratios, or nuclear project
-              provisions across any EPSCA union agreement.
-            </div>
-          ) : null}
-
-          {messages.map((message) => {
-            if (message.kind === "user") {
-              return (
-                <div key={message.id} style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <div
-                    style={{
-                      maxWidth: "78%",
-                      background: "var(--accent-primary)",
-                      color: "var(--text-on-accent)",
-                      borderRadius: "var(--radius-lg)",
-                      padding: "10px 14px",
-                      font: "var(--text-body)",
-                      lineHeight: 1.55,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
+            {messages.map((message) => {
+              if (message.kind === "user") {
+                return (
+                  <div key={message.id} className="query-line">
+                    <span className="query-line__marker" aria-hidden="true">
+                      ▸
+                    </span>
+                    <span className="query-line__text">{message.text}</span>
+                  </div>
+                );
+              }
+              if (message.kind === "error") {
+                return (
+                  <div key={message.id} role="alert" className="answer-error">
                     {message.text}
                   </div>
-                </div>
-              );
-            }
-            if (message.kind === "error") {
+                );
+              }
               return (
-                <div
-                  key={message.id}
-                  role="alert"
-                  style={{
-                    padding: "10px 14px",
-                    background: "var(--status-error-subtle)",
-                    border: "1px solid var(--status-error)",
-                    borderRadius: "var(--radius-md)",
-                    font: "var(--text-small)",
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  {message.text}
+                <div key={message.id} className="record-group">
+                  <AnswerCard answer={message.response.answer} />
+                  <CitationList citations={message.response.citations} />
+                  <LegalDisclaimer text={message.response.disclaimer} />
                 </div>
               );
-            }
-            return (
-              <div
-                key={message.id}
-                style={{ display: "flex", flexDirection: "column", gap: 12 }}
-              >
-                <AnswerCard answer={message.response.answer} />
-                <CitationList citations={message.response.citations} />
-                <LegalDisclaimer text={message.response.disclaimer} />
+            })}
+
+            {pending ? (
+              <div aria-label="Generating answer" className="retrieving">
+                <span className="u-label">Retrieving</span>
+                <span className="retrieving__bar epx-scan" aria-hidden="true" />
               </div>
-            );
-          })}
+            ) : null}
+          </div>
+        </div>
 
-          {pending ? (
-            <div
-              aria-label="Generating answer"
-              style={{
-                display: "inline-flex",
-                gap: 5,
-                alignItems: "center",
-                alignSelf: "flex-start",
-                background: "var(--surface-card)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius-pill)",
-                padding: "10px 14px",
-              }}
-            >
-              <style>{`@keyframes epsca-pulse{0%,60%,100%{opacity:.25}30%{opacity:1}}`}</style>
-              {[0, 0.15, 0.3].map((delay) => (
-                <span
-                  key={delay}
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background: "var(--text-tertiary)",
-                    animation: `epsca-pulse 1.1s ease-in-out ${delay}s infinite`,
-                  }}
-                />
-              ))}
-            </div>
-          ) : null}
+        <div className="chat__composer">
+          <div className="chat__inner">
+            <QueryInput onSubmit={handleSubmit} disabled={pending} unions={unions} />
+          </div>
         </div>
       </div>
-
-      <div
-        style={{
-          padding: "14px 20px 22px",
-          borderTop: "1px solid var(--border-subtle)",
-          background: "var(--surface-app)",
-        }}
-      >
-        <div style={{ maxWidth: "var(--container-chat)", margin: "0 auto" }}>
-          <QueryInput onSubmit={handleSubmit} disabled={pending} unions={unions} />
-        </div>
-      </div>
-    </main>
+    </AppShell>
   );
 }

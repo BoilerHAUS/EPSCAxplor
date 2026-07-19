@@ -30,6 +30,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${manrope.variable} ${plexMono.variable}`}>
       <body>
+        {/* Apply the stored theme before paint so a light-mode reload never
+            flashes the dark default. Dark is the default (no attribute). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('epsca-theme')==='light'){document.documentElement.setAttribute('data-theme','light')}}catch(e){}",
+          }}
+        />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

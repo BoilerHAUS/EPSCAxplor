@@ -9,7 +9,7 @@
  */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AppHeader } from "@/components/AppHeader";
+import { AppShell } from "@/components/AppShell";
 import { DocumentTable, documentTypeLabel } from "@/components/DocumentTable";
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth";
@@ -90,157 +90,91 @@ export default function DocumentsPage() {
     return null;
   }
 
-  const selectStyle = {
-    padding: "5px 10px",
-    font: "var(--text-small)",
-    fontFamily: "var(--font-sans)",
-    color: "var(--text-primary)",
-    background: "var(--surface-card)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius-md)",
-    outline: "none",
-  } as const;
-
   return (
-    <main
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        background: "var(--surface-app)",
-        fontFamily: "var(--font-sans)",
-      }}
-    >
-      <AppHeader />
-
-      <div style={{ flex: 1, overflowY: "auto" }}>
-        <div
-          style={{
-            maxWidth: "var(--container-page)",
-            margin: "0 auto",
-            padding: "28px 32px",
-          }}
-        >
-          <div style={{ font: "var(--text-h1)", color: "var(--text-primary)", marginBottom: 4 }}>
-            Document library
-          </div>
-          <div
-            style={{ font: "var(--text-body)", color: "var(--text-tertiary)", marginBottom: 20 }}
-          >
-            {visible.length} documents · {unionCount} unions — primary agreements, nuclear
-            project agreements, and wage schedules.
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: 12,
-              marginBottom: 18,
-            }}
-          >
-            <input
-              type="search"
-              placeholder="Search by union or document…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                ...selectStyle,
-                padding: "7px 12px",
-                width: 280,
-                font: "var(--text-body)",
-              }}
-            />
-            <select
-              aria-label="Union filter"
-              value={union}
-              onChange={(e) => setUnion(e.target.value)}
-              style={selectStyle}
-            >
-              <option value={ALL}>All unions</option>
-              {unionOptions.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Document type filter"
-              value={docType}
-              onChange={(e) => setDocType(e.target.value)}
-              style={selectStyle}
-            >
-              <option value={ALL}>All types</option>
-              {typeOptions.map((value) => (
-                <option key={value} value={value}>
-                  {documentTypeLabel(value)}
-                </option>
-              ))}
-            </select>
-            <label
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                font: "var(--text-small)",
-                color: "var(--text-secondary)",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="checkbox"
-                aria-label="Hide expired"
-                checked={hideExpired}
-                onChange={(e) => setHideExpired(e.target.checked)}
-                style={{ accentColor: "var(--accent-primary)" }}
-              />
-              Hide expired
-            </label>
-          </div>
-
-          {error ? (
-            <div
-              role="alert"
-              style={{
-                padding: "10px 14px",
-                background: "var(--status-error-subtle)",
-                border: "1px solid var(--status-error)",
-                borderRadius: "var(--radius-md)",
-                font: "var(--text-small)",
-                color: "var(--text-primary)",
-                marginBottom: 18,
-              }}
-            >
-              {error}
+    <AppShell>
+      <div className="page">
+        <div className="page__scroll">
+          <div className="page__inner">
+            <div className="masthead">
+              <div className="u-label">Corpus registry</div>
+              <h1 className="masthead__title">Document library</h1>
+              <p className="masthead__sub">
+                {visible.length} documents · {unionCount} unions — primary agreements, nuclear
+                project agreements, and wage schedules.
+              </p>
             </div>
-          ) : null}
 
-          <div
-            data-testid="document-results"
-            aria-live="polite"
-            aria-busy={loading}
-            style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms ease-out" }}
-          >
-            {loading && documents.length === 0 ? (
-              <div
-                style={{
-                  padding: "40px 20px",
-                  textAlign: "center",
-                  color: "var(--text-tertiary)",
-                  font: "var(--text-body)",
-                }}
+            <div className="controls">
+              <input
+                type="search"
+                placeholder="Search by union or document…"
+                aria-label="Search documents"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="field field--search"
+              />
+              <select
+                aria-label="Union filter"
+                value={union}
+                onChange={(e) => setUnion(e.target.value)}
+                className="field"
               >
-                Loading documents…
+                <option value={ALL}>All unions</option>
+                {unionOptions.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Document type filter"
+                value={docType}
+                onChange={(e) => setDocType(e.target.value)}
+                className="field"
+              >
+                <option value={ALL}>All types</option>
+                {typeOptions.map((value) => (
+                  <option key={value} value={value}>
+                    {documentTypeLabel(value)}
+                  </option>
+                ))}
+              </select>
+              <label className="checkline">
+                <input
+                  type="checkbox"
+                  aria-label="Hide expired"
+                  checked={hideExpired}
+                  onChange={(e) => setHideExpired(e.target.checked)}
+                />
+                Hide expired
+              </label>
+            </div>
+
+            {error ? (
+              <div role="alert" className="answer-error" style={{ marginBottom: 18 }}>
+                {error}
               </div>
-            ) : (
-              // refetches keep the current rows visible (dimmed) instead of
-              // blanking the table on every filter change
-              <DocumentTable documents={visible} />
-            )}
+            ) : null}
+
+            <div
+              data-testid="document-results"
+              aria-live="polite"
+              aria-busy={loading}
+              style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms var(--ease-out)" }}
+            >
+              {loading && documents.length === 0 ? (
+                <div className="ledger-empty">Loading documents…</div>
+              ) : (
+                // refetches keep the current rows visible (dimmed) instead of
+                // blanking the table on every filter change
+                <div className="ledger-wrap">
+                  <DocumentTable documents={visible} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </main>
+    </AppShell>
   );
 }

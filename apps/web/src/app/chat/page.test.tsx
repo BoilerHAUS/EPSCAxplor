@@ -213,9 +213,11 @@ describe("ChatPage", () => {
     });
   });
 
-  it("signs out via the header button", () => {
+  it("signs out via the shell button", () => {
     render(<ChatPage />);
-    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    // the shell renders a sign-out in both the rail and the mobile top bar;
+    // clicking either calls logout
+    fireEvent.click(screen.getAllByRole("button", { name: "Sign out" })[0]);
     expect(mockLogout).toHaveBeenCalled();
   });
 });

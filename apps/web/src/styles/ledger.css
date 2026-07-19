@@ -1,0 +1,184 @@
+/* ==========================================================================
+   EPSCAxplor — Ledger layer (documents registry + history log)
+   Shared page frame for the two data screens, plus the ruled ledger table and
+   the expandable query log. Mono for dates/counts; hairline rules for rows.
+   ========================================================================== */
+
+/* ---- Shared page frame (fills the shell main region, scrolls internally) */
+.page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.page__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.page__inner {
+  max-width: var(--container-page);
+  margin: 0 auto;
+  padding: 30px 32px 48px;
+}
+
+.masthead {
+  margin-bottom: 22px;
+}
+.masthead__title {
+  font: var(--text-h1);
+  color: var(--text-primary);
+  margin: 8px 0 6px;
+}
+.masthead__sub {
+  font: var(--text-body);
+  color: var(--text-tertiary);
+}
+
+/* ---- Control strip (filters / search) --------------------------------- */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.field {
+  padding: 7px 11px;
+  font: var(--text-small);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+}
+.field--search {
+  width: 280px;
+  max-width: 100%;
+}
+.checkline {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: var(--text-small);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.checkline input {
+  accent-color: var(--accent-primary);
+}
+
+/* ---- Registry ledger table -------------------------------------------- */
+.ledger-wrap {
+  overflow-x: auto;
+}
+.ledger {
+  width: 100%;
+  border-collapse: collapse;
+}
+.ledger th {
+  text-align: left;
+  padding: 9px 12px;
+  font: var(--text-label);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+.ledger td {
+  padding: 12px;
+  font: var(--text-small);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+.ledger tbody tr {
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.ledger tbody tr:hover {
+  background: var(--surface-hover);
+}
+.ledger td.ledger__union {
+  font: var(--text-body-medium);
+  color: var(--text-primary);
+}
+.ledger td.ledger__mono {
+  font: var(--text-mono-small);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+.ledger-empty {
+  padding: 44px 20px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font: var(--text-body);
+}
+
+/* ---- Query log (history) ---------------------------------------------- */
+.log {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-subtle);
+}
+.log__entry {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.log__toggle {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-sans);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.log__toggle:hover {
+  background: var(--surface-hover);
+}
+.log__query {
+  font: var(--text-body-medium);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.log__meta {
+  display: inline-flex;
+  gap: 14px;
+  flex-shrink: 0;
+  font: var(--text-mono-small);
+  color: var(--text-tertiary);
+}
+.log__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 2px 6px 18px;
+}
+.log__loose {
+  padding: 22px 6px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font: var(--text-body);
+}
+
+@media (max-width: 767px) {
+  .page__inner {
+    padding: 22px 16px 40px;
+  }
+  .field--search {
+    width: 100%;
+  }
+  .log__meta {
+    gap: 10px;
+  }
+}

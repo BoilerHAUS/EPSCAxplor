@@ -1,7 +1,7 @@
 /**
- * Numbered source badge shared by AnswerCard (inline [SOURCE N] markers)
- * and CitationList (card headers). Visual style from the design-system
- * export's CitationChip / CitationCard number bubble.
+ * Numbered source reference shared by AnswerCard (inline [SOURCE N] markers)
+ * and CitationList (card headers). Rendered as a bracketed monospace footnote
+ * ref — [1] — so citations read as legal references, not chat-app chips.
  */
 
 export interface SourceMarkerProps {
@@ -11,27 +11,12 @@ export interface SourceMarkerProps {
 }
 
 export function SourceMarker({ number, size = "sm" }: SourceMarkerProps) {
-  const px = size === "sm" ? 16 : 20;
   return (
     <span
       aria-label={`Source ${number}`}
-      style={{
-        width: px,
-        height: px,
-        borderRadius: "50%",
-        background: "var(--accent-primary)",
-        color: "var(--text-on-accent)",
-        fontSize: size === "sm" ? 10 : 11,
-        fontWeight: 700,
-        fontFamily: "var(--font-sans)",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-        verticalAlign: "text-bottom",
-      }}
+      className={size === "sm" ? "srcref srcref--inline" : "srcref srcref--lg"}
     >
-      {number}
+      [{number}]
     </span>
   );
 }

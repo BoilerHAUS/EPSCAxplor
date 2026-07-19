@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Wordmark } from "@/components/Wordmark";
 import { useAuth } from "@/lib/auth";
 
 export default function Home() {
@@ -26,15 +27,7 @@ export default function Home() {
         background: "var(--surface-app)",
       }}
     >
-      <div
-        style={{
-          font: "800 24px var(--font-sans)",
-          color: "var(--text-primary)",
-          letterSpacing: "var(--tracking-tight)",
-        }}
-      >
-        EPSCA<span style={{ color: "var(--accent-primary)" }}>xplor</span>
-      </div>
+      <Wordmark size="lg" />
     </main>
   );
 }

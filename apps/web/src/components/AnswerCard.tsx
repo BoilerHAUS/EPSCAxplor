@@ -37,23 +37,12 @@ function renderWithMarkers(answer: string): ReactNode[] {
 
 export function AnswerCard({ answer }: AnswerCardProps) {
   return (
-    <div style={{ display: "flex", justifyContent: "flex-start" }}>
-      <div
-        style={{
-          maxWidth: "78%",
-          background: "var(--surface-card)",
-          color: "var(--text-primary)",
-          border: "1px solid var(--border-subtle)",
-          borderRadius: "var(--radius-lg)",
-          padding: "10px 14px",
-          font: "var(--text-body)",
-          fontFamily: "var(--font-sans)",
-          lineHeight: 1.55,
-          whiteSpace: "pre-wrap",
-        }}
-      >
-        {renderWithMarkers(answer)}
+    <article className="record">
+      <div className="record__head">
+        <span className="u-label">Answer</span>
+        <span className="record__status u-label">Grounded</span>
       </div>
-    </div>
+      <div className="record__body">{renderWithMarkers(answer)}</div>
+    </article>
   );
 }

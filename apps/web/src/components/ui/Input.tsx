@@ -70,7 +70,6 @@ export function Input({
                 : "var(--border-default)"
           }`,
           borderRadius: "var(--radius-md)",
-          outline: "none",
           boxShadow: focused ? "var(--shadow-focus)" : "none",
           opacity: disabled ? 0.5 : 1,
         }}
