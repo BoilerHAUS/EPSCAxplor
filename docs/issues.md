@@ -127,7 +127,7 @@ throttling) first, then #141/#144/#142, then #145/#146/#147.
 
 | # | type | status | title |
 |---|------|--------|-------|
-| [#140](https://github.com/BoilerHAUS/EPSCAxplor/issues/140) | pr | [ ] | fix(auth): rate-limit /auth/login + /auth/refresh and fix client-IP trust boundary |
+| [#140](https://github.com/BoilerHAUS/EPSCAxplor/issues/140) | pr | [x] | fix(auth): rate-limit /auth/login + /auth/refresh and fix client-IP trust boundary |
 | [#141](https://github.com/BoilerHAUS/EPSCAxplor/issues/141) | pr | [ ] | fix(auth): normalize email to lowercase for login and uniqueness |
 | [#142](https://github.com/BoilerHAUS/EPSCAxplor/issues/142) | pr | [ ] | feat(auth): password reset / credential rotation flow |
 | [#143](https://github.com/BoilerHAUS/EPSCAxplor/issues/143) | no-pr | [ ] | ops: automated off-VPS backups for Postgres and Qdrant |

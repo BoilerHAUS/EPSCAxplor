@@ -1,6 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,7 +38,22 @@ class Settings(BaseSettings):
     refresh_cookie_samesite: Literal["lax", "strict", "none"] = "strict"
     refresh_cookie_domain: str | None = None
     # Per-client burst cap on /query (#85); per-tenant tier quota is enforce_tier_limit (#25).
-    query_rate_limit_per_minute: int = 30
+    # 0 disables; a negative value is rejected at startup (ge=0).
+    query_rate_limit_per_minute: int = Field(default=30, ge=0)
+    # Stricter per-client cap on /auth/login + /auth/refresh (#140); 0 disables.
+    # Auth is far lower-frequency than /query, so this can be tight without
+    # affecting legitimate use while still throttling online brute-force.
+    auth_rate_limit_per_minute: int = Field(default=10, ge=0)
+    # Number of trusted reverse-proxy hops in front of the app (#140). The
+    # limiter key is taken as the Nth-from-right X-Forwarded-For entry, because
+    # Traefik appends the true socket peer as the right-most hop; a client-
+    # supplied leading value is attacker-controlled and must not be trusted.
+    # Set to 0 for direct-peer mode (no proxy, e.g. local dev).
+    trusted_proxy_hops: int = Field(default=1, ge=0)
+    # Hard cap on distinct limiter keys held in memory (#140); bounds the
+    # in-process sliding-window state against unique-key flooding. Must be >= 1:
+    # a smaller value would force an eviction sweep on every request.
+    rate_limit_max_keys: int = Field(default=10_000, ge=1)
     cors_origins: str = "http://localhost:3000"
     # Commit SHA of the running build, baked into the image at build time
     # (Dockerfile ARG → ENV) and surfaced in /health so the deploy workflow

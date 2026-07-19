@@ -149,6 +149,17 @@ class TestRateLimit:
         assert [client.get("/rl", headers=a).status_code for _ in range(3)] == [200, 200, 429]
         assert client.get("/rl", headers=b).status_code == 200
 
+    def test_spoofed_leading_xff_does_not_reset_window(self) -> None:
+        # Attacker rotates the *leading* XFF value each request, but Traefik
+        # always appends the same real peer (1.1.1.1) as the right-most hop.
+        # With trusted_proxy_hops=1 the key stays 1.1.1.1 → the limiter holds.
+        client = self._rate_app(_settings(query_rate_limit_per_minute=2))
+        codes = [
+            client.get("/rl", headers={"X-Forwarded-For": f"{rot}.6.6.6, 1.1.1.1"}).status_code
+            for rot in range(3)
+        ]
+        assert codes == [200, 200, 429]
+
     async def test_window_expiry(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import src.auth.dependencies as dep
 

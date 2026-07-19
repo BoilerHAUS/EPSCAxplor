@@ -2,17 +2,31 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from src.auth.dependencies import _auth_limiter, _request_log
 from src.auth.service import AuthError, TokenPair
 from src.config import Settings, get_settings
 from src.routes.auth import router as auth_router
 
 COOKIE = "epsca_refresh"
+
+
+@pytest.fixture(autouse=True)
+def _reset_limiters() -> Generator[None, None, None]:
+    """The auth/query limiters are process-global module state; reset between
+    tests so throttling counters do not leak across cases."""
+    _auth_limiter._buckets.clear()
+    _request_log.clear()
+    yield
+    _auth_limiter._buckets.clear()
+    _request_log.clear()
 
 
 def _settings(**overrides: Any) -> Settings:
@@ -273,3 +287,81 @@ def test_refresh_cookie_defaults_to_samesite_strict() -> None:
         resp = client.post("/auth/login", json={"email": "a@b.c", "password": "secret"})
 
     assert "SameSite=strict" in resp.headers["set-cookie"]
+
+
+# ─── auth throttling (#140) ─────────────────────────────────────────────────
+
+_LOGIN_BODY = {"email": "a@b.c", "password": "secret"}
+
+
+def test_login_throttled_after_limit() -> None:
+    # Failed logins must be counted (the limiter runs before the credential
+    # check), so an online brute-force is capped: 3 attempts pass to the
+    # handler (→ 401), the 4th and 5th are rejected with 429.
+    client = _client(_settings(auth_rate_limit_per_minute=3))
+    with patch(
+        "src.routes.auth.login", new=AsyncMock(side_effect=AuthError("invalid credentials"))
+    ):
+        codes = [client.post("/auth/login", json=_LOGIN_BODY).status_code for _ in range(5)]
+    assert codes == [401, 401, 401, 429, 429]
+
+
+def test_login_throttle_429_carries_retry_after() -> None:
+    client = _client(_settings(auth_rate_limit_per_minute=1))
+    with patch(
+        "src.routes.auth.login", new=AsyncMock(side_effect=AuthError("invalid credentials"))
+    ):
+        client.post("/auth/login", json=_LOGIN_BODY)  # consume the single slot
+        resp = client.post("/auth/login", json=_LOGIN_BODY)
+    assert resp.status_code == 429
+    assert resp.headers.get("Retry-After") == "60"
+
+
+def test_login_throttle_counts_successes_and_failures_in_one_bucket() -> None:
+    # A success followed by failures share the same per-client bucket.
+    pair = TokenPair(access_token="a.1", refresh_token="raw-1", expires_in=900)
+    client = _client(_settings(auth_rate_limit_per_minute=2))
+    with patch("src.routes.auth.login", new=AsyncMock(return_value=pair)):
+        first = client.post("/auth/login", json=_LOGIN_BODY).status_code
+    with patch(
+        "src.routes.auth.login", new=AsyncMock(side_effect=AuthError("invalid credentials"))
+    ):
+        second = client.post("/auth/login", json=_LOGIN_BODY).status_code
+        third = client.post("/auth/login", json=_LOGIN_BODY).status_code
+    assert (first, second, third) == (200, 401, 429)
+
+
+def test_auth_limit_disabled_when_zero() -> None:
+    client = _client(_settings(auth_rate_limit_per_minute=0))
+    with patch(
+        "src.routes.auth.login", new=AsyncMock(side_effect=AuthError("invalid credentials"))
+    ):
+        codes = [client.post("/auth/login", json=_LOGIN_BODY).status_code for _ in range(10)]
+    assert codes == [401] * 10
+
+
+def test_refresh_throttled_after_limit() -> None:
+    pair = TokenPair(access_token="a.2", refresh_token="raw-2", expires_in=900)
+    client = _client(_settings(cors_origins=WEB_ORIGIN, auth_rate_limit_per_minute=2))
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.rotate_refresh_token", new=AsyncMock(return_value=pair)):
+        codes = [
+            client.post("/auth/refresh", headers={"Origin": WEB_ORIGIN}).status_code
+            for _ in range(3)
+        ]
+    assert codes == [200, 200, 429]
+
+
+def test_auth_throttle_precedes_csrf_on_refresh() -> None:
+    # Ordering lock: the rate limiter runs before the CSRF-origin guard. A
+    # cross-site request still consumes a slot (→ 403 the first time), and once
+    # over the limit the throttle fires first (429 before the 403).
+    client = _client(_settings(cors_origins=WEB_ORIGIN, auth_rate_limit_per_minute=1))
+    client.cookies.set(COOKIE, "raw-refresh-1")
+    with patch("src.routes.auth.rotate_refresh_token", new=AsyncMock()) as rotate:
+        codes = [
+            client.post("/auth/refresh", headers={"Origin": "https://evil.example"}).status_code
+            for _ in range(2)
+        ]
+    assert codes == [403, 429]
+    rotate.assert_not_awaited()

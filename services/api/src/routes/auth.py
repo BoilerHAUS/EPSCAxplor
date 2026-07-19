@@ -18,6 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from src.auth import enforce_auth_rate_limit
 from src.auth.service import (
     AuthError,
     login,
@@ -135,7 +136,11 @@ def _clear_refresh_cookie(response: Response, settings: Settings) -> None:
     )
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    dependencies=[Depends(enforce_auth_rate_limit)],
+)
 async def login_route(
     body: LoginRequest,
     response: Response,
@@ -153,7 +158,8 @@ async def login_route(
 @router.post(
     "/refresh",
     response_model=TokenResponse,
-    dependencies=[Depends(enforce_csrf_origin)],
+    # Throttle first (#140): a flood is rejected before the CSRF-origin work.
+    dependencies=[Depends(enforce_auth_rate_limit), Depends(enforce_csrf_origin)],
 )
 async def refresh_route(
     request: Request,
