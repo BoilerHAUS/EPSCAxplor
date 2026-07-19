@@ -118,6 +118,26 @@ Goal: Secure, multi-tenant product ready for beta users.
 
 ---
 
+## Security & Hardening — Pre-Phase 4 Audit (2026-07-19)
+
+Surfaced by a full-codebase security review and audit before starting Phase 4. No exploitable
+vulnerabilities were found; these are hardening, correctness, and readiness items to close before
+taking payment and onboarding external tenants. Suggested order: #143 (backups) and #140 (auth
+throttling) first, then #141/#144/#142, then #145/#146/#147.
+
+| # | type | status | title |
+|---|------|--------|-------|
+| [#140](https://github.com/BoilerHAUS/EPSCAxplor/issues/140) | pr | [ ] | fix(auth): rate-limit /auth/login + /auth/refresh and fix client-IP trust boundary |
+| [#141](https://github.com/BoilerHAUS/EPSCAxplor/issues/141) | pr | [ ] | fix(auth): normalize email to lowercase for login and uniqueness |
+| [#142](https://github.com/BoilerHAUS/EPSCAxplor/issues/142) | pr | [ ] | feat(auth): password reset / credential rotation flow |
+| [#143](https://github.com/BoilerHAUS/EPSCAxplor/issues/143) | no-pr | [ ] | ops: automated off-VPS backups for Postgres and Qdrant |
+| [#144](https://github.com/BoilerHAUS/EPSCAxplor/issues/144) | pr | [ ] | chore(infra): enable Qdrant API key auth on dokploy-network |
+| [#145](https://github.com/BoilerHAUS/EPSCAxplor/issues/145) | pr | [ ] | feat(web): source document links in the corpus library |
+| [#146](https://github.com/BoilerHAUS/EPSCAxplor/issues/146) | pr | [ ] | chore(security): add HTTP security headers and unify CORS config source |
+| [#147](https://github.com/BoilerHAUS/EPSCAxplor/issues/147) | pr | [ ] | perf(api): asyncpg connection pool + Qdrant client lifecycle |
+
+---
+
 ## Phase 4 — Go to Market
 
 Goal: Paid product with billing and white-label capability.
