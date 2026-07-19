@@ -45,7 +45,7 @@ involve multiple trade unions working simultaneously on the same job site. Each 
 operates under its own collective agreement governing overtime rates, foreman ratios,
 tool allowances, jurisdictional boundaries, shift premiums, and grievance procedures.
 
-Project managers, superintendents, and foremen must navigate up to 58 documents across
+Project managers, superintendents, and foremen must navigate roughly 317 documents across
 18 unions to answer questions that arise daily on the job. Manual searching is slow,
 error-prone, and requires significant experience to interpret correctly. Errors lead
 to grievances, labour disputes, and project delays.
@@ -177,7 +177,7 @@ networks:
 
 **Source:** https://www.epsca.org/resources
 **Agreement cycle:** 2025–2030 (all documents current; no expired agreements in corpus)
-**Total documents:** ~58
+**Total documents:** ~317 (20 primary CAs + 16 NPAs + 2 supplementary MOAs + 279 per-local wage schedules)
 
 #### Primary Collective Agreements (20 documents)
 
@@ -236,10 +236,15 @@ override clauses in the Primary CA for nuclear project work.
 
 These MOAs are older than the current agreement cycle but remain in force.
 
-#### Wage Schedules (18 documents)
+#### Wage Schedules (279 documents)
 
-One per union. Dynamically generated through the EPSCA website wage schedule selector
-and downloaded manually as dated PDFs (e.g., `EPSCA Boilermakers - May 1, 2025.pdf`).
+Per-local, not one-per-union: each trade publishes a separate dated schedule for every
+local/city (and for scope or classification variants), so the 18 unions expand to ~279
+schedules. They are listed in the `var wageSchedules` selector on epsca.org/resources and
+downloaded as dated PDFs (e.g., `E-1-C LU 773 Windsor - May 1, 2025.pdf`). The monthly
+`corpus-drift.yml` workflow diffs this list against `corpus_manifest.yaml` (see
+`services/ingestion/check_corpus_drift.py`) and files an issue when EPSCA reissues,
+adds, or removes a schedule.
 
 > **Important:** Wage schedule PDFs are dated independently of the main agreement.
 > Wage rates are typically updated annually when contractual increases take effect.
