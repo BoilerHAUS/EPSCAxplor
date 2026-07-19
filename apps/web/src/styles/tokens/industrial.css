@@ -1,0 +1,35 @@
+/* ==========================================================================
+   EPSCAxplor — Industrial reference-console tokens
+   Additive layer over the base system. The authenticated app is framed as a
+   technical reference console (ledger tables, ruled records, mono field
+   labels), so this layer adds: a distinct rail surface, a hairline grid
+   texture for masthead/empty fields, and the mono micro-label type role the
+   console/ledger voice leans on. Nothing here overrides the base tokens.
+   ========================================================================== */
+
+:root {
+  /* Side-rail sits one step below the content surface so the console reads
+     as chrome vs. document. */
+  --surface-rail: var(--gray-1000);
+  --rail-width: 236px;
+
+  /* Very faint ruled-paper grid — used only on intentional fields
+     (login masthead, chat empty state), never the whole body. */
+  --grid-line: rgba(255, 255, 255, 0.022);
+
+  /* Mono micro-label: uppercase field/section markers. Pair with the
+     .u-label utility (adds tracking + uppercase) in globals.css. */
+  --text-label: 600 10.5px/1.4 var(--font-mono);
+
+  /* Motion — named easings + durations (never the browser default `ease`). */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-mid: 200ms;
+}
+
+[data-theme="light"] {
+  --surface-rail: var(--gray-100);
+  --grid-line: rgba(10, 10, 10, 0.03);
+}

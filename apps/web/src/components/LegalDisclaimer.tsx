@@ -15,23 +15,10 @@ export interface LegalDisclaimerProps {
 
 export function LegalDisclaimer({ text }: LegalDisclaimerProps) {
   return (
-    <div
-      role="note"
-      aria-label="Legal disclaimer"
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 8,
-        padding: "10px 14px",
-        background: "var(--status-warning-subtle)",
-        border: "1px solid var(--accent-border)",
-        borderRadius: "var(--radius-md)",
-        font: "var(--text-small)",
-        fontFamily: "var(--font-sans)",
-        color: "var(--text-secondary)",
-      }}
-    >
-      <span aria-hidden="true">⚠️</span>
+    <div role="note" aria-label="Legal disclaimer" className="disclaimer">
+      <span className="disclaimer__key" aria-hidden="true">
+        ⚠️
+      </span>
       <span>{text || DEFAULT_DISCLAIMER}</span>
     </div>
   );

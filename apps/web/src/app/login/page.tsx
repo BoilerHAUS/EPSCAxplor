@@ -7,6 +7,7 @@
  */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { Wordmark } from "@/components/Wordmark";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ApiError } from "@/lib/api-client";
@@ -46,109 +47,61 @@ export default function LoginPage() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--surface-app)",
-        fontFamily: "var(--font-sans)",
-      }}
-    >
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          width: 340,
-          background: "var(--surface-card)",
-          border: "1px solid var(--border-subtle)",
-          borderRadius: "var(--radius-xl)",
-          boxShadow: "var(--shadow-lg)",
-          padding: "32px 28px",
-        }}
-      >
-        <div
-          style={{
-            font: "800 24px var(--font-sans)",
-            color: "var(--text-primary)",
-            marginBottom: 4,
-            letterSpacing: "var(--tracking-tight)",
-          }}
-        >
-          EPSCA<span style={{ color: "var(--accent-primary)" }}>xplor</span>
-        </div>
-        <div
-          style={{
-            font: "var(--text-small)",
-            color: "var(--text-tertiary)",
-            marginBottom: 22,
-          }}
-        >
-          Grounded answers for EPSCA collective agreements.
-        </div>
+    <main className="auth">
+      <section className="auth__brand u-gridfield">
+        <Wordmark size="lg" sublabel="Collective agreement index" />
+        <p className="auth__statement">
+          Grounded, cited answers across every EPSCA collective agreement.
+        </p>
+        <p className="auth__disclaimer">
+          Reference only — not legal advice. All answers must be verified against the
+          governing collective agreement.
+        </p>
+      </section>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-            marginBottom: 18,
-          }}
-        >
-          <Input
-            placeholder="you@company.com"
-            value={email}
-            onChange={setEmail}
-            type="email"
-            name="email"
-            autoComplete="email"
-            required
-            ariaLabel="Email"
-            disabled={submitting}
-          />
-          <Input
-            placeholder="Password"
-            value={password}
-            onChange={setPassword}
-            type="password"
-            name="password"
-            autoComplete="current-password"
-            required
-            ariaLabel="Password"
-            disabled={submitting}
-          />
-        </div>
+      <section className="auth__panel">
+        <form onSubmit={handleSubmit} className="auth__form">
+          <h1 className="auth__title">Sign in</h1>
+          <p className="auth__sub">Grounded answers for EPSCA collective agreements.</p>
 
-        {error ? (
-          <div
-            role="alert"
-            style={{
-              font: "var(--text-small)",
-              color: "var(--status-error)",
-              marginTop: -6,
-              marginBottom: 14,
-            }}
-          >
-            {error}
+          <div className="auth__fields">
+            <Input
+              placeholder="you@company.com"
+              value={email}
+              onChange={setEmail}
+              type="email"
+              name="email"
+              autoComplete="email"
+              required
+              ariaLabel="Email"
+              disabled={submitting}
+            />
+            <Input
+              placeholder="Password"
+              value={password}
+              onChange={setPassword}
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              required
+              ariaLabel="Password"
+              disabled={submitting}
+            />
           </div>
-        ) : null}
 
-        <Button type="submit" variant="primary" size="md" disabled={submitting}>
-          {submitting ? "Signing in…" : "Sign in"}
-        </Button>
+          {error ? (
+            <div role="alert" className="auth__error">
+              {error}
+            </div>
+          ) : null}
 
-        <div
-          style={{
-            font: "var(--text-micro)",
-            color: "var(--text-tertiary)",
-            marginTop: 18,
-            lineHeight: 1.5,
-          }}
-        >
-          Reference only — not legal advice. All answers must be verified
-          against the governing collective agreement.
-        </div>
-      </form>
+          <div className="auth__submit">
+            <Button type="submit" variant="primary" size="md" disabled={submitting}>
+              {submitting ? "Signing in…" : "Sign in"}
+            </Button>
+          </div>
+        </form>
+      </section>
     </main>
   );
 }

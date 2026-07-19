@@ -7,7 +7,7 @@
  */
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppHeader } from "@/components/AppHeader";
+import { AppShell } from "@/components/AppShell";
 import { QueryHistoryItem } from "@/components/QueryHistoryItem";
 import { Button } from "@/components/ui/Button";
 import { apiClient } from "@/lib/api-client";
@@ -74,100 +74,52 @@ export default function HistoryPage() {
   }
 
   return (
-    <main
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        background: "var(--surface-app)",
-        fontFamily: "var(--font-sans)",
-      }}
-    >
-      <AppHeader />
-
-      <div style={{ flex: 1, overflowY: "auto" }}>
-        <div
-          style={{
-            maxWidth: "var(--container-page)",
-            margin: "0 auto",
-            padding: "28px 32px",
-          }}
-        >
-          <div style={{ font: "var(--text-h1)", color: "var(--text-primary)", marginBottom: 4 }}>
-            Query history
-          </div>
-          <div
-            style={{ font: "var(--text-body)", color: "var(--text-tertiary)", marginBottom: 20 }}
-          >
-            {items.length} of {total} queries — newest first.
-          </div>
-
-          {error ? (
-            <div
-              role="alert"
-              style={{
-                padding: "10px 14px",
-                background: "var(--status-error-subtle)",
-                border: "1px solid var(--status-error)",
-                borderRadius: "var(--radius-md)",
-                font: "var(--text-small)",
-                color: "var(--text-primary)",
-                marginBottom: 18,
-              }}
-            >
-              {error}
+    <AppShell>
+      <div className="page">
+        <div className="page__scroll">
+          <div className="page__inner">
+            <div className="masthead">
+              <div className="u-label">Query log</div>
+              <h1 className="masthead__title">Query history</h1>
+              <p className="masthead__sub">
+                {items.length} of {total} queries — newest first.
+              </p>
             </div>
-          ) : null}
 
-          <div
-            aria-live="polite"
-            aria-busy={loading}
-            style={{ display: "flex", flexDirection: "column", gap: 10 }}
-          >
-            {!loading && !error && items.length === 0 ? (
-              <div
-                style={{
-                  padding: "40px 20px",
-                  textAlign: "center",
-                  color: "var(--text-tertiary)",
-                  font: "var(--text-body)",
-                }}
-              >
-                No queries yet — ask one in the chat and it will show up here.
+            {error ? (
+              <div role="alert" className="answer-error" style={{ marginBottom: 18 }}>
+                {error}
               </div>
             ) : null}
 
-            {items.map((item) => (
-              <QueryHistoryItem key={item.id} item={item} />
-            ))}
+            <div aria-live="polite" aria-busy={loading} className="log">
+              {!loading && !error && items.length === 0 ? (
+                <div className="log__loose">
+                  No queries yet — ask one in the chat and it will show up here.
+                </div>
+              ) : null}
 
-            {loading ? (
-              <div
-                style={{
-                  padding: "20px",
-                  textAlign: "center",
-                  color: "var(--text-tertiary)",
-                  font: "var(--text-body)",
-                }}
-              >
-                Loading…
+              {items.map((item) => (
+                <QueryHistoryItem key={item.id} item={item} />
+              ))}
+
+              {loading ? <div className="log__loose">Loading…</div> : null}
+            </div>
+
+            {!loading && items.length < total ? (
+              <div style={{ marginTop: 18, textAlign: "center" }}>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => void loadPage(nextOffsetRef.current)}
+                >
+                  Load more
+                </Button>
               </div>
             ) : null}
           </div>
-
-          {!loading && items.length < total ? (
-            <div style={{ marginTop: 18, textAlign: "center" }}>
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={() => void loadPage(nextOffsetRef.current)}
-              >
-                Load more
-              </Button>
-            </div>
-          ) : null}
         </div>
       </div>
-    </main>
+    </AppShell>
   );
 }

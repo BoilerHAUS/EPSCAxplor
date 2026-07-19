@@ -12,6 +12,15 @@
 @import "./tokens/spacing.css";
 @import "./tokens/radii.css";
 @import "./tokens/shadows.css";
+@import "./tokens/industrial.css";
+
+/* Reference-console component layers (class-based; used alongside the
+   existing inline styles for structure, states, and responsive behavior
+   that inline styles can't express). */
+@import "./shell.css";
+@import "./console.css";
+@import "./ledger.css";
+@import "./auth.css";
 
 *,
 *::before,
@@ -24,6 +33,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -32,4 +42,42 @@ body {
   font: var(--text-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   Base — focus, selection, and the console's shared voice utilities
+   ========================================================================== */
+
+/* Real keyboard focus rings. Components must NOT set `outline: none`; the
+   ring only shows for keyboard users (:focus-visible), never on mouse click. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+/* Mono uppercase micro-label — the console/ledger field-marker voice. */
+.u-label {
+  font: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  color: var(--text-tertiary);
+}
+
+/* Intentional hairline ruled-paper texture — masthead + empty fields only. */
+.u-gridfield {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .epx-scan::after {
+    animation: none !important;
+  }
 }

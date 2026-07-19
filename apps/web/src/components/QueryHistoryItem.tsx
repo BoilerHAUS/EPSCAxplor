@@ -27,52 +27,15 @@ export function QueryHistoryItem({ item }: QueryHistoryItemProps) {
   const citationCount = item.citations.length;
 
   return (
-    <div
-      style={{
-        background: "var(--surface-card)",
-        border: "1px solid var(--border-subtle)",
-        borderRadius: "var(--radius-lg)",
-        overflow: "hidden",
-      }}
-    >
+    <div className="log__entry">
       <button
         type="button"
         aria-expanded={expanded}
         onClick={() => setExpanded((prev) => !prev)}
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          gap: 16,
-          width: "100%",
-          padding: "14px 16px",
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          textAlign: "left",
-          fontFamily: "var(--font-sans)",
-        }}
+        className="log__toggle"
       >
-        <span
-          style={{
-            font: "var(--text-body-medium)",
-            color: "var(--text-primary)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {item.query_text}
-        </span>
-        <span
-          style={{
-            display: "inline-flex",
-            gap: 12,
-            flexShrink: 0,
-            font: "var(--text-mono-small)",
-            color: "var(--text-tertiary)",
-          }}
-        >
+        <span className="log__query">{item.query_text}</span>
+        <span className="log__meta">
           <span>{formatTimestamp(item.created_at)}</span>
           <span>{item.model_used}</span>
           <span>
@@ -82,16 +45,7 @@ export function QueryHistoryItem({ item }: QueryHistoryItemProps) {
       </button>
 
       {expanded ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-            padding: "0 16px 16px",
-            borderTop: "1px solid var(--border-subtle)",
-            paddingTop: 14,
-          }}
-        >
+        <div className="log__detail">
           <AnswerCard answer={item.answer} />
           <CitationList citations={item.citations} />
           <LegalDisclaimer />

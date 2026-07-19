@@ -1,0 +1,168 @@
+/* ==========================================================================
+   EPSCAxplor — App shell (side-rail console frame)
+   Replaces the wordmark+links top header (a generic SaaS/AI tell) with a
+   fixed left rail that reframes the app as a reference console. Collapses to
+   a segmented top bar under 768px.
+   ========================================================================== */
+
+.shell {
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--surface-app);
+}
+
+.shell__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---- Desktop rail ------------------------------------------------------ */
+.rail {
+  width: var(--rail-width);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-rail);
+  border-right: 1px solid var(--border-subtle);
+  padding: 22px 16px 18px;
+}
+.rail__brand {
+  padding: 2px 8px 22px;
+}
+.rail__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rail__link {
+  display: flex;
+  align-items: center;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font: var(--text-mono-small);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  position: relative;
+  transition: background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.rail__link:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+.rail__link--active {
+  color: var(--text-primary);
+  background: var(--surface-active);
+}
+.rail__link--active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--accent-primary);
+  border-radius: 1px;
+}
+.rail__spacer {
+  flex: 1;
+}
+.rail__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ---- Theme toggle (rail + top bar) ------------------------------------ */
+.rail-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font: var(--text-mono-small);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.rail-action:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+.rail-action svg {
+  flex: none;
+}
+
+/* ---- Mobile top bar ---------------------------------------------------- */
+.topbar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .shell {
+    flex-direction: column;
+  }
+  .rail {
+    display: none;
+  }
+  .topbar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface-rail);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .topbar__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  /* icon-only actions on mobile so the top row never overflows at 320px */
+  .topbar__actions .rail-action span {
+    display: none;
+  }
+  .topbar__nav {
+    display: flex;
+    gap: 6px;
+  }
+  .topbar__link {
+    flex: 1;
+    text-align: center;
+    padding: 8px 6px;
+    font: var(--text-label);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar__link--active {
+    color: var(--text-on-accent);
+    background: var(--accent-primary);
+    border-color: transparent;
+  }
+}
