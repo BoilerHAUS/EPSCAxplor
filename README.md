@@ -82,7 +82,7 @@ EPSCAxplor is designed to make those answers:
 ### Highlights
 
 - **Structure-aware chunking** splits agreement text at article and section boundaries instead of blunt fixed windows.
-- **Table-aware wage schedule ingestion** can route wage schedule PDFs through Docling + TPDS for row-aware chunks, with the legacy `pymupdf4llm` path kept as fallback.
+- **Table-aware wage schedule ingestion** parses the EPSCA wage form deterministically (`epsca_wage_parser.py`) with structured, sum-validated rate rows; the legacy `pymupdf4llm` path is kept as fallback.
 - **Nuclear-aware retrieval** widens the search space when the query references OPG, Bruce Power, Darlington, Pickering, or other nuclear context.
 - **Scope-aware retrieval** supports generation vs. transmission filtering where agreements differ.
 - **Best-effort audit logging** writes query logs without blocking answer delivery.
@@ -332,7 +332,7 @@ The ingestion service is not a long-running app. It is a staged pipeline:
 | --- | --- |
 | `download.py` | Fetch PDFs from the manifest and store them under `corpus/` |
 | `convert.py` | Convert table-heavy PDFs to Markdown when configured |
-| `wage_tables.py` | Optional wage-schedule-only Docling + TPDS branch with artifact capture and row-aware chunking |
+| `epsca_wage_parser.py` | Deterministic EPSCA-form wage schedule parser with structured, sum-validated rate rows |
 | `extract.py` | Extract text blocks and table blocks with page numbers |
 | `classify.py` | Attach manifest metadata to the extracted document |
 | `chunk.py` | Split content by structure, preserving article and section metadata |
@@ -350,9 +350,6 @@ python3 run_pipeline.py --dry-run
 
 # Full run for one document type
 python3 run_pipeline.py --doc-type wage_schedule
-
-# Enable the Docling + TPDS wage-table branch explicitly
-INGEST_WAGE_TABLE_PIPELINE=1 python3 run_pipeline.py --doc-type wage_schedule --dry-run
 ```
 
 ## Corpus snapshot
@@ -368,7 +365,7 @@ target is tracked separately from the Phase 3 product-layer work.
 | Full project target from planning docs | ~58 documents across 18 unions |
 | Evaluation harness | 30 gold questions in `services/api/eval/run_eval.py`; nightly auto-checked smoke subset via `.github/workflows/nightly-smoke.yml` |
 
-Table-heavy wage schedules are a first-class retrieval problem in this repo. The default path still supports PDF-to-Markdown conversion before chunking, and an opt-in Docling + TPDS branch now exists for wage schedules when you want row-aware table chunks plus saved normalization artifacts:
+Table-heavy wage schedules are a first-class retrieval problem in this repo. Wage schedule PDFs are parsed by the deterministic EPSCA-form parser (structured rate rows validated by their sum invariant); the default path still supports PDF-to-Markdown conversion before chunking for other table-heavy documents:
 
 <p align="center">
   <img src="docs/evaluation/image.png" alt="Excerpt from an EPSCA wage schedule PDF showing dense tabular rate data" width="760" />
@@ -442,7 +439,6 @@ See [`docs/issues.md`](docs/issues.md) for the active roadmap and issue list.
 
 - [`docs/planning.md`](docs/planning.md) — full project planning and architecture spec
 - [`docs/architecture.md`](docs/architecture.md) — architecture index
-- [`docs/architecture_docling_tpds_wage_ingestion.md`](docs/architecture_docling_tpds_wage_ingestion.md) — Docling + TPDS wage-schedule ingestion note
 - [`docs/github-workflow.md`](docs/github-workflow.md) — branch, PR, CI/CD, and release conventions
 - [`docs/runbooks/ingestion.md`](docs/runbooks/ingestion.md) — ingestion operations
 - [`docs/runbooks/deploy.md`](docs/runbooks/deploy.md) — deployment and rollback

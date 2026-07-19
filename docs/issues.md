@@ -84,7 +84,7 @@ prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
 | [#87](https://github.com/BoilerHAUS/EPSCAxplor/issues/87) | pr | [x] | chore(ci): nightly smoke eval with auto-checked questions |
 | [#88](https://github.com/BoilerHAUS/EPSCAxplor/issues/88) | pr | [x] | feat(api): wire query logging (query_log_id currently N/A) |
 | [#89](https://github.com/BoilerHAUS/EPSCAxplor/issues/89) | pr | [x] | feat(rag): structured rate lookup path for wage queries (deterministic payload-filter match pins the exact wage chunk when classification + city/local resolve unambiguously; falls back to re-ranked vector pass otherwise; zero ingestion changes) |
-| [#90](https://github.com/BoilerHAUS/EPSCAxplor/issues/90) | pr | [ ] | chore(ingestion): retire Docling + TPDS branch and committed node_modules |
+| [#90](https://github.com/BoilerHAUS/EPSCAxplor/issues/90) | pr | [x] | chore(ingestion): retire Docling + TPDS branch and committed node_modules (wage_tables.py reduced to is_wage_schedule_entry; tpds_bridge.mjs/package*.json/docling dep/Node CI steps removed; node_modules was gitignored all along — deleted from disk; legacy pymupdf4llm fallback kept) |
 | [#91](https://github.com/BoilerHAUS/EPSCAxplor/issues/91) | pr | [ ] | chore(ci): monthly corpus drift check against epsca.org |
 | [#75](https://github.com/BoilerHAUS/EPSCAxplor/issues/75) | pr | [ ] | chore(ci): harden Dokploy deploys — pin GIT_SHA images and verify deployment status |
 | [#76](https://github.com/BoilerHAUS/EPSCAxplor/issues/76) | no-pr | [ ] | ops: rotate Dokploy GHCR token before Oct 9, 2026 |
