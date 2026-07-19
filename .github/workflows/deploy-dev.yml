@@ -38,6 +38,10 @@ jobs:
         with:
           context: services/api
           push: true
+          # GIT_SHA is baked into the image (Dockerfile ARG → ENV) so /health
+          # reports the running build and the deploy job can confirm it shipped.
+          build-args: |
+            GIT_SHA=${{ github.sha }}
           tags: |
             ${{ env.IMAGE_PREFIX }}-api:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}-api:latest
@@ -81,6 +85,37 @@ jobs:
             exit 1
           fi
 
+      - name: Verify API deployment shipped this commit
+        env:
+          API_URL: ${{ vars.PROD_API_URL }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "::error::PROD_API_URL repo variable is not set — cannot verify the deploy"
+            exit 1
+          fi
+          echo "Waiting for $API_URL/health to report git_sha=$EXPECTED_SHA"
+          # The webhook only triggers the redeploy; it returns 200 even when
+          # Dokploy's image pull later fails, leaving the old container serving
+          # (the ~3-month silent-failure gap, #75). Poll the live /health until
+          # it reports the SHA we just built, so a stale container fails red.
+          deadline=$(( $(date +%s) + 300 ))
+          last=""
+          # No curl -f: /health returns 503 while a dependency is still warming
+          # up, but the body (and git_sha) is exactly what we need to read, so a
+          # stale-and-degraded container is distinguishable from an absent one.
+          until [ "$(date +%s)" -ge "$deadline" ]; do
+            last=$(curl -s --max-time 10 "$API_URL/health" | jq -r '.git_sha // empty' 2>/dev/null || true)
+            if [ "$last" = "$EXPECTED_SHA" ]; then
+              echo "API is serving the expected build ($EXPECTED_SHA)."
+              exit 0
+            fi
+            echo "  still ${last:-unreachable}; retrying in 10s…"
+            sleep 10
+          done
+          echo "::error::API did not report git_sha=$EXPECTED_SHA within 5m (last seen: ${last:-unreachable}). Deploy likely failed to pull the new image."
+          exit 1
+
       - name: Trigger Dokploy redeploy — Web
         run: |
           if [ -z "${{ secrets.DOKPLOY_WEBHOOK_WEB }}" ]; then
@@ -95,3 +130,26 @@ jobs:
             echo "::error::Dokploy Web webhook returned HTTP $HTTP"
             exit 1
           fi
+
+      - name: Verify Web is reachable after redeploy
+        env:
+          WEB_URL: ${{ vars.PROD_WEB_URL }}
+        run: |
+          if [ -z "$WEB_URL" ]; then
+            echo "::warning::PROD_WEB_URL repo variable is not set — skipping web readiness check"
+            exit 0
+          fi
+          echo "Waiting for $WEB_URL to return HTTP 200"
+          deadline=$(( $(date +%s) + 300 ))
+          last=""
+          until [ "$(date +%s)" -ge "$deadline" ]; do
+            last=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$WEB_URL" || true)
+            if [ "$last" = "200" ]; then
+              echo "Web is reachable (HTTP 200)."
+              exit 0
+            fi
+            echo "  still HTTP ${last:-000}; retrying in 10s…"
+            sleep 10
+          done
+          echo "::error::Web did not return HTTP 200 within 5m (last: ${last:-000})."
+          exit 1
