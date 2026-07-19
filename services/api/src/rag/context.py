@@ -120,6 +120,13 @@ def assemble_context(
         article_line = " | ".join(article_parts)
 
         lines: list[str] = [f"[SOURCE {i}]"]
+        if chunk.pinned:
+            # Structured rate lookup (issue #89): tell the model this source
+            # was resolved deterministically, not by similarity search.
+            lines.append(
+                "PINNED — STRUCTURED RATE LOOKUP "
+                "(exact classification + location match; quote rates verbatim)"
+            )
         lines.append(f"Union: {chunk.union_name}")
         lines.append(f"Document: {title}")
         lines.append(f"Document Type: {doc_type_label}")

@@ -23,7 +23,7 @@ Design notes
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, cast
 
 import httpx
@@ -35,6 +35,7 @@ from qdrant_client.models import (
     FieldCondition,
     Filter,
     MatchValue,
+    Record,
     ScoredPoint,
 )
 
@@ -69,6 +70,12 @@ _PROVISION_PER_UNION: int = 2
 _PROVISION_MERGED_LIMIT: int = 4
 _PROVISION_MAX_TERMS: int = 3
 
+# Structured rate lookup (issue #89): scroll pagination page size and a hard
+# cap on scanned points.  The corpus holds ~279 per-local wage schedules; the
+# cap bounds the scan if the collection grows unexpectedly.
+_RATE_SCROLL_PAGE: int = 256
+_RATE_SCROLL_CAP: int = 2000
+
 
 class ChunkResult(BaseModel):
     """A single retrieved chunk with its Qdrant payload and similarity score."""
@@ -88,6 +95,9 @@ class ChunkResult(BaseModel):
     page_number: int | None
     is_table: bool
     text: str
+    # True only for the chunk resolved by the structured rate lookup (issue
+    # #89) — a deterministic payload-filter match, not a similarity hit.
+    pinned: bool = False
 
 
 def _expiry_guard(now: datetime) -> Filter:
@@ -352,9 +362,7 @@ def _wage_rank_boost(query_lower: str, payload: dict[str, Any]) -> float:
     ):
         boost += _CLASSIFICATION_BOOST
 
-    city = str(payload.get("city") or "").lower()
-    local = str(payload.get("local") or "").lower()  # e.g. "local 105"
-    if (city and city in query_lower) or (local and local in query_lower):
+    if _matches_location(query_lower, payload):
         boost += _LOCATION_BOOST
 
     return boost
@@ -399,6 +407,205 @@ def _reserve_baseline_slots(
     if not take:
         return selected
     return [*selected[: limit - len(take)], *take]
+
+
+def _select_current_rate_row(
+    rates: list[dict[str, Any]],
+    *,
+    today: date,
+) -> dict[str, Any] | None:
+    """Return the rate row in effect on *today*, or the earliest future row.
+
+    Rows are `{"effective_date": "YYYY-MM-DD", "sum_valid": bool, <column>:
+    float, ...}` dicts from the wage chunk's structured payload.  Input order
+    is not trusted; rows with unparseable dates are skipped.  Returns None
+    when no row has a valid date.  Duplicate effective dates (an ingestion
+    artifact) tie-break to the last such row in input order (stable sort).
+    """
+    dated: list[tuple[date, dict[str, Any]]] = []
+    for row in rates:
+        try:
+            effective = date.fromisoformat(str(row.get("effective_date")))
+        except (TypeError, ValueError):
+            continue
+        dated.append((effective, row))
+    if not dated:
+        return None
+    dated.sort(key=lambda pair: pair[0])
+    in_effect = [row for effective, row in dated if effective <= today]
+    if in_effect:
+        return in_effect[-1]
+    return dated[0][1]
+
+
+def _format_rate_row(row: dict[str, Any]) -> str:
+    """Render a structured rate row as the parser's verbatim line format."""
+    pairs = ", ".join(
+        f"{column} ${value:.2f}"
+        for column, value in row.items()
+        if column not in ("effective_date", "sum_valid")
+        and isinstance(value, int | float)
+    )
+    return f"Effective {row.get('effective_date')}: {pairs}."
+
+
+def _matches_location(query_lower: str, payload: dict[str, Any]) -> bool:
+    """True when the chunk's city or local number appears in the query.
+
+    Shared by ``_wage_rank_boost`` and the structured rate lookup so the
+    deterministic pin and the re-rank boost resolve location identically.
+    """
+    city = str(payload.get("city") or "").lower()
+    local = str(payload.get("local") or "").lower()  # e.g. "local 105"
+    return bool((city and city in query_lower) or (local and local in query_lower))
+
+
+def _rate_lookup_filter(
+    union_filter: str | None,
+    agreement_scope: str | None,
+) -> Filter:
+    """Filter for wage-schedule TABLE chunks (notes chunks share the doc type
+    but are ``is_table=False`` and must not create false ambiguity)."""
+    must: list[Condition] = [
+        FieldCondition(key="document_type", match=MatchValue(value="wage_schedule")),
+        FieldCondition(key="is_table", match=MatchValue(value=True)),
+    ]
+    if union_filter:
+        must.append(
+            FieldCondition(key="union_name", match=MatchValue(value=union_filter))
+        )
+    if agreement_scope:
+        # Null-tolerant, mirroring build_filter: most wage chunks are
+        # scope-less and a hard match would drop them all.
+        must.append(
+            Filter(
+                should=[
+                    FieldCondition(key="agreement_scope", is_null=True),
+                    FieldCondition(
+                        key="agreement_scope", match=MatchValue(value=agreement_scope)
+                    ),
+                ]
+            )
+        )
+    return Filter(must=must)
+
+
+async def _scroll_rate_candidates(
+    qdrant: AsyncQdrantClient,
+    *,
+    scroll_filter: Filter,
+    classification: str,
+    query_lower: str,
+) -> Record | None:
+    """Scan wage table chunks for classification + location matches.
+
+    Returns the single matching record, or None when zero or several match
+    (several = ambiguous — multiple locals/zones/map codes — so the caller
+    must fall back to the re-ranked vector pass).  The scan is paginated and
+    capped at ``_RATE_SCROLL_CAP`` points, with an early exit as soon as a
+    second candidate appears.
+    """
+    match: Record | None = None
+    offset: Any = None
+    scanned = 0
+    while True:
+        records, offset = await qdrant.scroll(
+            collection_name=COLLECTION,
+            scroll_filter=scroll_filter,
+            limit=_RATE_SCROLL_PAGE,
+            offset=offset,
+            with_payload=True,
+        )
+        for record in records:
+            payload = record.payload or {}
+            if _chunk_classification(payload) != classification:
+                continue
+            if not _matches_location(query_lower, payload):
+                continue
+            if match is not None:
+                return None
+            match = record
+        scanned += len(records)
+        if offset is None or not records or scanned >= _RATE_SCROLL_CAP:
+            return match
+
+
+def _build_pinned_chunk(record: Record) -> ChunkResult | None:
+    """Build the pinned ChunkResult from a matched wage record.
+
+    Appends a "Currently in effect" line resolved from the structured
+    ``rates`` payload; returns None when no rate row has a parseable date
+    (the caller then falls back to the vector pass).
+    """
+    payload = record.payload or {}
+    rates = payload.get("rates")
+    if not isinstance(rates, list):
+        return None
+    rows = [row for row in rates if isinstance(row, dict)]
+    today = datetime.now(UTC).date()
+    current_row = _select_current_rate_row(rows, today=today)
+    if current_row is None:
+        return None
+
+    pinned_text = (
+        f"{payload.get('text', '')}\n\n"
+        f"Currently in effect (as of {today.isoformat()}): "
+        f"{_format_rate_row(current_row)}"
+    )
+    return ChunkResult(
+        point_id=str(record.id),
+        # Synthetic top score: the pinned chunk is a deterministic match, not
+        # a similarity hit, and must lead any downstream ordering.
+        score=1.0,
+        document_id=payload.get("document_id", ""),
+        source_filename=payload.get("source_filename", ""),
+        union_name=payload.get("union_name", ""),
+        document_type=payload.get("document_type", ""),
+        agreement_scope=payload.get("agreement_scope"),
+        effective_date=payload.get("effective_date"),
+        expiry_date=payload.get("expiry_date"),
+        article_number=payload.get("article_number"),
+        article_title=payload.get("article_title"),
+        section_number=payload.get("section_number"),
+        page_number=payload.get("page_number"),
+        is_table=payload.get("is_table", True),
+        text=pinned_text,
+        pinned=True,
+    )
+
+
+async def _structured_rate_lookup(
+    qdrant: AsyncQdrantClient,
+    *,
+    query: str,
+    union_filter: str | None,
+    agreement_scope: str | None,
+    classification: str,
+) -> ChunkResult | None:
+    """Deterministically resolve ONE wage chunk by payload filter (issue #89).
+
+    Rate questions are exact lookups, not semantic search: when the query
+    names exactly one classification family and the chunk's city or local
+    appears verbatim in the query, the answer lives in a single wage-schedule
+    chunk whose payload already carries a structured, sum-validated ``rates``
+    list.  This pass scrolls the wage-schedule table chunks (no vector),
+    matches classification + location in Python, and — only when exactly one
+    chunk matches — returns it as a pinned chunk with the currently-in-effect
+    rate row appended from the structured payload.
+
+    Returns None (caller falls back to the re-ranked vector pass) when zero
+    or several chunks match, or when the matched chunk has no parseable rate
+    rows.
+    """
+    record = await _scroll_rate_candidates(
+        qdrant,
+        scroll_filter=_rate_lookup_filter(union_filter, agreement_scope),
+        classification=classification,
+        query_lower=query.lower(),
+    )
+    if record is None:
+        return None
+    return _build_pinned_chunk(record)
 
 
 async def _query_wage_schedules(
@@ -698,6 +905,7 @@ async def retrieve(
     agreement_scope: str | None = None,
     is_wage_query: bool = False,
     provision_terms: list[str] | None = None,
+    rate_classification: str | None = None,
     settings: Settings,
 ) -> list[ChunkResult]:
     """Embed *query* and retrieve the top-k matching chunks from Qdrant.
@@ -724,6 +932,13 @@ async def retrieve(
             query vectors to recall a specific provision that plain cosine on
             the full query misses (issue #78).  When non-empty, these chunks
             lead the context window ahead of the NPA and wage passes.
+        rate_classification: Single classification family (from
+            ``preprocess.detect_rate_classification``) that activates the
+            structured rate lookup (issue #89).  When the classification plus
+            the query's city/local resolve to exactly one wage chunk, that
+            chunk is pinned at the head of the context window; otherwise the
+            existing re-ranked wage pass is the sole wage source.  Skipped for
+            multi-union queries.
         settings: Application settings providing Qdrant and Ollama URLs.
 
     Returns:
@@ -765,6 +980,18 @@ async def retrieve(
     # starve a later one out of the window — e.g. provision + NPA hits filling
     # every slot and dropping the guaranteed wage table on a rate query.
     leading_sets: list[list[ChunkResult]] = []
+    if rate_classification and len(unique_union_filters) <= 1:
+        pinned = await _structured_rate_lookup(
+            qdrant,
+            query=query,
+            union_filter=unique_union_filters[0] if unique_union_filters else None,
+            agreement_scope=agreement_scope,
+            classification=rate_classification,
+        )
+        if pinned is not None:
+            # Highest-priority leading set: the deterministic rate match leads
+            # the context window ahead of provision/NPA/wage chunks.
+            leading_sets.append([pinned])
     if provision_terms:
         leading_sets.append(
             await _collect_provision_chunks(

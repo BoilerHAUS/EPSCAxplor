@@ -160,3 +160,44 @@ async def test_generate_returns_generator_result(settings: Settings) -> None:
     assert isinstance(result, GeneratorResult)
     assert result.prompt_tokens == 200
     assert result.completion_tokens == 80
+
+
+# ─── pinned rate prompt variant (issue #89) ──────────────────────────────────
+
+
+def test_pinned_rate_prompt_appends_pinned_rules() -> None:
+    prompt = build_system_prompt(is_cross_union=False, has_pinned_rate=True)
+    assert "PINNED RATE SOURCE RULES" in prompt
+    assert "verbatim" in prompt
+
+
+def test_prompt_without_pinned_rate_omits_pinned_rules() -> None:
+    prompt = build_system_prompt(is_cross_union=False)
+    assert "PINNED RATE SOURCE RULES" not in prompt
+
+
+def test_pinned_rate_defaults_false_for_existing_callers() -> None:
+    assert build_system_prompt(is_cross_union=True) == build_system_prompt(
+        is_cross_union=True, has_pinned_rate=False
+    )
+
+
+@pytest.mark.asyncio
+async def test_generate_passes_pinned_rate_prompt(settings: Settings) -> None:
+    mock_response = _make_mock_response("Rate answer [SOURCE 1]")
+    mock_create = AsyncMock(return_value=mock_response)
+
+    with patch(
+        "src.rag.generator.anthropic.AsyncAnthropic",
+        return_value=_mock_client(mock_create),
+    ):
+        await generate(
+            "journeyperson rate in Windsor?",
+            "context",
+            is_cross_union=False,
+            has_pinned_rate=True,
+            settings=settings,
+        )
+
+    system_blocks = mock_create.call_args.kwargs["system"]
+    assert "PINNED RATE SOURCE RULES" in system_blocks[0]["text"]

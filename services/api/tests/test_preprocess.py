@@ -4,6 +4,7 @@ from src.rag.preprocess import (
     classify_complexity,
     detect_nuclear,
     detect_provision_terms,
+    detect_rate_classification,
     detect_scope,
     detect_union,
     detect_unions,
@@ -348,6 +349,79 @@ class TestDetectProvisionTerms:
         assert len(terms) == len(set(terms))
 
 
+class TestDetectRateClassification:
+    """Structured rate lookup (issue #89): resolve a single classification
+    family from the query, or None when zero or several families appear."""
+
+    def test_journeyperson_maps_to_journeyman(self) -> None:
+        assert (
+            detect_rate_classification("journeyperson rate in Windsor")
+            == "journeyman"
+        )
+
+    def test_journeyman_maps_to_journeyman(self) -> None:
+        assert detect_rate_classification("journeyman wage") == "journeyman"
+
+    def test_journey_person_with_space_maps_to_journeyman(self) -> None:
+        assert detect_rate_classification("journey person rate") == "journeyman"
+
+    def test_foreperson_maps_to_foreman(self) -> None:
+        assert detect_rate_classification("foreperson hourly rate") == "foreman"
+
+    def test_forewoman_maps_to_foreman(self) -> None:
+        assert detect_rate_classification("forewoman pay") == "foreman"
+
+    def test_subforeman_maps_to_subforeman(self) -> None:
+        assert detect_rate_classification("subforeman rate") == "subforeman"
+
+    def test_hyphenated_sub_foreman_is_subforeman_not_foreman(self) -> None:
+        assert detect_rate_classification("sub-foreman rate") == "subforeman"
+
+    def test_spaced_sub_foreman_is_subforeman_not_foreman(self) -> None:
+        assert detect_rate_classification("sub foreman rate") == "subforeman"
+
+    def test_double_space_sub_foreman_is_subforeman(self) -> None:
+        assert detect_rate_classification("sub  foreman rate") == "subforeman"
+
+    def test_spaced_hyphen_sub_foreman_is_subforeman(self) -> None:
+        assert detect_rate_classification("sub - foreman rate") == "subforeman"
+
+    def test_apprentice_maps_to_apprentice(self) -> None:
+        assert detect_rate_classification("apprentice wages") == "apprentice"
+
+    def test_welder_maps_to_welder(self) -> None:
+        assert detect_rate_classification("welder rate Local 353") == "welder"
+
+    def test_material_handler_maps_to_material_handler(self) -> None:
+        assert (
+            detect_rate_classification("material handler hourly pay")
+            == "material handler"
+        )
+
+    def test_matching_is_case_insensitive(self) -> None:
+        assert detect_rate_classification("JOURNEYPERSON RATE") == "journeyman"
+
+    def test_no_classification_returns_none(self) -> None:
+        assert detect_rate_classification("vacation days after 5 years") is None
+
+    def test_two_families_return_none(self) -> None:
+        # Premium/differential comparisons need both tables — the structured
+        # lookup must not pin one of them.
+        assert (
+            detect_rate_classification(
+                "how much more does a foreman make than a journeyperson"
+            )
+            is None
+        )
+
+    def test_word_boundary_no_false_positive(self) -> None:
+        # "welders" plural should match; embedded substrings should not.
+        assert detect_rate_classification("rate for pipewelders") == "welder"
+
+    def test_empty_query_returns_none(self) -> None:
+        assert detect_rate_classification("") is None
+
+
 class TestQueryContext:
     def test_default_values(self) -> None:
         ctx = QueryContext(
@@ -478,3 +552,39 @@ class TestPreprocess:
     def test_non_provision_query_leaves_provision_terms_empty(self) -> None:
         ctx = preprocess("How many vacation days after 5 years?", KNOWN_UNIONS)
         assert ctx.provision_terms == []
+
+    def test_wage_query_with_classification_sets_rate_classification(self) -> None:
+        ctx = preprocess(
+            "What is the journeyperson rate for Labourers in Windsor?", KNOWN_UNIONS
+        )
+        assert ctx.is_wage_query is True
+        assert ctx.rate_classification == "journeyman"
+
+    def test_classification_without_wage_intent_is_ignored(self) -> None:
+        # "foreman" appears but nothing signals a wage/rate question, so the
+        # structured lookup must not activate.
+        ctx = preprocess("foreman safety responsibilities on site", KNOWN_UNIONS)
+        assert ctx.is_wage_query is False
+        assert ctx.rate_classification is None
+
+    def test_premium_comparison_query_has_no_rate_classification(self) -> None:
+        ctx = preprocess(
+            "How much more does a foreman make than a journeyperson?", KNOWN_UNIONS
+        )
+        assert ctx.rate_classification is None
+
+    def test_wage_query_without_classification_has_no_rate_classification(
+        self,
+    ) -> None:
+        ctx = preprocess("What are the IBEW wage rates?", KNOWN_UNIONS)
+        assert ctx.is_wage_query is True
+        assert ctx.rate_classification is None
+
+    def test_cross_union_wage_query_has_no_rate_classification(self) -> None:
+        # A comparison across trades must not pin a single union's table,
+        # even when only one classification family is named.
+        ctx = preprocess(
+            "Compare the journeyperson rate across trades in Windsor", KNOWN_UNIONS
+        )
+        assert ctx.is_cross_union is True
+        assert ctx.rate_classification is None

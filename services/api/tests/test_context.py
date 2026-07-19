@@ -39,6 +39,7 @@ def make_chunk(
     text: str = "Overtime shall be paid at time and one-half.",
     point_id: str = "pt-1",
     score: float = 0.9,
+    pinned: bool = False,
 ) -> ChunkResult:
     return ChunkResult(
         point_id=point_id,
@@ -56,6 +57,7 @@ def make_chunk(
         page_number=page_number,
         is_table=is_table,
         text=text,
+        pinned=pinned,
     )
 
 
@@ -303,3 +305,31 @@ class TestAssembleContext:
         assert "Article 12 — Overtime | Section 12.03" in result
         assert "Page: 34" in result
         assert '"Overtime shall be paid at time and one-half."' in result
+
+
+class TestPinnedRateLabel:
+    """Pinned structured-rate chunks carry an explicit label (issue #89)."""
+
+    def test_pinned_chunk_gets_label_line(self) -> None:
+        chunk = make_chunk(pinned=True)
+        block = assemble_context([chunk])
+        lines = block.splitlines()
+        assert lines[0] == "[SOURCE 1]"
+        assert lines[1].startswith("PINNED — STRUCTURED RATE LOOKUP")
+
+    def test_unpinned_chunk_has_no_label(self) -> None:
+        block = assemble_context([make_chunk()])
+        assert "PINNED" not in block
+
+    def test_label_mentions_verbatim_instruction(self) -> None:
+        chunk = make_chunk(pinned=True)
+        block = assemble_context([chunk])
+        assert "exact classification + location match" in block
+
+    def test_mixed_chunks_label_only_the_pinned_one(self) -> None:
+        pinned = make_chunk(pinned=True, point_id="pt-1")
+        normal = make_chunk(point_id="pt-2")
+        block = assemble_context([pinned, normal])
+        first, second = block.split("\n\n---\n\n")
+        assert "PINNED" in first
+        assert "PINNED" not in second

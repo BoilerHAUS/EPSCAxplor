@@ -9,7 +9,7 @@ Covers:
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -37,6 +37,7 @@ from src.rag.retrieval import (
     _merge_with_priority,
     _point_to_chunk,
     _reserve_baseline_slots,
+    _select_current_rate_row,
     _wage_rank_boost,
     build_filter,
     retrieve,
@@ -1902,3 +1903,336 @@ class TestRetrieveProvisionRecall:
             )
 
         assert mock_qdrant.query_points.await_count == 1
+
+
+# ─── Structured rate lookup (issue #89) ───────────────────────────────────────
+
+
+def make_wage_record(
+    *,
+    point_id: str = "wage-1",
+    city: str = "Windsor",
+    local: str = "Local 1059",
+    classification_names: list[str] | None = None,
+    rates: list[dict[str, Any]] | None = None,
+    is_table: bool = True,
+    union: str = "Labourers",
+) -> MagicMock:
+    """A Qdrant scroll Record for a wage-schedule classification chunk."""
+    record = MagicMock()
+    record.id = point_id
+    record.payload = {
+        "document_id": str(uuid.uuid4()),
+        "source_filename": f"{union} wage schedule.pdf",
+        "union_name": union,
+        "document_type": "wage_schedule",
+        "agreement_scope": None,
+        "effective_date": "2025-05-01",
+        "expiry_date": None,
+        "article_number": None,
+        "article_title": f"{local} {city} — JOURNEYMAN (L-12)",
+        "section_number": None,
+        "page_number": 3,
+        "is_table": is_table,
+        "text": (
+            f"{union} {local} ({city}) — Labourer EPSCA Wage Schedule L-12.\n"
+            "Classification: JOURNEYMAN.\n"
+            "Hourly rates by effective date:\n"
+            "- Effective 2025-05-01: base hourly rate $45.10, total wage package $62.35.\n"
+            "- Effective 2026-05-01: base hourly rate $46.10, total wage package $63.55."
+        ),
+        "wage_schedule": True,
+        "local": local,
+        "city": city,
+        "map_code": "L-12",
+        "trade_name": "Labourer",
+        "classification_names": classification_names or ["JOURNEYMAN"],
+        "rates": rates
+        if rates is not None
+        else [
+            {
+                "effective_date": "2025-05-01",
+                "sum_valid": True,
+                "base hourly rate": 45.10,
+                "total wage package": 62.35,
+            },
+            {
+                "effective_date": "2026-05-01",
+                "sum_valid": True,
+                "base hourly rate": 46.10,
+                "total wage package": 63.55,
+            },
+        ],
+    }
+    return record
+
+
+class TestSelectCurrentRateRow:
+    """_select_current_rate_row is pure: pick the row in effect today."""
+
+    def test_picks_latest_in_effect_row(self) -> None:
+        rows = [
+            {"effective_date": "2025-05-01", "base hourly rate": 45.10},
+            {"effective_date": "2026-05-01", "base hourly rate": 46.10},
+            {"effective_date": "2099-05-01", "base hourly rate": 99.99},
+        ]
+        row = _select_current_rate_row(rows, today=date(2026, 7, 18))
+        assert row is not None
+        assert row["effective_date"] == "2026-05-01"
+
+    def test_unsorted_input_still_picks_latest_in_effect(self) -> None:
+        rows = [
+            {"effective_date": "2026-05-01"},
+            {"effective_date": "2024-05-01"},
+            {"effective_date": "2025-05-01"},
+        ]
+        row = _select_current_rate_row(rows, today=date(2026, 7, 18))
+        assert row is not None
+        assert row["effective_date"] == "2026-05-01"
+
+    def test_all_future_rows_picks_earliest(self) -> None:
+        rows = [
+            {"effective_date": "2099-05-01"},
+            {"effective_date": "2098-05-01"},
+        ]
+        row = _select_current_rate_row(rows, today=date(2026, 7, 18))
+        assert row is not None
+        assert row["effective_date"] == "2098-05-01"
+
+    def test_empty_rows_return_none(self) -> None:
+        assert _select_current_rate_row([], today=date(2026, 7, 18)) is None
+
+    def test_malformed_dates_are_skipped(self) -> None:
+        rows = [
+            {"effective_date": "not-a-date"},
+            {"effective_date": "2025-05-01"},
+        ]
+        row = _select_current_rate_row(rows, today=date(2026, 7, 18))
+        assert row is not None
+        assert row["effective_date"] == "2025-05-01"
+
+
+class TestStructuredRateLookup:
+    """retrieve() pins a deterministically-resolved wage chunk (issue #89)."""
+
+    QUERY = "What is the journeyperson rate for Labourers in Windsor?"
+
+    def _run(
+        self,
+        scroll_pages: list[tuple[list[MagicMock], Any]],
+        query: str | None = None,
+        **retrieve_kwargs: Any,
+    ) -> tuple[list[ChunkResult], AsyncMock]:
+        """Run retrieve() with mocked Ollama + Qdrant; returns (results, qdrant)."""
+        import asyncio
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
+            mock_qdrant.scroll = AsyncMock(side_effect=scroll_pages)
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            settings = Settings(
+                database_url="postgresql://user:pass@localhost/epsca",
+                qdrant_url="http://localhost:6333",
+                ollama_url="http://localhost:11434",
+                anthropic_api_key="test-key",
+                jwt_secret="test-jwt-secret",  # noqa: S106
+            )
+            results = asyncio.run(
+                retrieve(query or self.QUERY, settings=settings, **retrieve_kwargs)
+            )
+        return results, mock_qdrant
+
+    def test_single_match_pins_chunk_first(self) -> None:
+        record = make_wage_record()
+        results, _ = self._run(
+            [([record], None)],
+            union_filters=["Labourers"],
+            rate_classification="journeyman",
+        )
+        assert results, "expected at least the pinned chunk"
+        assert results[0].pinned is True
+        assert results[0].point_id == "wage-1"
+
+    def test_pinned_chunk_text_appends_current_rate_row(self) -> None:
+        record = make_wage_record()
+        results, _ = self._run(
+            [([record], None)],
+            union_filters=["Labourers"],
+            rate_classification="journeyman",
+        )
+        pinned = results[0]
+        # Original verbatim text preserved, current row appended from the
+        # structured payload (2026-05-01 is the latest row in effect).
+        assert pinned.text.startswith("Labourers Local 1059")
+        assert "Currently in effect" in pinned.text
+        assert "2026-05-01" in pinned.text
+        assert "$46.10" in pinned.text
+
+    def test_local_number_match_also_pins(self) -> None:
+        record = make_wage_record(city="SomewhereElse")
+        results, _ = self._run(
+            [([record], None)],
+            query="journeyperson rate for Labourers Local 1059",
+            union_filters=["Labourers"],
+            rate_classification="journeyman",
+        )
+        assert results[0].pinned is True
+
+    def test_no_candidates_falls_back_without_pin(self) -> None:
+        results, _ = self._run(
+            [([], None)],
+            union_filters=["Labourers"],
+            rate_classification="journeyman",
+        )
+        assert all(not c.pinned for c in results)
+
+    def test_ambiguous_candidates_fall_back_without_pin(self) -> None:
+        rec1 = make_wage_record(point_id="wage-1")
+        rec2 = make_wage_record(point_id="wage-2")
+        results, _ = self._run(
+            [([rec1, rec2], None)],
+            union_filters=["Labourers"],
+            rate_classification="journeyman",
+        )
+        assert all(not c.pinned for c in results)
+
+    def test_wrong_classification_is_not_a_candidate(self) -> None:
+        record = make_wage_record(
+            classification_names=["FOREMAN"],
+        )
+        results, _ = self._run(
+            [([record], None)],
+            union_filters=["Labourers"],
+            rate_classification="journeyman",
+        )
+        assert all(not c.pinned for c in results)
+
+    def test_no_location_in_query_falls_back(self) -> None:
+        record = make_wage_record(city="Hamilton", local="Local 105")
+        results, _ = self._run(
+            [([record], None)],
+            union_filters=["Labourers"],
+            rate_classification="journeyman",
+        )
+        assert all(not c.pinned for c in results)
+
+    def test_empty_rates_falls_back(self) -> None:
+        record = make_wage_record(rates=[])
+        results, _ = self._run(
+            [([record], None)],
+            union_filters=["Labourers"],
+            rate_classification="journeyman",
+        )
+        assert all(not c.pinned for c in results)
+
+    def test_scroll_filter_excludes_notes_chunks(self) -> None:
+        _, mock_qdrant = self._run(
+            [([], None)],
+            union_filters=["Labourers"],
+            rate_classification="journeyman",
+        )
+        scroll_filter = mock_qdrant.scroll.call_args.kwargs["scroll_filter"]
+        conditions = {
+            (c.key, getattr(c.match, "value", None))
+            for c in scroll_filter.must
+            if isinstance(c, FieldCondition)
+        }
+        assert ("document_type", "wage_schedule") in conditions
+        assert ("is_table", True) in conditions
+        assert ("union_name", "Labourers") in conditions
+
+    def test_scroll_paginates_until_offset_none(self) -> None:
+        rec = make_wage_record()
+        pages: list[tuple[list[MagicMock], Any]] = [
+            ([make_wage_record(point_id="other", city="Hamilton")], "page-2"),
+            ([rec], None),
+        ]
+        results, mock_qdrant = self._run(
+            pages,
+            union_filters=["Labourers"],
+            rate_classification="journeyman",
+        )
+        assert mock_qdrant.scroll.await_count == 2
+        assert results[0].pinned is True
+
+    def test_no_rate_classification_skips_scroll(self) -> None:
+        _, mock_qdrant = self._run(
+            [([], None)],
+            union_filters=["Labourers"],
+            rate_classification=None,
+        )
+        mock_qdrant.scroll.assert_not_awaited()
+
+    def test_multi_union_query_skips_scroll(self) -> None:
+        _, mock_qdrant = self._run(
+            [([], None)],
+            union_filters=["Labourers", "IBEW"],
+            rate_classification="journeyman",
+        )
+        mock_qdrant.scroll.assert_not_awaited()
+
+    def test_pinned_respects_top_k_and_primary_floor(self) -> None:
+        record = make_wage_record()
+        primary_hits = []
+        for i in range(TOP_K + 5):
+            hit = MagicMock(spec=ScoredPoint)
+            hit.id = f"ca-{i}"
+            hit.score = 0.9
+            hit.payload = {
+                "document_id": str(uuid.uuid4()),
+                "source_filename": "ca.pdf",
+                "union_name": "Labourers",
+                "document_type": "primary_ca",
+                "agreement_scope": None,
+                "effective_date": "2025-05-01",
+                "expiry_date": None,
+                "article_number": None,
+                "article_title": None,
+                "section_number": None,
+                "page_number": None,
+                "is_table": False,
+                "text": "clause",
+            }
+            primary_hits.append(hit)
+
+        import asyncio
+
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                return_value=_make_query_response(primary_hits)
+            )
+            mock_qdrant.scroll = AsyncMock(return_value=([record], None))
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            settings = Settings(
+                database_url="postgresql://user:pass@localhost/epsca",
+                qdrant_url="http://localhost:6333",
+                ollama_url="http://localhost:11434",
+                anthropic_api_key="test-key",
+                jwt_secret="test-jwt-secret",  # noqa: S106
+            )
+            results = asyncio.run(
+                retrieve(
+                    self.QUERY,
+                    union_filters=["Labourers"],
+                    is_wage_query=True,
+                    rate_classification="journeyman",
+                    settings=settings,
+                )
+            )
+
+        assert len(results) <= TOP_K
+        assert results[0].pinned is True
+        primary_count = sum(1 for c in results if c.document_type == "primary_ca")
+        assert primary_count >= _MIN_PRIMARY_SLOTS

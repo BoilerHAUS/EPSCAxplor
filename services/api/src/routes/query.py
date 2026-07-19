@@ -147,6 +147,7 @@ async def query_handler(
         agreement_scope=ctx.agreement_scope,
         is_wage_query=ctx.is_wage_query,
         provision_terms=ctx.provision_terms,
+        rate_classification=ctx.rate_classification,
         settings=settings,
     )
 
@@ -160,6 +161,8 @@ async def query_handler(
         body.query,
         context_block,
         is_cross_union=ctx.is_cross_union,
+        # True only when the structured rate lookup pinned a chunk (issue #89).
+        has_pinned_rate=any(c.pinned for c in chunks),
         settings=settings,
     )
 
