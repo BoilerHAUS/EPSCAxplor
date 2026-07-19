@@ -21,6 +21,7 @@ class DependencyStatuses(BaseModel):
 
 class HealthResponse(BaseModel):
     status: HealthStatus
+    git_sha: str
     dependencies: DependencyStatuses
 
 
@@ -77,6 +78,7 @@ async def health(
 
     return HealthResponse(
         status="ok" if all_ok else "error",
+        git_sha=settings.git_sha,
         dependencies=DependencyStatuses(
             database=database_status,
             qdrant=qdrant_status,

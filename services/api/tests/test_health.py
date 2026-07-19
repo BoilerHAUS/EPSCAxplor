@@ -19,8 +19,61 @@ class TestHealthEndpoint:
         assert response_state.status_code == 200
         assert payload.model_dump() == {
             "status": "ok",
+            "git_sha": "unknown",
             "dependencies": {"database": "ok", "qdrant": "ok", "ollama": "ok"},
         }
+
+    async def test_health_reports_configured_git_sha(self) -> None:
+        # The deploy workflow polls this field to confirm the freshly built
+        # image is actually serving (issue #75).
+        settings = Settings(
+            database_url="postgresql://user:pass@localhost/epsca",
+            qdrant_url="http://localhost:6333",
+            ollama_url="http://localhost:11434",
+            anthropic_api_key="test-key",
+            jwt_secret="test-jwt-secret-key",  # noqa: S106
+            git_sha="abc1234",
+        )
+        with (
+            patch("src.routes.health._check_database", new=AsyncMock(return_value="ok")),
+            patch("src.routes.health._check_qdrant", new=AsyncMock(return_value="ok")),
+            patch("src.routes.health._check_ollama", new=AsyncMock(return_value="ok")),
+        ):
+            payload = await health(Response(), settings=settings)
+        assert payload.git_sha == "abc1234"
+
+    def test_git_sha_serialized_in_http_response(self, client: object) -> None:
+        # End-to-end through FastAPI's response-model layer (not a direct
+        # coroutine call): the deploy poll reads .git_sha from the live JSON,
+        # so it must survive actual serialization. Dependencies are unreachable
+        # in tests, so this returns 503 — the SHA must be present regardless.
+        from fastapi.testclient import TestClient
+
+        assert isinstance(client, TestClient)
+        body = client.get("/health").json()
+        assert body["git_sha"] == "unknown"
+
+    async def test_git_sha_present_even_when_degraded(self) -> None:
+        # A stale/misconfigured container must still report its SHA so the
+        # deploy poll can distinguish "old code still serving" from "down".
+        settings = Settings(
+            database_url="postgresql://user:pass@localhost/epsca",
+            qdrant_url="http://localhost:6333",
+            ollama_url="http://localhost:11434",
+            anthropic_api_key="test-key",
+            jwt_secret="test-jwt-secret-key",  # noqa: S106
+            git_sha="deadbee",
+        )
+        with (
+            patch("src.routes.health._check_database", new=AsyncMock(return_value="error")),
+            patch("src.routes.health._check_qdrant", new=AsyncMock(return_value="ok")),
+            patch("src.routes.health._check_ollama", new=AsyncMock(return_value="ok")),
+        ):
+            response_state = Response()
+            payload = await health(response_state, settings=settings)
+        assert response_state.status_code == 503
+        assert payload.status == "error"
+        assert payload.git_sha == "deadbee"
 
     async def test_database_down_returns_503(self, test_settings: Settings) -> None:
         with (

@@ -4,8 +4,14 @@
 
 Every merge to `main` triggers `deploy-dev.yml`:
 1. Validates API (ruff, mypy, pytest) and Web (tsc, eslint)
-2. Builds and pushes Docker images to GHCR tagged with Git SHA
+2. Builds and pushes Docker images to GHCR tagged with Git SHA (the API image
+   bakes the SHA in as `GIT_SHA`, surfaced at `/health`)
 3. Fires Dokploy webhooks to redeploy `epsca-api` and `epsca-web`
+4. **Verifies the deploy shipped**: polls `PROD_API_URL/health` until its
+   `git_sha` matches the built commit (fails after ~5 min), then polls
+   `PROD_WEB_URL` for HTTP 200 (skipped with a warning if that variable is
+   unset). A stale container the webhook failed to update now fails the run
+   instead of passing silently.
 
 ## Production Release
 
@@ -59,3 +65,4 @@ Rollback steps below to pin the previous known-good SHA while you investigate.
 | Variable | Purpose |
 |---|---|
 | `PROD_API_URL` | Base URL of the production API (e.g. `https://api.epscaxplor.boilerhaus.org`), polled by the post-deploy health check. A repository **variable**, not a secret — the URL is public. |
+| `PROD_WEB_URL` | Base URL of the deployed web app (e.g. `https://epscaxplor.boilerhaus.org`), polled for HTTP 200 after the web redeploy. Optional — if unset, the web readiness check is skipped with a warning. Repository **variable**, not a secret. |

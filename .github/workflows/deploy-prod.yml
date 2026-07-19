@@ -60,6 +60,10 @@ jobs:
         with:
           context: services/api
           push: true
+          # GIT_SHA is baked into the image (Dockerfile ARG → ENV) so /health
+          # reports the running build and the verify job can confirm it shipped.
+          build-args: |
+            GIT_SHA=${{ github.sha }}
           tags: |
             ${{ env.IMAGE_PREFIX }}-api:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}-api:${{ github.ref_name }}
@@ -156,6 +160,9 @@ jobs:
           # Poll /health (200 only when database + Qdrant + Ollama are all ok,
           # 503 otherwise) until it converges, so a deploy that crashloops or
           # loses a dependency fails the release instead of passing silently.
+          # The health payload also carries git_sha; require it to match this
+          # release so an old container still serving 200 (a stale image pull)
+          # fails the release instead of passing silently (#75).
           if [ -z "$BASE" ]; then
             echo "::error::PROD_API_URL repository variable is not set"
             exit 1
@@ -170,14 +177,15 @@ jobs:
           until [ "$(date +%s)" -ge "$deadline" ]; do
             attempt=$((attempt + 1))
             code=$(curl -s -o "$body" -w "%{http_code}" --max-time 10 "$BASE/health" || echo "000")
-            if [ "$code" = "200" ]; then
-              echo "Healthy after $attempt attempt(s):"
+            served_sha=$(jq -r '.git_sha // empty' "$body" 2>/dev/null || true)
+            if [ "$code" = "200" ] && [ "$served_sha" = "$SHA" ]; then
+              echo "Healthy and serving $SHA after $attempt attempt(s):"
               cat "$body"; echo
               exit 0
             fi
-            echo "attempt $attempt: HTTP $code — not healthy yet, retrying in 15s…"
+            echo "attempt $attempt: HTTP $code, git_sha=${served_sha:-none} — not the new release yet, retrying in 15s…"
             sleep 15
           done
-          echo "::error::Production /health did not report healthy within ~5 minutes of deploy"
+          echo "::error::Production /health did not report healthy on $SHA within ~5 minutes of deploy"
           cat "$body" 2>/dev/null || true
           exit 1

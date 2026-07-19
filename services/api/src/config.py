@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     # Per-client burst cap on /query (#85); per-tenant tier quota is enforce_tier_limit (#25).
     query_rate_limit_per_minute: int = 30
     cors_origins: str = "http://localhost:3000"
+    # Commit SHA of the running build, baked into the image at build time
+    # (Dockerfile ARG → ENV) and surfaced in /health so the deploy workflow
+    # can confirm the freshly built image is actually serving (#75).
+    git_sha: str = "unknown"
 
 
 @lru_cache
