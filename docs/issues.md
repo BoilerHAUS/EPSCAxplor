@@ -130,7 +130,7 @@ throttling) first, then #141/#144/#142, then #145/#146/#147.
 | [#140](https://github.com/BoilerHAUS/EPSCAxplor/issues/140) | pr | [x] | fix(auth): rate-limit /auth/login + /auth/refresh and fix client-IP trust boundary |
 | [#141](https://github.com/BoilerHAUS/EPSCAxplor/issues/141) | pr | [ ] | fix(auth): normalize email to lowercase for login and uniqueness |
 | [#142](https://github.com/BoilerHAUS/EPSCAxplor/issues/142) | pr | [ ] | feat(auth): password reset / credential rotation flow |
-| [#143](https://github.com/BoilerHAUS/EPSCAxplor/issues/143) | no-pr | [ ] | ops: automated off-VPS backups for Postgres and Qdrant |
+| [#143](https://github.com/BoilerHAUS/EPSCAxplor/issues/143) | no-pr | [x] | ops: automated off-VPS backups for Postgres and Qdrant |
 | [#144](https://github.com/BoilerHAUS/EPSCAxplor/issues/144) | pr | [ ] | chore(infra): enable Qdrant API key auth on dokploy-network |
 | [#145](https://github.com/BoilerHAUS/EPSCAxplor/issues/145) | pr | [ ] | feat(web): source document links in the corpus library |
 | [#146](https://github.com/BoilerHAUS/EPSCAxplor/issues/146) | pr | [ ] | chore(security): add HTTP security headers and unify CORS config source |

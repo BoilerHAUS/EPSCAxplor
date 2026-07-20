@@ -1,0 +1,14 @@
+[Unit]
+Description=Nightly EPSCAxplor off-VPS backup
+Documentation=https://github.com/BoilerHAUS/EPSCAxplor/blob/main/docs/runbooks/backup-restore.md
+
+[Timer]
+# 03:30 daily (VPS local time). Persistent=true runs a missed backup on the
+# next boot if the machine was off at the scheduled time.
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+# Spread the start so it never collides to the exact second with other timers.
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
