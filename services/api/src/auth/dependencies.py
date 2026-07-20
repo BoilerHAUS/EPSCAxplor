@@ -4,8 +4,9 @@
   key (enterprise tier, #24) by its prefix, otherwise a JWT — into tenant/user
   context. This is the seam every protected route hangs off; per-tenant tier
   limits (#25) extend it without touching the routes themselves.
-- ``enforce_rate_limit`` is the interim in-process sliding-window limiter from
-  #85, kept verbatim (per-tenant tier limits arrive in #25).
+- ``enforce_rate_limit`` / ``enforce_auth_rate_limit`` are in-process sliding-
+  window limiters (#85, #140): a per-client burst cap on ``/query`` and a
+  stricter cap on the auth endpoints. Per-tenant tier limits arrive in #25.
 """
 
 from __future__ import annotations
@@ -13,13 +14,13 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from collections import deque
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from src.auth.api_keys import hash_api_key, looks_like_api_key
+from src.auth.rate_limit import SlidingWindowLimiter
 from src.auth.tokens import TokenError, decode_access_token
 from src.config import Settings, get_settings
 from src.db import connect
@@ -84,43 +85,83 @@ async def _authenticate_api_key(settings: Settings, raw_key: str) -> CurrentUser
     return CurrentUser(tenant_id=record.tenant_id, user_id=None)
 
 
-# ─── Interim rate limiting (#85); tier-aware limits arrive in #25 ─────────────
+# ─── Per-client rate limiting (#85, #140) ────────────────────────────────────
+#
+# ``/query`` and the auth endpoints each own a separate limiter instance, so
+# their counters never interfere. Tier-aware quotas are ``enforce_tier_limit``.
 
 _RATE_WINDOW_SECONDS = 60.0
-# Per-client request timestamps within the sliding window.
-_request_log: dict[str, deque[float]] = {}
+
+_query_limiter = SlidingWindowLimiter(window_seconds=_RATE_WINDOW_SECONDS)
+_auth_limiter = SlidingWindowLimiter(window_seconds=_RATE_WINDOW_SECONDS)
+
+# Back-compat alias: existing tests reset limiter state via ``_request_log.clear()``.
+# It must remain the *same object* as the query limiter's bucket dict.
+_request_log = _query_limiter._buckets
 
 
-def _client_key(request: Request) -> str:
-    """Identify the caller: first X-Forwarded-For hop (Traefik) or peer IP."""
+def _client_key(request: Request, hops: int) -> str:
+    """Identify the caller by the trusted client IP.
+
+    Traefik *appends* the true socket peer as the right-most ``X-Forwarded-For``
+    entry, so the trusted client is the ``hops``-th entry counted from the right
+    (``hops`` = number of trusted reverse-proxy hops). A client-supplied leading
+    value is attacker-controlled and is never used.
+
+    - ``hops == 0`` (no proxy): use the direct peer IP.
+    - Fewer XFF entries than ``hops`` (request did not traverse the trusted proxy
+      chain) or XFF absent: fall back to the peer IP — never trust a partial XFF.
+    """
+    peer = request.client.host if request.client else "unknown"
+    if hops <= 0:
+        return peer
     forwarded = request.headers.get("x-forwarded-for", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
+    entries = [entry.strip() for entry in forwarded.split(",") if entry.strip()]
+    if len(entries) < hops:
+        return peer
+    return entries[-hops]
+
+
+def _reject_over_limit(detail: str) -> HTTPException:
+    return HTTPException(status_code=429, detail=detail, headers={"Retry-After": "60"})
 
 
 async def enforce_rate_limit(
     request: Request,
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> None:
-    """Sliding-window per-client rate limit (429 above the threshold).
+    """Sliding-window per-client burst limit on ``/query`` (429 above threshold).
 
     Disabled when ``query_rate_limit_per_minute`` is 0. In-process state is
     sufficient for the current single-replica deployment.
     """
-    limit = settings.query_rate_limit_per_minute
-    if limit <= 0:
-        return
+    key = _client_key(request, settings.trusted_proxy_hops)
+    allowed = _query_limiter.check(
+        key,
+        limit=settings.query_rate_limit_per_minute,
+        now=time.monotonic(),
+        max_keys=settings.rate_limit_max_keys,
+    )
+    if not allowed:
+        raise _reject_over_limit("Rate limit exceeded; try again shortly.")
 
-    now = time.monotonic()
-    key = _client_key(request)
-    window = _request_log.setdefault(key, deque())
-    while window and now - window[0] > _RATE_WINDOW_SECONDS:
-        window.popleft()
-    if len(window) >= limit:
-        raise HTTPException(
-            status_code=429,
-            detail="Rate limit exceeded; try again shortly.",
-            headers={"Retry-After": "60"},
-        )
-    window.append(now)
+
+async def enforce_auth_rate_limit(
+    request: Request,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> None:
+    """Stricter per-client limit on ``/auth/login`` + ``/auth/refresh`` (#140).
+
+    Runs as a route dependency *before* the credential/CSRF checks, so failed
+    login attempts are counted — bounding online password brute-force. Disabled
+    when ``auth_rate_limit_per_minute`` is 0.
+    """
+    key = _client_key(request, settings.trusted_proxy_hops)
+    allowed = _auth_limiter.check(
+        key,
+        limit=settings.auth_rate_limit_per_minute,
+        now=time.monotonic(),
+        max_keys=settings.rate_limit_max_keys,
+    )
+    if not allowed:
+        raise _reject_over_limit("Too many authentication attempts; try again shortly.")
