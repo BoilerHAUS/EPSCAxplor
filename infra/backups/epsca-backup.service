@@ -1,0 +1,38 @@
+[Unit]
+Description=EPSCAxplor off-VPS backup (Postgres + Qdrant → restic/S3)
+Documentation=https://github.com/BoilerHAUS/EPSCAxplor/blob/main/docs/runbooks/backup-restore.md
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/epsca/backup.env
+# Adjust if the checkout lives elsewhere on the VPS.
+ExecStart=/opt/epsca/EPSCAxplor/infra/backups/backup.sh
+# The dump/snapshot can be large; give it room before systemd kills it.
+TimeoutStartSec=2h
+Nice=10
+IOSchedulingClass=idle
+
+# ─── Hardening (safe subset) ─────────────────────────────────────────────────
+# Private staging files must not be world-readable even if backup.sh's own
+# `umask 0077` is ever removed.
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+# `full` makes /usr, /boot, and /etc read-only while leaving /var, /run (Docker
+# socket) and $HOME (restic cache) writable — so it won't break docker/restic.
+ProtectSystem=full
+#
+# Stricter sandboxing is possible but NOT enabled by default because it can
+# break Docker-socket access (/run/docker.sock) or restic's cache under $HOME.
+# If you want it, add the following and VERIFY with `sudo systemctl start
+# epsca-backup.service` before trusting the timer:
+#   ProtectHome=true
+#   Environment=RESTIC_CACHE_DIR=/var/lib/epsca-backups/restic-cache
+#   ProtectSystem=strict
+#   ReadWritePaths=/var/lib/epsca-backups /var/lock
+#   SupplementaryGroups=docker
+
+[Install]
+WantedBy=multi-user.target
