@@ -16,7 +16,7 @@ from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from src.auth import enforce_auth_rate_limit
 from src.auth.service import (
@@ -26,6 +26,7 @@ from src.auth.service import (
     rotate_refresh_token,
 )
 from src.config import Settings, get_settings
+from src.emails import normalize_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -33,9 +34,30 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 _REFRESH_COOKIE_PATH = "/auth"
 
 
+# Email length bounds (RFC 5321 caps a whole address at 320 chars). The minimum is
+# re-checked after normalization because Field constraints only see the raw input.
+_EMAIL_MIN_LEN = 3
+_EMAIL_MAX_LEN = 320
+
+
 class LoginRequest(BaseModel):
-    email: str = Field(min_length=3, max_length=320)
+    email: str = Field(min_length=_EMAIL_MIN_LEN, max_length=_EMAIL_MAX_LEN)
     password: str = Field(min_length=1, max_length=200)
+
+    @field_validator("email")
+    @classmethod
+    def _normalize_email(cls, value: str) -> str:
+        """Canonicalize at the API boundary so login is case-insensitive (#141).
+
+        Runs in Pydantic's ``after`` mode, so ``value`` is already a validated
+        ``str`` bounded by ``max_length``. We re-check the minimum length *after*
+        normalizing: ``Field(min_length=...)`` only sees the raw, pre-strip input,
+        so a whitespace-only string would otherwise pass and collapse to ``""``.
+        """
+        normalized = normalize_email(value)
+        if len(normalized) < _EMAIL_MIN_LEN:
+            raise ValueError("email must have at least 3 characters after trimming")
+        return normalized
 
 
 class TokenResponse(BaseModel):

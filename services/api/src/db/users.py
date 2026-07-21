@@ -11,6 +11,8 @@ import uuid
 import asyncpg
 from pydantic import BaseModel
 
+from src.emails import normalize_email
+
 
 class UserRecord(BaseModel):
     id: uuid.UUID
@@ -22,11 +24,19 @@ class UserRecord(BaseModel):
 
 
 async def get_user_by_email(conn: asyncpg.Connection, email: str) -> UserRecord | None:
-    """Return the user with this email, or None if there is no match."""
+    """Return the user with this email, or None if there is no match.
+
+    The lookup is case-insensitive (#141): the argument is normalized here —
+    independently of any caller, so this primitive is safe to call directly — and
+    matched against ``LOWER(email)`` (backed by the ``idx_users_email_lower``
+    unique index), so ``You@x.com`` and ``you@x.com`` resolve to the same account.
+    Do not "simplify" the predicate to ``email = $1``: that would drop the
+    functional index and silently restore case-sensitive matching.
+    """
     row = await conn.fetchrow(
         "SELECT id, tenant_id, email, password_hash, role, is_active "
-        "FROM users WHERE email = $1",
-        email,
+        "FROM users WHERE LOWER(email) = $1",
+        normalize_email(email),
     )
     return UserRecord.model_validate(dict(row)) if row is not None else None
 

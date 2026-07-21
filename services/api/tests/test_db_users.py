@@ -35,6 +35,17 @@ async def test_get_user_by_email_returns_none_when_absent() -> None:
     assert await get_user_by_email(conn, "missing@b.c") is None
 
 
+async def test_get_user_by_email_normalizes_and_matches_case_insensitively() -> None:
+    """Login is case-insensitive (#141): the lookup lowercases its argument and
+    compares against ``LOWER(email)`` so mixed-case input still finds the row."""
+    conn = AsyncMock()
+    conn.fetchrow = AsyncMock(return_value=USER_ROW)
+    await get_user_by_email(conn, "  You@B.C ")
+    sql, bound = conn.fetchrow.await_args.args[0], conn.fetchrow.await_args.args[1]
+    assert "LOWER(email) = $1" in sql
+    assert bound == "you@b.c"
+
+
 async def test_touch_last_login_executes_update_with_user_id() -> None:
     conn = AsyncMock()
     uid = uuid.uuid4()

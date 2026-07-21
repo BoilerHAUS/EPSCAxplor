@@ -67,6 +67,32 @@ async def test_create_user_hashes_password_and_returns_id() -> None:
     assert stored_hash != "s3kr3t"
 
 
+async def test_create_user_stores_normalized_email() -> None:
+    """Emails are stored lowercased so the LOWER(email) unique index holds (#141)."""
+    conn = AsyncMock()
+    conn.fetchval = AsyncMock(return_value=uuid.uuid4())  # existing tenant id
+    conn.fetchrow = AsyncMock(return_value={"id": uuid.uuid4()})
+
+    @contextlib.asynccontextmanager
+    async def _fake_connect(*_a: object, **_k: object) -> Any:
+        yield conn
+
+    with patch("scripts.create_user.connect", _fake_connect), patch(
+        "scripts.create_user.get_tenant_subscription", new=AsyncMock(return_value=None)
+    ):
+        await _create_user(
+            tenant_slug="system",
+            email="  You@Example.COM ",
+            role="member",
+            password="pw",
+            rounds=4,
+            database_url="postgresql://x",
+        )
+
+    stored_email = conn.fetchrow.await_args.args[2]
+    assert stored_email == "you@example.com"
+
+
 async def test_create_user_errors_when_tenant_missing() -> None:
     conn = AsyncMock()
     conn.fetchval = AsyncMock(return_value=None)  # no such tenant
@@ -120,4 +146,46 @@ async def test_create_user_rejected_when_at_user_limit() -> None:
                 database_url="postgresql://x",
             )
     # user was at the limit, so no INSERT happened
+    conn.fetchrow.assert_not_awaited()
+
+
+async def test_create_user_rejects_empty_after_normalize_email() -> None:
+    """A whitespace-only --email collapses to '' and must be refused, not stored (#141)."""
+    conn = AsyncMock()
+
+    @contextlib.asynccontextmanager
+    async def _fake_connect(*_a: object, **_k: object) -> Any:
+        yield conn
+
+    with patch("scripts.create_user.connect", _fake_connect):
+        with pytest.raises(SystemExit):
+            await _create_user(
+                tenant_slug="system",
+                email="   ",
+                role="member",
+                password="pw",
+                rounds=4,
+                database_url="postgresql://x",
+            )
+    conn.fetchrow.assert_not_awaited()
+
+
+async def test_create_user_rejects_non_ascii_email() -> None:
+    """Non-ASCII email is refused at the ingress so app + DB case-folding can't desync (#141)."""
+    conn = AsyncMock()
+
+    @contextlib.asynccontextmanager
+    async def _fake_connect(*_a: object, **_k: object) -> Any:
+        yield conn
+
+    with patch("scripts.create_user.connect", _fake_connect):
+        with pytest.raises(SystemExit):
+            await _create_user(
+                tenant_slug="system",
+                email="İstanbul@x.com",
+                role="member",
+                password="pw",
+                rounds=4,
+                database_url="postgresql://x",
+            )
     conn.fetchrow.assert_not_awaited()
