@@ -9,10 +9,12 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from src.auth.dependencies import _auth_limiter, _request_log
 from src.auth.service import AuthError, TokenPair
 from src.config import Settings, get_settings
+from src.routes.auth import LoginRequest
 from src.routes.auth import router as auth_router
 
 COOKIE = "epsca_refresh"
@@ -85,6 +87,17 @@ def test_login_rejects_malformed_body() -> None:
     client = _client(_settings())
     resp = client.post("/auth/login", json={"email": "a@b.c"})  # missing password
     assert resp.status_code == 422
+
+
+def test_login_request_normalizes_email_at_boundary() -> None:
+    """The API boundary lowercases + strips the email so login is case-insensitive (#141)."""
+    assert LoginRequest(email="  You@X.COM ", password="pw").email == "you@x.com"
+
+
+def test_login_request_rejects_whitespace_only_email() -> None:
+    """A padded string that passes raw min_length must fail once normalized (#141)."""
+    with pytest.raises(ValidationError):
+        LoginRequest(email="   ", password="pw")
 
 
 # ─── refresh ──────────────────────────────────────────────────────────────────

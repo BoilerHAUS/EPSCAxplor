@@ -27,6 +27,7 @@ from src.auth.passwords import hash_password
 from src.db import connect
 from src.db.subscriptions import get_tenant_subscription
 from src.db.users import count_users_for_tenant
+from src.emails import normalize_email
 
 DEFAULT_ROUNDS = 12
 ROLES = ("owner", "admin", "member")
@@ -49,6 +50,17 @@ async def _create_user(
     database_url: str,
 ) -> uuid.UUID:
     """Insert a user under the tenant identified by slug; return the new id."""
+    # Store the canonical (lowercased) email so the LOWER(email) unique index
+    # holds and the account is reachable by any casing at login (#141). Reject
+    # empty/malformed or non-ASCII input at this ingress: it is the only path that
+    # writes emails, and Python str.lower() and Postgres LOWER() can diverge on
+    # non-ASCII, which would desync the app's lookup from the functional index.
+    email = normalize_email(email)
+    if "@" not in email or not email.isascii():
+        raise SystemExit(
+            "Email must be a non-empty ASCII address containing '@' "
+            "(non-ASCII emails are not supported)."
+        )
     password_hash = hash_password(password, rounds=rounds)
     async with connect(database_url) as conn:
         tenant_id = await conn.fetchval("SELECT id FROM tenants WHERE slug = $1", tenant_slug)
@@ -107,7 +119,8 @@ def main(argv: list[str] | None = None) -> int:
             database_url=database_url,
         )
     )
-    print(f"Created user {args.email} ({user_id}) in tenant {args.tenant_slug!r} as {args.role}.")
+    stored_email = normalize_email(args.email)
+    print(f"Created user {stored_email} ({user_id}) in tenant {args.tenant_slug!r} as {args.role}.")
     return 0
 
 
