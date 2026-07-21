@@ -29,10 +29,15 @@ umask 0077
 # ─── Configuration ───────────────────────────────────────────────────────────
 
 # Load an env file for manual runs; systemd supplies these via EnvironmentFile.
+# `set -a` so sourced vars are EXPORTED — restic reads RESTIC_REPOSITORY / AWS_*
+# from the environment, and a plain `source` would only set shell (unexported)
+# vars that child processes never see. (systemd's EnvironmentFile exports for us.)
 BACKUP_ENV="${EPSCA_BACKUP_ENV:-/etc/epsca/backup.env}"
 if [[ -f "$BACKUP_ENV" ]]; then
+  set -a
   # shellcheck disable=SC1090
   source "$BACKUP_ENV"
+  set +a
 fi
 
 DB_NAME="${DB_NAME:-epsca}"

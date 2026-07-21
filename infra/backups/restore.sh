@@ -19,8 +19,12 @@ umask 0077   # restored dumps hold the same sensitive data as the backup
 # ─── Configuration ───────────────────────────────────────────────────────────
 BACKUP_ENV="${EPSCA_BACKUP_ENV:-/etc/epsca/backup.env}"
 if [[ -f "$BACKUP_ENV" ]]; then
+  # set -a: export sourced vars so restic (reads RESTIC_REPOSITORY / AWS_* from
+  # the environment) inherits them on manual runs, matching systemd's behaviour.
+  set -a
   # shellcheck disable=SC1090
   source "$BACKUP_ENV"
+  set +a
 fi
 
 DB_NAME="${DB_NAME:-epsca}"

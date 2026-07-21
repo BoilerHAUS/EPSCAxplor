@@ -7,8 +7,9 @@ Requires=docker.service
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/epsca/backup.env
-# Adjust if the checkout lives elsewhere on the VPS.
-ExecStart=/opt/epsca/EPSCAxplor/infra/backups/backup.sh
+# Scripts are installed to a root-owned dir (see runbook) rather than run from a
+# user's git checkout, so the root timer can't execute a user-writable script.
+ExecStart=/opt/epsca/backups/backup.sh
 # The dump/snapshot can be large; give it room before systemd kills it.
 TimeoutStartSec=2h
 Nice=10

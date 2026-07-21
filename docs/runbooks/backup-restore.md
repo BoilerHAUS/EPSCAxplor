@@ -55,6 +55,27 @@ sudo chmod 600 /etc/epsca/backup.env
 sudoedit /etc/epsca/backup.env   # fill RESTIC_REPOSITORY, AWS_* keys
 ```
 
+Confirm the container-name filters in `backup.env` match this deployment —
+Dokploy/Swarm mangles the compose service names (e.g. `epscaxplor-epscadb-…`,
+`epscaxplor-epscaqdrant-…`), so the generic `epsca-db`/`epsca-qdrant` will *not*
+match:
+
+```bash
+docker ps --format '{{.Names}}' | grep -iE 'epscadb|epscaqdrant'
+```
+
+### 3b. Install the scripts to a root-owned location
+
+The root timer must not execute a script writable by a normal user, so install
+the scripts outside any user's home/git checkout:
+
+```bash
+sudo mkdir -p /opt/epsca/backups
+sudo cp infra/backups/backup.sh infra/backups/restore.sh /opt/epsca/backups/
+sudo chown -R root:root /opt/epsca/backups
+sudo chmod 700 /opt/epsca/backups
+```
+
 ### 4. Initialise the repository & smoke-test
 
 ```bash
@@ -71,10 +92,18 @@ restic snapshots                         # confirm a snapshot appeared
 > If a nightly run ever errors with "repository not accessible", the endpoint or
 > S3 credentials are wrong — do not set `INIT_REPO=1` to paper over it.
 
+> Troubleshooting `restic init`:
+> - **"The request signature we calculated does not match…"** → wrong region or
+>   secret key. Set `AWS_DEFAULT_REGION` to your endpoint's region (e.g. `gra`),
+>   and re-check `AWS_SECRET_ACCESS_KEY` for typos / trailing whitespace and that
+>   it's the **S3** key (not an OpenStack password).
+> - **"Please specify repository location"** → `RESTIC_REPOSITORY` isn't in the
+>   environment; on manual runs source the env with `set -a` (backup.sh does this).
+
 ### 5. Install the schedule
 
-The unit's `ExecStart` assumes the repo is at `/opt/epsca/EPSCAxplor`. Edit the
-path in `epsca-backup.service` if your checkout differs.
+The unit's `ExecStart` points at `/opt/epsca/backups/backup.sh` (installed in
+step 3b). Edit the unit if you install the scripts elsewhere.
 
 ```bash
 sudo cp infra/backups/epsca-backup.service /etc/systemd/system/
