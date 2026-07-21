@@ -173,23 +173,35 @@ def _make_http_client_mock(
 
 
 class TestCheckQdrant:
-    async def test_ok_when_healthz_returns_200(self) -> None:
+    async def test_ok_when_healthz_returns_200_keyless_sends_no_header(self) -> None:
+        # Keyless (local/dev): no api-key header is attached (#144).
         mock_client = _make_http_client_mock(status_code=200)
         with patch("src.routes.health.httpx.AsyncClient", return_value=mock_client):
-            result = await _check_qdrant("http://localhost:6333")
+            result = await _check_qdrant("http://localhost:6333", None)
         assert result == "ok"
-        mock_client.get.assert_called_once_with("http://localhost:6333/healthz")
+        mock_client.get.assert_called_once_with("http://localhost:6333/healthz", headers=None)
+
+    async def test_sends_api_key_header_when_configured(self) -> None:
+        # When a key is configured the probe forwards it as the api-key header
+        # so client wiring is uniform across every Qdrant caller (#144).
+        mock_client = _make_http_client_mock(status_code=200)
+        with patch("src.routes.health.httpx.AsyncClient", return_value=mock_client):
+            result = await _check_qdrant("http://localhost:6333", "probe-secret")
+        assert result == "ok"
+        mock_client.get.assert_called_once_with(
+            "http://localhost:6333/healthz", headers={"api-key": "probe-secret"}
+        )
 
     async def test_error_when_healthz_returns_non_200(self) -> None:
         mock_client = _make_http_client_mock(status_code=503)
         with patch("src.routes.health.httpx.AsyncClient", return_value=mock_client):
-            result = await _check_qdrant("http://localhost:6333")
+            result = await _check_qdrant("http://localhost:6333", None)
         assert result == "error"
 
     async def test_error_when_connection_fails(self) -> None:
         mock_client = _make_http_client_mock(error=httpx.ConnectError("Connection failed"))
         with patch("src.routes.health.httpx.AsyncClient", return_value=mock_client):
-            result = await _check_qdrant("http://bad-host:6333")
+            result = await _check_qdrant("http://bad-host:6333", None)
         assert result == "error"
 
 

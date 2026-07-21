@@ -583,7 +583,39 @@ class TestRetrieve:
 
             await retrieve("overtime rates", settings=settings)
 
-        mock_qdrant_cls.assert_called_once_with(url=settings.qdrant_url)
+        # Unset key (fixture default) → the reader is built keyless (api_key=None),
+        # preserving local/dev behavior (#144).
+        mock_qdrant_cls.assert_called_once_with(
+            url=settings.qdrant_url, api_key=settings.qdrant_api_key
+        )
+        assert settings.qdrant_api_key is None
+
+    @pytest.mark.asyncio
+    async def test_qdrant_initialised_with_api_key_when_configured(self) -> None:
+        # When QDRANT_API_KEY is set, the reader must forward it so it is not
+        # locked out once Qdrant enforces auth (#144).
+        settings = Settings(
+            database_url="postgresql://user:pass@localhost/epsca",
+            qdrant_url="http://localhost:6333",
+            ollama_url="http://localhost:11434",
+            anthropic_api_key="test-key",
+            jwt_secret="test-jwt-secret",  # noqa: S106
+            qdrant_api_key="reader-secret",  # noqa: S106
+        )
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve("overtime rates", settings=settings)
+
+        mock_qdrant_cls.assert_called_once_with(
+            url="http://localhost:6333", api_key="reader-secret"
+        )
 
     @pytest.mark.asyncio
     async def test_single_union_filter_still_uses_one_qdrant_query(

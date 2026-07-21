@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +20,12 @@ class Settings(BaseSettings):
 
     database_url: str
     qdrant_url: str
+    # Optional Qdrant API key (#144). Blank ⇒ None so an unset ${QDRANT_API_KEY}
+    # (which a compose variable expands to "") never becomes an empty "api-key"
+    # header on the wire; local/dev stays keyless. A real key is forwarded
+    # byte-for-byte to stay matched with the Qdrant service, which reads the
+    # same value from QDRANT__SERVICE__API_KEY.
+    qdrant_api_key: str | None = None
     ollama_url: str
     ollama_embed_model: str = "nomic-embed-text"
     anthropic_api_key: str
@@ -59,6 +65,16 @@ class Settings(BaseSettings):
     # (Dockerfile ARG → ENV) and surfaced in /health so the deploy workflow
     # can confirm the freshly built image is actually serving (#75).
     git_sha: str = "unknown"
+
+    @field_validator("qdrant_api_key", mode="before")
+    @classmethod
+    def _blank_qdrant_key_to_none(cls, value: str | None) -> str | None:
+        """Treat a blank ``QDRANT_API_KEY`` as unset (keyless), but never strip
+        a real key — the Qdrant service reads the same raw value, so trimming
+        here would desync the client from the server."""
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
 
 
 @lru_cache

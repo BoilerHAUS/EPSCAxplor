@@ -13,9 +13,11 @@ so re-running the pipeline on the same document overwrites existing points rathe
 than creating duplicates.
 
 Environment variables:
-    QDRANT_URL:    Base URL for the Qdrant instance.  Default: http://127.0.0.1:6333
-    POSTGRES_DSN:  asyncpg-compatible connection string.
-                   Default: postgresql://epsca_user:password@localhost/epsca
+    QDRANT_URL:     Base URL for the Qdrant instance.  Default: http://127.0.0.1:6333
+    QDRANT_API_KEY: Optional Qdrant API key.  Unset/blank ⇒ keyless (local dev);
+                    set it once auth is enforced (#144) or the writer is locked out.
+    POSTGRES_DSN:   asyncpg-compatible connection string.
+                    Default: postgresql://epsca_user:password@localhost/epsca
 """
 
 from __future__ import annotations
@@ -43,7 +45,21 @@ from classify import ClassifiedDocument
 
 logger = logging.getLogger(__name__)
 
+
+def _normalize_qdrant_api_key(value: str | None) -> str | None:
+    """Blank/whitespace-only ⇒ keyless (None); a real key is preserved
+    byte-for-byte so the writer stays matched with the Qdrant service that
+    reads the same raw value (mirrors the API config validator, #144)."""
+    if value is None or value.strip() == "":
+        return None
+    return value
+
+
 QDRANT_URL: str = os.getenv("QDRANT_URL", "http://127.0.0.1:6333")
+# Optional Qdrant API key (#144). Blank/unset ⇒ keyless (local/dev still
+# connects); when Qdrant enforces auth on the shared network, export
+# QDRANT_API_KEY for host-run ingestion or the writer is locked out.
+QDRANT_API_KEY: str | None = _normalize_qdrant_api_key(os.getenv("QDRANT_API_KEY"))
 QDRANT_COLLECTION: str = "epsca_chunks"
 # No default — must be provided via environment or the postgres_dsn kwarg.
 # Fail fast rather than silently connecting to the wrong host.
@@ -202,6 +218,7 @@ async def store_document(
     embeddings: list[list[float]],
     *,
     qdrant_url: str = QDRANT_URL,
+    qdrant_api_key: str | None = QDRANT_API_KEY,
     postgres_dsn: str = POSTGRES_DSN,
 ) -> None:
     """
@@ -216,8 +233,9 @@ async def store_document(
         doc:          ClassifiedDocument produced by classify.py.
         chunks:       Chunks produced by chunk_document().
         embeddings:   Embedding vectors from embed_chunks(), same order as chunks.
-        qdrant_url:   Qdrant base URL (overridable for testing).
-        postgres_dsn: asyncpg-compatible DSN (overridable for testing).
+        qdrant_url:     Qdrant base URL (overridable for testing).
+        qdrant_api_key: Qdrant API key; None ⇒ keyless (overridable for testing).
+        postgres_dsn:   asyncpg-compatible DSN (overridable for testing).
 
     Raises:
         ValueError: If len(chunks) != len(embeddings).
@@ -251,7 +269,7 @@ async def store_document(
         return
 
     points = _build_points(document_id, doc, chunks, embeddings)
-    qdrant = AsyncQdrantClient(url=qdrant_url)
+    qdrant = AsyncQdrantClient(url=qdrant_url, api_key=qdrant_api_key)
     try:
         # Point IDs are deterministic on (document_id, chunk_index), so a
         # re-ingest that produces fewer chunks would otherwise leave stale

@@ -14,11 +14,13 @@ from extract import ExtractedDocument
 from store import (
     QDRANT_COLLECTION,
     _make_point_id,
+    _normalize_qdrant_api_key,
     store_document,
 )
 
 EMBED_DIM = 768
 _TEST_DSN = "postgresql://test/test"
+_TEST_API_KEY = "ingest-secret-key"  # noqa: S105
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -543,3 +545,72 @@ class TestStoreDocumentValidation:
             await store_document(doc, [], [], postgres_dsn=_TEST_DSN)
 
         qdrant.upsert.assert_not_called()
+
+
+# ─── Qdrant API key auth (#144) ───────────────────────────────────────────────
+
+
+class TestNormalizeQdrantApiKey:
+    """Blank/whitespace-only ⇒ None (keyless); a real key is preserved
+    byte-for-byte so it stays matched with the Qdrant service."""
+
+    def test_none_is_none(self) -> None:
+        assert _normalize_qdrant_api_key(None) is None
+
+    def test_empty_string_is_none(self) -> None:
+        assert _normalize_qdrant_api_key("") is None
+
+    def test_whitespace_only_is_none(self) -> None:
+        assert _normalize_qdrant_api_key("   ") is None
+
+    def test_real_key_preserved_byte_for_byte(self) -> None:
+        assert _normalize_qdrant_api_key("  spaced-but-real  ") == "  spaced-but-real  "
+
+
+class TestQdrantAuth:
+    """The writer must forward the Qdrant API key so ingestion is not locked
+    out once auth is enforced, while staying keyless when unconfigured."""
+
+    @pytest.mark.asyncio
+    async def test_forwards_api_key_when_provided(self, tmp_path: Path) -> None:
+        doc = _make_doc(tmp_path)
+        chunks = [_make_chunk(0)]
+        embeddings = [_fake_embedding()]
+        pool = _make_pg_pool(_make_pg_conn())
+
+        with (
+            patch("store.asyncpg.create_pool", return_value=pool),
+            patch("store.AsyncQdrantClient", return_value=_make_qdrant_client()) as mock_cls,
+        ):
+            await store_document(
+                doc,
+                chunks,
+                embeddings,
+                qdrant_url="http://qd:6333",
+                qdrant_api_key=_TEST_API_KEY,
+                postgres_dsn=_TEST_DSN,
+            )
+
+        mock_cls.assert_called_once_with(url="http://qd:6333", api_key=_TEST_API_KEY)
+
+    @pytest.mark.asyncio
+    async def test_defaults_to_keyless_when_unset(self, tmp_path: Path) -> None:
+        doc = _make_doc(tmp_path)
+        chunks = [_make_chunk(0)]
+        embeddings = [_fake_embedding()]
+        pool = _make_pg_pool(_make_pg_conn())
+
+        with (
+            patch("store.asyncpg.create_pool", return_value=pool),
+            patch("store.AsyncQdrantClient", return_value=_make_qdrant_client()) as mock_cls,
+        ):
+            await store_document(
+                doc,
+                chunks,
+                embeddings,
+                qdrant_url="http://qd:6333",
+                postgres_dsn=_TEST_DSN,
+            )
+
+        # No key configured (module default is None in the test env) → keyless.
+        mock_cls.assert_called_once_with(url="http://qd:6333", api_key=None)
