@@ -49,7 +49,10 @@ services:
       - "host-gateway:host-gateway"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.epsca-api.rule=Host(`api.epscaxplor.boilerhaus.org`)"
+      # Dual-serve the API on the new + old host during the #152 cutover (no
+      # redirect — a 301 on POST /auth and /query would be hostile to clients).
+      # Drop the old host in the Phase-5 cleanup PR after the dual-run window.
+      - "traefik.http.routers.epsca-api.rule=Host(`api.epscaxplor.com`) || Host(`api.epscaxplor.boilerhaus.org`)"
       - "traefik.http.routers.epsca-api.entrypoints=websecure"
       - "traefik.http.routers.epsca-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.epsca-api.middlewares=epsca-api-secheaders"
@@ -76,9 +79,12 @@ services:
       - dokploy-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.epsca-web.rule=Host(`epscaxplor.boilerhaus.org`)"
+      # Canonical app on the new apex (#152 domain cutover to epscaxplor.com).
+      # Two routers now share this service, so each declares .service explicitly.
+      - "traefik.http.routers.epsca-web.rule=Host(`epscaxplor.com`)"
       - "traefik.http.routers.epsca-web.entrypoints=websecure"
       - "traefik.http.routers.epsca-web.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.epsca-web.service=epsca-web"
       - "traefik.http.routers.epsca-web.middlewares=epsca-web-secheaders"
       - "traefik.http.services.epsca-web.loadbalancer.server.port=3000"
       # Security response headers (#146). Same four headers as the API router,
@@ -89,6 +95,22 @@ services:
       - "traefik.http.middlewares.epsca-web-secheaders.headers.contentTypeNosniff=true"
       - "traefik.http.middlewares.epsca-web-secheaders.headers.referrerPolicy=strict-origin-when-cross-origin"
       - "traefik.http.middlewares.epsca-web-secheaders.headers.customFrameOptionsValue=DENY"
+      # Transition redirect (#152): www + the old boilerhaus.org web host redirect to
+      # the new apex, preserving the path. Keeps old links alive and lands every user
+      # same-site on epscaxplor.com — required by the SameSite=strict refresh cookie,
+      # since an old-web -> new-api call is cross-site and would drop the cookie. Uses
+      # a 302 (permanent=false) during the dual-run so it is NOT browser-cached and the
+      # cutover stays cleanly revertible; the Phase-5 cleanup PR drops the old host and
+      # flips www -> apex to 301. NOTE: $${1} escapes docker-compose interpolation so
+      # Traefik receives ${1} and the request path is preserved (verify post-deploy).
+      - "traefik.http.routers.epsca-web-redirect.rule=Host(`www.epscaxplor.com`) || Host(`epscaxplor.boilerhaus.org`)"
+      - "traefik.http.routers.epsca-web-redirect.entrypoints=websecure"
+      - "traefik.http.routers.epsca-web-redirect.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.epsca-web-redirect.service=epsca-web"
+      - "traefik.http.routers.epsca-web-redirect.middlewares=epsca-web-to-apex"
+      - "traefik.http.middlewares.epsca-web-to-apex.redirectregex.regex=^https?://[^/]+/(.*)"
+      - "traefik.http.middlewares.epsca-web-to-apex.redirectregex.replacement=https://epscaxplor.com/$${1}"
+      - "traefik.http.middlewares.epsca-web-to-apex.redirectregex.permanent=false"
     restart: unless-stopped
 
 volumes:

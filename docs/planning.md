@@ -110,12 +110,12 @@ net new.
 
 | Environment | Domain | Notes |
 |---|---|---|
-| Development | `epscaxplor.boilerhaus.org` | Used during active development and internal testing |
-| Production | TBD — dedicated product domain | Separate from boilerhaus.org; to be registered before go-to-market |
+| Live | `epscaxplor.com` (+ `api.epscaxplor.com`) | Production domain since the #152 migration; deployed from `main` |
+| Legacy | `epscaxplor.boilerhaus.org` | Pre-#152 domain; redirects to the apex during the dual-run, then retired |
 
-All subdomains during development nest under `epscaxplor.boilerhaus.org`. When the
-production domain is registered, Traefik routing rules are updated and DNS is pointed
-at the same VPS — no re-deployment of services required.
+The live domain is `epscaxplor.com` with the API at `api.epscaxplor.com`, both routed by
+Traefik on the same VPS. The former `epscaxplor.boilerhaus.org` hosts redirect to the new
+apex during the #152 transition and are dropped after the dual-run window.
 
 ### Services to Deploy
 

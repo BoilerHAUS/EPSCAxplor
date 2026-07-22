@@ -5,7 +5,7 @@ in docs/evaluation/phase1_results.md for manual review.
 
 Usage:
     python services/api/eval/run_eval.py
-    python services/api/eval/run_eval.py --api-url https://api.epscaxplor.boilerhaus.org
+    python services/api/eval/run_eval.py --api-url https://api.epscaxplor.com
     python services/api/eval/run_eval.py --output docs/evaluation/phase1_results.md
 
 Environment:
@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     import httpx
 
-DEFAULT_API_URL = "https://api.epscaxplor.boilerhaus.org"
+DEFAULT_API_URL = "https://api.epscaxplor.com"
 DEFAULT_OUTPUT = Path(__file__).parent.parent.parent.parent / "docs" / "evaluation" / "phase1_results.md"
 
 # ---------------------------------------------------------------------------
