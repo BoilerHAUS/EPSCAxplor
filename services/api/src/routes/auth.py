@@ -80,15 +80,6 @@ def _unauthorized() -> HTTPException:
 _SAFE_FETCH_SITES = frozenset({"same-origin", "same-site", "none"})
 
 
-def _allowed_origins(cors_origins: str) -> set[str]:
-    """Normalised origin allow-list from the comma-separated CORS_ORIGINS."""
-    return {
-        origin.strip().rstrip("/").lower()
-        for origin in cors_origins.split(",")
-        if origin.strip()
-    }
-
-
 def _is_same_host(origin: str, host: str | None) -> bool:
     """True when *origin*'s authority equals the request's own Host header.
 
@@ -126,7 +117,7 @@ async def enforce_csrf_origin(
     origin = request.headers.get("origin")
     if origin is not None:
         normalised = origin.strip().rstrip("/").lower()
-        if normalised in _allowed_origins(settings.cors_origins) or _is_same_host(
+        if normalised in settings.cors_origins_list or _is_same_host(
             origin, request.headers.get("host")
         ):
             return

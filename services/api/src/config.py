@@ -76,6 +76,24 @@ class Settings(BaseSettings):
             return None
         return value
 
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Normalized CORS/CSRF allow-list — the single source of truth (#146).
+
+        Consumed by BOTH the CORSMiddleware (main.py) and the #104 CSRF Origin
+        gate (auth.py), so the two controls can never silently drift. Strips
+        whitespace, drops a trailing slash, lowercases, and skips empty entries
+        — identical to the former ``_allowed_origins`` in auth.py. Lowercasing
+        and slash-trimming only tolerate misconfiguration and match what a
+        browser actually sends (lowercase scheme+host, no path), so they never
+        merge distinct origins or broaden the list beyond ``CORS_ORIGINS``.
+        """
+        return [
+            origin.strip().rstrip("/").lower()
+            for origin in self.cors_origins.split(",")
+            if origin.strip()
+        ]
+
 
 @lru_cache
 def get_settings() -> Settings:

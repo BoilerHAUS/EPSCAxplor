@@ -59,3 +59,74 @@ class TestQdrantApiKeySetting:
         monkeypatch.setenv("QDRANT_API_KEY", key)
         settings = Settings(_env_file=None)  # type: ignore[call-arg]
         assert settings.qdrant_api_key == key
+
+
+class TestCorsOriginsList:
+    """The single normalized CORS/CSRF allow-list parser (#146).
+
+    ``cors_origins_list`` is the one source of truth consumed by both the
+    CORSMiddleware (main.py) and the #104 CSRF Origin gate (auth.py). Its
+    normalization must match the old ``_allowed_origins`` exactly — strip,
+    drop a trailing slash, lowercase, skip empty entries — so the swap is
+    behaviour-preserving and the two layers can never drift apart.
+    """
+
+    def test_single_origin_parsed(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _set_required(monkeypatch)
+        monkeypatch.setenv("CORS_ORIGINS", "https://a.example")
+        settings = Settings(_env_file=None)  # type: ignore[call-arg]
+        assert settings.cors_origins_list == ["https://a.example"]
+
+    def test_multiple_origins_split_on_comma(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _set_required(monkeypatch)
+        monkeypatch.setenv("CORS_ORIGINS", "https://a.example,https://b.example")
+        settings = Settings(_env_file=None)  # type: ignore[call-arg]
+        assert settings.cors_origins_list == ["https://a.example", "https://b.example"]
+
+    def test_strips_surrounding_whitespace(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _set_required(monkeypatch)
+        monkeypatch.setenv("CORS_ORIGINS", " https://a.example , https://b.example ")
+        settings = Settings(_env_file=None)  # type: ignore[call-arg]
+        assert settings.cors_origins_list == ["https://a.example", "https://b.example"]
+
+    def test_strips_trailing_slash(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _set_required(monkeypatch)
+        monkeypatch.setenv("CORS_ORIGINS", "https://a.example/")
+        settings = Settings(_env_file=None)  # type: ignore[call-arg]
+        assert settings.cors_origins_list == ["https://a.example"]
+
+    def test_lowercases_origin(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _set_required(monkeypatch)
+        monkeypatch.setenv("CORS_ORIGINS", "HTTPS://A.EXAMPLE")
+        settings = Settings(_env_file=None)  # type: ignore[call-arg]
+        assert settings.cors_origins_list == ["https://a.example"]
+
+    def test_skips_empty_entries(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _set_required(monkeypatch)
+        monkeypatch.setenv("CORS_ORIGINS", "https://a.example,,  ,https://b.example")
+        settings = Settings(_env_file=None)  # type: ignore[call-arg]
+        assert settings.cors_origins_list == ["https://a.example", "https://b.example"]
+
+    def test_default_value_parses(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _set_required(monkeypatch)
+        monkeypatch.delenv("CORS_ORIGINS", raising=False)
+        settings = Settings(_env_file=None)  # type: ignore[call-arg]
+        assert settings.cors_origins_list == ["http://localhost:3000"]
+
+    def test_combined_normalization(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _set_required(monkeypatch)
+        monkeypatch.setenv("CORS_ORIGINS", " HTTPS://A.EXAMPLE/ ,, https://B.example ")
+        settings = Settings(_env_file=None)  # type: ignore[call-arg]
+        assert settings.cors_origins_list == ["https://a.example", "https://b.example"]
+
+    def test_empty_or_separator_only_yields_empty_list(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # An empty or all-separator CORS_ORIGINS produces an empty allow-list,
+        # which fails CLOSED: CORSMiddleware allows no origin and the #104 CSRF
+        # gate rejects every cross-site request (it is never treated as a wildcard).
+        _set_required(monkeypatch)
+        monkeypatch.setenv("CORS_ORIGINS", "")
+        assert Settings(_env_file=None).cors_origins_list == []  # type: ignore[call-arg]
+        monkeypatch.setenv("CORS_ORIGINS", ",,  ,")
+        assert Settings(_env_file=None).cors_origins_list == []  # type: ignore[call-arg]
