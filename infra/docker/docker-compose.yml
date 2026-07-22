@@ -52,7 +52,18 @@ services:
       - "traefik.http.routers.epsca-api.rule=Host(`api.epscaxplor.boilerhaus.org`)"
       - "traefik.http.routers.epsca-api.entrypoints=websecure"
       - "traefik.http.routers.epsca-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.epsca-api.middlewares=epsca-api-secheaders"
       - "traefik.http.services.epsca-api.loadbalancer.server.port=8000"
+      # Security response headers (#146). Defined on this service and attached by
+      # bare name to this service's own router, so it resolves within the router's
+      # own provider — avoids the @docker-vs-@swarm ambiguity under Dokploy Swarm.
+      # HSTS is HTTPS-only (websecure/TLS above; forceStsHeader left off).
+      # Content-Security-Policy is deliberately deferred to #156 (per-surface).
+      - "traefik.http.middlewares.epsca-api-secheaders.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.epsca-api-secheaders.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.epsca-api-secheaders.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.epsca-api-secheaders.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.middlewares.epsca-api-secheaders.headers.customFrameOptionsValue=DENY"
     restart: unless-stopped
 
   epsca-web:
@@ -68,7 +79,16 @@ services:
       - "traefik.http.routers.epsca-web.rule=Host(`epscaxplor.boilerhaus.org`)"
       - "traefik.http.routers.epsca-web.entrypoints=websecure"
       - "traefik.http.routers.epsca-web.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.epsca-web.middlewares=epsca-web-secheaders"
       - "traefik.http.services.epsca-web.loadbalancer.server.port=3000"
+      # Security response headers (#146). Same four headers as the API router,
+      # defined on this service and attached by bare name (see the epsca-api note).
+      # CSP for the Next.js app is deferred to #156 (needs per-surface authoring).
+      - "traefik.http.middlewares.epsca-web-secheaders.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.epsca-web-secheaders.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.epsca-web-secheaders.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.epsca-web-secheaders.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.middlewares.epsca-web-secheaders.headers.customFrameOptionsValue=DENY"
     restart: unless-stopped
 
 volumes:

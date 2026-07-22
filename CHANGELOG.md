@@ -30,9 +30,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - `/query` now requires a valid access JWT; `get_current_user` decodes the bearer token into tenant/user context, replacing the interim shared bearer token.
 - CORS now sends `allow_credentials` so the httpOnly refresh cookie can round-trip (requires exact, non-wildcard `CORS_ORIGINS`).
 - `/query` now returns a real `query_log_id` (previously `N/A`); query-log persistence moved into `src/db/query_logs.py` with unit coverage, and remains best-effort so a logging failure never fails the answer (#88).
+- CORS `allow_origins` now derives from the same normalized `Settings.cors_origins_list` that the #104 CSRF Origin gate reads, replacing a separate `os.getenv("CORS_ORIGINS")` read in `main.py` (#146). The two controls can no longer silently drift; the app is now built via a `create_app()` factory.
 
 ### Removed
 - Interim `QUERY_API_TOKEN` shared-secret protection on `/query`, superseded by JWT auth (#85 → #23).
 
 ### Security
 - Passwords hashed with bcrypt (via the maintained `bcrypt` library, replacing the unmaintained `passlib`); JWT algorithm pinned to HS256 to block `alg=none`/confusion; uniform `401 unauthorized` on all auth failures to avoid user enumeration.
+- HTTP security response headers on both apps (#146): a Traefik `headers` middleware sets `Strict-Transport-Security: max-age=31536000; includeSubDomains` (HTTPS-only, no preload), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `X-Frame-Options: DENY` on both the API and web routers. Content-Security-Policy is deferred to a per-surface follow-up (#156).
