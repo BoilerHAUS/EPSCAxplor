@@ -135,6 +135,7 @@ throttling) first, then #141/#144/#142, then #145/#146/#147.
 | [#145](https://github.com/BoilerHAUS/EPSCAxplor/issues/145) | pr | [ ] | feat(web): source document links in the corpus library |
 | [#146](https://github.com/BoilerHAUS/EPSCAxplor/issues/146) | pr | [ ] | chore(security): add HTTP security headers and unify CORS config source |
 | [#147](https://github.com/BoilerHAUS/EPSCAxplor/issues/147) | pr | [ ] | perf(api): asyncpg connection pool + Qdrant client lifecycle |
+| [#155](https://github.com/BoilerHAUS/EPSCAxplor/issues/155) | pr | [ ] | chore(security): separate read-only vs read-write Qdrant API keys (least-privilege) |
 
 ---
 
