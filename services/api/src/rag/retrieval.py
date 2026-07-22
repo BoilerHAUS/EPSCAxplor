@@ -947,7 +947,7 @@ async def retrieve(
         interleaving of per-union top results for multi-union queries.
     """
     vector = await _embed(query, settings)
-    qdrant = AsyncQdrantClient(url=settings.qdrant_url)
+    qdrant = AsyncQdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key)
 
     unique_union_filters = list(dict.fromkeys(union_filters or []))
     if len(unique_union_filters) > 1:

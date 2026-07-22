@@ -70,6 +70,7 @@ docker run -d --rm --name qdrant-fwd \
 
 # Run ingestion
 POSTGRES_DSN="postgresql://epsca_user:<password>@127.0.0.1:5433/epsca?sslmode=disable" \
+  QDRANT_API_KEY="<key>" \
   INGEST_DOC_TYPE=<doc_type> \
   python run_pipeline.py
 
@@ -78,6 +79,10 @@ docker rm -f pg-fwd qdrant-fwd
 ```
 
 `sslmode=disable` is required — the internal Postgres container has no SSL certs.
+
+`QDRANT_API_KEY` is required once Qdrant auth is enforced (#144) — omit it only if
+Qdrant is still keyless, otherwise the writer is locked out. Use the same value set on
+the `epsca-qdrant` service.
 
 ### Testing migrations locally
 
