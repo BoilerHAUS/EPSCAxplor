@@ -151,6 +151,7 @@ Goal: Paid product with billing and white-label capability.
 | [#35](https://github.com/BoilerHAUS/EPSCAxplor/issues/35) | pr | [ ] | feat(web): build enterprise API key management dashboard |
 | [#36](https://github.com/BoilerHAUS/EPSCAxplor/issues/36) | no-pr | [ ] | ops: confirm EPSCA document usage rights before public launch |
 | [#37](https://github.com/BoilerHAUS/EPSCAxplor/issues/37) | no-pr | [ ] | ops: register production domain and update Traefik routing |
+| [#152](https://github.com/BoilerHAUS/EPSCAxplor/issues/152) | no-pr | [ ] | OPS: transfer DNS to new domain (epscaxplor.com) |
 | [#38](https://github.com/BoilerHAUS/EPSCAxplor/issues/38) | pr | [ ] | feat(web): build marketing site and add terms of service / privacy policy |
 | [#136](https://github.com/BoilerHAUS/EPSCAxplor/issues/136) | pr | [x] | feat(web): redesign authenticated UI as an industrial reference console |
 | [#138](https://github.com/BoilerHAUS/EPSCAxplor/issues/138) | pr | [x] | refactor(web): migrate Button/Input focus + hover to CSS :focus-visible |
