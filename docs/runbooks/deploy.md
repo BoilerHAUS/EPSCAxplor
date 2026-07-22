@@ -64,5 +64,33 @@ Rollback steps below to pin the previous known-good SHA while you investigate.
 
 | Variable | Purpose |
 |---|---|
-| `PROD_API_URL` | Base URL of the production API (e.g. `https://api.epscaxplor.boilerhaus.org`), polled by the post-deploy health check. A repository **variable**, not a secret — the URL is public. |
-| `PROD_WEB_URL` | Base URL of the deployed web app (e.g. `https://epscaxplor.boilerhaus.org`), polled for HTTP 200 after the web redeploy. Optional — if unset, the web readiness check is skipped with a warning. Repository **variable**, not a secret. |
+| `PROD_API_URL` | Base URL of the production API (`https://api.epscaxplor.com`), polled by the post-deploy health check **and baked into the web bundle at build time** as `NEXT_PUBLIC_API_URL`. Update it *before* the merge that rebuilds `:latest`. A repository **variable**, not a secret — the URL is public. |
+| `PROD_WEB_URL` | Base URL of the deployed web app (`https://epscaxplor.com`), polled for HTTP 200 after the web redeploy. Optional — if unset, the web readiness check is skipped with a warning. Repository **variable**, not a secret. |
+| `SMOKE_API_URL` | Base URL the nightly smoke eval targets (`https://api.epscaxplor.com`). Optional — falls back to the same default hard-coded in `nightly-smoke.yml`. Repository **variable**, not a secret. |
+
+## Domain migration (#152 — epscaxplor.com)
+
+The live site moved from `*.epscaxplor.boilerhaus.org` to `epscaxplor.com` (apex web) +
+`api.epscaxplor.com` via a dual-domain transition on the same VPS. Order matters:
+
+1. **DNS first.** Point `epscaxplor.com`, `www.epscaxplor.com`, and `api.epscaxplor.com`
+   at the VPS (`149.202.56.68`, direct/un-proxied) and confirm they resolve
+   (`dig +short <host>`) **before** deploying the new Traefik `Host` rules — Traefik's
+   Let's Encrypt HTTP-01 challenge does **not** auto-retry on failure.
+2. **Repo vars.** Set `PROD_API_URL`, `PROD_WEB_URL`, `SMOKE_API_URL` to the new hosts,
+   right before the merge; freeze other `main` merges across this window (the `deploy-dev`
+   verify would otherwise poll the not-yet-live host and fail).
+3. **Merge the compose PR** → auto rebuild (`:latest`, new API origin baked in) + Dokploy
+   redeploy + LE cert issuance for the new hosts.
+4. **Dokploy env.** Set the `epsca-api` stack `CORS_ORIGINS` to `https://epscaxplor.com`
+   and redeploy the API (the CORS middleware and the #104 CSRF Origin gate both read it).
+5. **Verify** (new hosts): valid LE cert + the #146 security headers via `curl -sSI`,
+   `/health` `git_sha` matches, `/docs` loads, browser login→refresh→logout round-trips,
+   old host redirects to the apex, cross-site `Origin`→`/auth/refresh` still `403`.
+
+**Cert stuck?** If a new host serves a default/self-signed cert (DNS raced the deploy),
+`ssh boiler@149.202.56.68` and `docker restart dokploy-traefik` to force a fresh challenge
+once DNS is correct, then re-`curl -sSI`.
+
+The old `*.boilerhaus.org` hosts keep serving (API) / `302`-redirect (web) during a
+~14-day dual-run, then a cleanup PR drops the old `Host` rules and flips `www`→apex to `301`.

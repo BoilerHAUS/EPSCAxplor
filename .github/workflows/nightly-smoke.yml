@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      API_URL: ${{ vars.SMOKE_API_URL || 'https://api.epscaxplor.boilerhaus.org' }}
+      API_URL: ${{ vars.SMOKE_API_URL || 'https://api.epscaxplor.com' }}
     steps:
       - uses: actions/checkout@v4
 

@@ -111,10 +111,10 @@ main                    ← production-ready, always deployable
   └── release/v1.2.0    ← cut from main, exists only for the release window
 ```
 
-There is no persistent `staging` or `develop` branch. The development domain
-(`epscaxplor.boilerhaus.org`) is the staging environment, deployed from `main` on
-every merge. The production domain (to be registered before go-to-market) is deployed
-from tagged releases on `main`.
+There is no persistent `staging` or `develop` branch. The live domain
+(`epscaxplor.com` + `api.epscaxplor.com`) is deployed from `main` on every merge; the
+former `epscaxplor.boilerhaus.org` hosts redirect to it during the #152 migration and
+are retired after the dual-run window.
 
 ### Branch Naming
 
@@ -527,8 +527,8 @@ need to be configured manually. It is used for pushing to GHCR.
 | Environment | Domain | Deployed From | Purpose |
 |---|---|---|---|
 | Local dev | `localhost` | Developer machine | Day-to-day development |
-| Dev / staging | `epscaxplor.boilerhaus.org` | Merge to `main` | Integration testing, demos |
-| Production | TBD product domain | Version tag push | Live users |
+| Live | `epscaxplor.com` (+ `api.epscaxplor.com`) | Merge to `main` | Production — real users |
+| Legacy | `epscaxplor.boilerhaus.org` | pre-#152 | Redirects to the apex during the dual-run, then retired |
 
 ### File Layout
 
