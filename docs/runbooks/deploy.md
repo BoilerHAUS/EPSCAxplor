@@ -64,5 +64,42 @@ Rollback steps below to pin the previous known-good SHA while you investigate.
 
 | Variable | Purpose |
 |---|---|
-| `PROD_API_URL` | Base URL of the production API (e.g. `https://api.epscaxplor.boilerhaus.org`), polled by the post-deploy health check. A repository **variable**, not a secret — the URL is public. |
-| `PROD_WEB_URL` | Base URL of the deployed web app (e.g. `https://epscaxplor.boilerhaus.org`), polled for HTTP 200 after the web redeploy. Optional — if unset, the web readiness check is skipped with a warning. Repository **variable**, not a secret. |
+| `PROD_API_URL` | Base URL of the production API (`https://api.epscaxplor.com`), polled by the post-deploy health check **and baked into the web bundle at build time** as `NEXT_PUBLIC_API_URL`. Update it *before* the merge that rebuilds `:latest`. A repository **variable**, not a secret — the URL is public. |
+| `PROD_WEB_URL` | Base URL of the deployed web app (`https://epscaxplor.com`), polled for HTTP 200 after the web redeploy. Optional — if unset, the web readiness check is skipped with a warning. Repository **variable**, not a secret. |
+| `SMOKE_API_URL` | Base URL the nightly smoke eval targets (`https://api.epscaxplor.com`). Optional — falls back to the same default hard-coded in `nightly-smoke.yml`. Repository **variable**, not a secret. |
+
+## Domain migration (#152 — epscaxplor.com)
+
+The live site moved to `epscaxplor.com` (apex web) + `api.epscaxplor.com` on the same VPS.
+**Routing is managed by Dokploy's per-service Domains UI, not the `traefik.*` labels in
+`docker-compose.yml` — Dokploy ignores those.** Order matters:
+
+1. **DNS first.** Point `epscaxplor.com`, `www.epscaxplor.com`, `api.epscaxplor.com` at the
+   VPS (`149.202.56.68`, direct/un-proxied) and confirm they resolve (`dig +short <host>`)
+   **before** adding the domains in Dokploy — the Let's Encrypt HTTP-01 challenge fires when
+   a domain is added and does **not** auto-retry on failure.
+   - Namecheap gotcha: the **Host** field takes the short label (`@`, `api`, `www`), not the
+     FQDN — entering the full domain builds `epscaxplor.com.epscaxplor.com` and nothing resolves.
+2. **Add the domains in Dokploy** (each service → Domains → Add Domain): `api.epscaxplor.com`
+   → epsca-api :8000; `epscaxplor.com` + `www.epscaxplor.com` → epsca-web :3000; HTTPS, cert
+   `letsencrypt`. Dokploy creates the routers and auto-issues the certs. Confirm each with
+   `curl -sSI https://<host>` (valid cert, HTTP 200).
+3. **Repo vars + CORS.** Set repo variables `PROD_API_URL=https://api.epscaxplor.com`,
+   `PROD_WEB_URL=https://epscaxplor.com`, `SMOKE_API_URL=https://api.epscaxplor.com`, and the
+   Dokploy `epsca-api` env `CORS_ORIGINS=https://epscaxplor.com` (the CORS middleware and the
+   #104 CSRF gate read it). `PROD_API_URL` is **baked into the web bundle** at build time.
+4. **Merge to `main`** → `deploy-dev` rebuilds `:latest` with the new API origin baked in and
+   redeploys; its verify polls `api.epscaxplor.com/health` (git_sha) + `epscaxplor.com` (200).
+   Freeze other `main` merges from when the repo vars change until this lands.
+5. **Verify:** `curl -sSI` the new hosts (valid cert), `/health` git_sha matches, `/docs`
+   loads, browser login→refresh→logout round-trips (same-site cookie), cross-site
+   `Origin`→`/auth/refresh` still `403`.
+6. **Retire the old domains:** once the new domain is verified, remove
+   `epscaxplor.boilerhaus.org` and `api.epscaxplor.boilerhaus.org` from Dokploy (they were a
+   placeholder — no redirect kept).
+
+**Cert stuck?** If a host serves a default cert (DNS raced the add), `ssh boiler@149.202.56.68`
+then `docker restart dokploy-traefik` to force a fresh challenge, and re-`curl -sSI`.
+
+**Security headers:** must be added via a Dokploy Traefik middleware, **not** compose labels
+(Dokploy ignores `traefik.*` labels) — tracked separately.
