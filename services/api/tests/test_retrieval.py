@@ -8,6 +8,7 @@ Covers:
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from datetime import UTC, date, datetime
 from typing import Any
@@ -23,6 +24,7 @@ from qdrant_client.models import (
     ScoredPoint,
 )
 
+import src.rag.retrieval as retrieval_module
 from src.config import Settings
 from src.rag.retrieval import (
     _MIN_PRIMARY_SLOTS,
@@ -2268,3 +2270,140 @@ class TestStructuredRateLookup:
         assert results[0].pinned is True
         primary_count = sum(1 for c in results if c.document_type == "primary_ca")
         assert primary_count >= _MIN_PRIMARY_SLOTS
+
+
+class TestQdrantClientLifecycle:
+    """Shared-client reuse and per-call fallback close (#147)."""
+
+    def _hit(self) -> MagicMock:
+        hit = MagicMock(spec=ScoredPoint)
+        hit.id = str(uuid.uuid4())
+        hit.score = 0.9
+        hit.payload = {
+            "document_id": str(uuid.uuid4()),
+            "source_filename": "x.pdf",
+            "union_name": "IBEW",
+            "document_type": "primary_ca",
+            "agreement_scope": None,
+            "effective_date": "2025-05-01",
+            "expiry_date": None,
+            "article_number": None,
+            "article_title": None,
+            "section_number": None,
+            "page_number": None,
+            "is_table": False,
+            "text": "clause",
+        }
+        return hit
+
+    @pytest.fixture(autouse=True)
+    def _reset_shared_client(self) -> Any:
+        retrieval_module._shared_qdrant = None
+        yield
+        retrieval_module._shared_qdrant = None
+
+    @pytest.mark.asyncio
+    async def test_injected_client_is_used_and_not_closed(self, settings: Settings) -> None:
+        injected = AsyncMock()
+        injected.query_points = AsyncMock(return_value=_make_query_response([self._hit()]))
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            results = await retrieve("overtime", settings=settings, qdrant=injected)
+
+        assert len(results) == 1
+        mock_cls.assert_not_called()  # no per-call client constructed
+        injected.close.assert_not_awaited()  # lifespan owns the client
+
+    @pytest.mark.asyncio
+    async def test_shared_client_is_used_when_initialized(self, settings: Settings) -> None:
+        shared = AsyncMock()
+        shared.query_points = AsyncMock(return_value=_make_query_response([self._hit()]))
+        retrieval_module._shared_qdrant = shared
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            results = await retrieve("overtime", settings=settings)
+
+        assert len(results) == 1
+        mock_cls.assert_not_called()
+        shared.close.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_fallback_client_is_closed(self, settings: Settings) -> None:
+        """Without a shared client, retrieve creates its own and must close it
+        (the pre-#147 code leaked it)."""
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            own = AsyncMock()
+            own.query_points = AsyncMock(return_value=_make_query_response([]))
+            mock_cls.return_value = own
+
+            await retrieve("overtime", settings=settings)
+
+        own.close.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_fallback_client_closed_on_error(self, settings: Settings) -> None:
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            own = AsyncMock()
+            own.query_points = AsyncMock(side_effect=RuntimeError("qdrant down"))
+            mock_cls.return_value = own
+
+            with pytest.raises(RuntimeError, match="qdrant down"):
+                await retrieve("overtime", settings=settings)
+
+        own.close.assert_awaited_once()
+
+    def test_init_is_idempotent_and_close_resets(self, settings: Settings) -> None:
+        with patch("src.rag.retrieval.AsyncQdrantClient") as mock_cls:
+            instance = AsyncMock()
+            mock_cls.return_value = instance
+
+            first = retrieval_module.init_qdrant_client(settings)
+            second = retrieval_module.init_qdrant_client(settings)
+
+            assert first is second is retrieval_module.get_shared_qdrant_client()
+            mock_cls.assert_called_once_with(
+                url=settings.qdrant_url, api_key=settings.qdrant_api_key
+            )
+
+            asyncio.run(retrieval_module.close_qdrant_client())
+            instance.close.assert_awaited_once()
+            assert retrieval_module.get_shared_qdrant_client() is None
+
+    @pytest.mark.asyncio
+    async def test_multi_union_fanout_propagates_exceptions(self, settings: Settings) -> None:
+        """A failing per-union query fails the whole retrieval (gather must not
+        swallow errors or leak sibling tasks)."""
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            own = AsyncMock()
+            own.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([self._hit()]),
+                    RuntimeError("union query failed"),
+                ]
+            )
+            mock_cls.return_value = own
+
+            with pytest.raises(RuntimeError, match="union query failed"):
+                await retrieve(
+                    "compare overtime",
+                    union_filters=["IBEW", "United Association"],
+                    settings=settings,
+                )

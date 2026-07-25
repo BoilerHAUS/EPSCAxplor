@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from src.auth import CurrentUser, get_current_user
 from src.config import Settings, get_settings
-from src.db import connect
+from src.db import acquire
 from src.db.query_logs import count_query_logs, list_query_logs
 
 router = APIRouter()
@@ -44,7 +44,7 @@ async def query_history_route(
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> QueryHistoryResponse:
     """Return the caller's tenant query history, newest first, paginated."""
-    async with connect(settings.database_url) as conn:
+    async with acquire() as conn:
         records = await list_query_logs(
             conn, current_user.tenant_id, limit=limit, offset=offset
         )

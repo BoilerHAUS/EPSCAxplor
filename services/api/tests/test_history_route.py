@@ -50,7 +50,7 @@ async def _fake_connect(*_a: object, **_k: object) -> Any:
 
 async def test_returns_history_with_pagination() -> None:
     logs = [_log(), _log(query_text="q2")]
-    with patch("src.routes.history.connect", _fake_connect), patch(
+    with patch("src.routes.history.acquire", _fake_connect), patch(
         "src.routes.history.list_query_logs", new=AsyncMock(return_value=logs)
     ), patch("src.routes.history.count_query_logs", new=AsyncMock(return_value=5)):
         resp = await query_history_route(
@@ -66,7 +66,7 @@ async def test_returns_history_with_pagination() -> None:
 
 async def test_scopes_queries_and_count_to_caller_tenant() -> None:
     tenant_id = uuid.uuid4()
-    with patch("src.routes.history.connect", _fake_connect), patch(
+    with patch("src.routes.history.acquire", _fake_connect), patch(
         "src.routes.history.list_query_logs", new=AsyncMock(return_value=[])
     ) as listed, patch(
         "src.routes.history.count_query_logs", new=AsyncMock(return_value=0)

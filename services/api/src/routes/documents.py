@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from src.auth import get_current_user
 from src.config import Settings, get_settings
-from src.db import connect
+from src.db import acquire
 from src.db.documents import list_documents
 
 router = APIRouter()
@@ -49,7 +49,7 @@ async def list_documents_route(
     is_expired: bool | None = None,
 ) -> DocumentsResponse:
     """List corpus documents, optionally filtered by union / type / expiry."""
-    async with connect(settings.database_url) as conn:
+    async with acquire() as conn:
         records = await list_documents(
             conn,
             union_name=union_name,

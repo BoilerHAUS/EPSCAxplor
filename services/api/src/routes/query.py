@@ -15,19 +15,18 @@ import time
 import uuid
 from typing import Annotated, Any
 
-import asyncpg
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, field_validator
 
 from src.auth import CurrentUser, enforce_rate_limit, enforce_tier_limit, get_current_user
 from src.config import Settings, get_settings
-from src.db import connect
+from src.db import acquire
 from src.db.query_logs import insert_query_log
 from src.rag.citation_extractor import CitationRef, extract_citations
 from src.rag.context import assemble_context
 from src.rag.generator import DISCLAIMER, GeneratorResult, generate
 from src.rag.preprocess import QueryContext, preprocess
-from src.rag.retrieval import ChunkResult, retrieve
+from src.rag.retrieval import ChunkResult, get_shared_qdrant_client, retrieve
 
 logger = logging.getLogger(__name__)
 
@@ -53,33 +52,26 @@ class QueryResponse(BaseModel):
     query_log_id: str | None
 
 
-async def _get_known_unions(database_url: str) -> list[str]:
+async def _get_known_unions() -> list[str]:
     """Return distinct union names from the documents table."""
-    conn = await asyncpg.connect(database_url, timeout=5)
-    try:
+    async with acquire() as conn:
         rows = await conn.fetch("SELECT DISTINCT union_name FROM documents ORDER BY union_name")
         return [row["union_name"] for row in rows]
-    finally:
-        await conn.close()
 
 
-async def _get_title_map(database_url: str, doc_ids: list[str]) -> dict[str, str]:
+async def _get_title_map(doc_ids: list[str]) -> dict[str, str]:
     """Return a document_id → title mapping for the given UUIDs."""
     if not doc_ids:
         return {}
-    conn = await asyncpg.connect(database_url, timeout=5)
-    try:
+    async with acquire() as conn:
         rows = await conn.fetch(
             "SELECT id::text, title FROM documents WHERE id = ANY($1::uuid[])",
             doc_ids,
         )
         return {row["id"]: row["title"] for row in rows}
-    finally:
-        await conn.close()
 
 
 async def _write_query_log(
-    database_url: str,
     *,
     tenant_id: uuid.UUID,
     user_id: uuid.UUID | None,
@@ -100,7 +92,7 @@ async def _write_query_log(
     and swallowed. On success the real ``query_log_id`` is returned.
     """
     try:
-        async with connect(database_url) as conn:
+        async with acquire() as conn:
             log_id = await insert_query_log(
                 conn,
                 tenant_id=tenant_id,
@@ -136,10 +128,10 @@ async def query_handler(
     pipeline_start = time.monotonic()
 
     # Step 1 — pre-process
-    known_unions = await _get_known_unions(settings.database_url)
+    known_unions = await _get_known_unions()
     ctx: QueryContext = preprocess(body.query, known_unions)
 
-    # Step 2 — retrieve
+    # Step 2 — retrieve (reusing the lifespan-owned Qdrant client, #147)
     chunks: list[ChunkResult] = await retrieve(
         body.query,
         union_filters=ctx.union_filters,
@@ -149,11 +141,12 @@ async def query_handler(
         provision_terms=ctx.provision_terms,
         rate_classification=ctx.rate_classification,
         settings=settings,
+        qdrant=get_shared_qdrant_client(),
     )
 
     # Step 3 — assemble context (with title lookup)
     doc_ids = list({c.document_id for c in chunks})
-    title_map = await _get_title_map(settings.database_url, doc_ids)
+    title_map = await _get_title_map(doc_ids)
     context_block = assemble_context(chunks, title_map=title_map)
 
     # Step 4 — generate
@@ -178,7 +171,6 @@ async def query_handler(
     total_latency_ms = int((time.monotonic() - pipeline_start) * 1000)
 
     query_log_id = await _write_query_log(
-        settings.database_url,
         tenant_id=current_user.tenant_id,
         user_id=current_user.user_id,
         query_text=body.query,

@@ -112,7 +112,7 @@ def _service_env(**overrides: AsyncMock) -> Iterator[dict[str, AsyncMock]]:
     }
     mocks.update(overrides)
     with ExitStack() as stack:
-        stack.enter_context(patch("src.auth.service.connect", _fake_connect))
+        stack.enter_context(patch("src.auth.service.acquire", _fake_connect))
         for name, mock in mocks.items():
             stack.enter_context(patch(f"src.auth.service.{name}", new=mock))
         yield mocks

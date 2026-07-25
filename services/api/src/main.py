@@ -5,6 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import Settings, get_settings
+from src.db import close_pool, init_pool
+from src.rag.retrieval import close_qdrant_client, init_qdrant_client
 from src.routes.auth import router as auth_router
 from src.routes.documents import router as documents_router
 from src.routes.health import router as health_router
@@ -17,8 +19,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Belt-and-suspenders: create_app() already resolves get_settings() at import
     # time, so a misconfigured env fails at process boot. This re-check at ASGI
     # startup is an lru_cache hit, not a second Settings() construction.
-    get_settings()
-    yield
+    settings = get_settings()
+    # Process-wide resources (#147). Neither call performs I/O: the pool opens
+    # its first connection on first acquire (min_size=0), so a briefly-down
+    # Postgres degrades /health instead of crash-looping the app.
+    await init_pool(settings.database_url)
+    init_qdrant_client(settings)
+    try:
+        yield
+    finally:
+        await close_pool()
+        await close_qdrant_client()
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

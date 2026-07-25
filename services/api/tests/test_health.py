@@ -1,8 +1,11 @@
+import contextlib
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 from fastapi import Response
 
+import src.db
 from src.config import Settings
 from src.routes.health import _check_database, _check_ollama, _check_qdrant, health
 
@@ -130,30 +133,44 @@ class TestHealthEndpoint:
         assert all(v == "error" for v in data["dependencies"].values())
 
 
+@contextlib.asynccontextmanager
+async def _fake_acquire_yielding(conn: AsyncMock) -> Any:
+    yield conn
+
+
 class TestCheckDatabase:
-    async def test_ok_when_connection_succeeds(self) -> None:
+    async def test_ok_when_pool_roundtrip_succeeds(self) -> None:
         mock_conn = AsyncMock()
-        with patch("src.routes.health.asyncpg.connect", new=AsyncMock(return_value=mock_conn)):
-            result = await _check_database("postgresql://user:pass@localhost/epsca")
+        with patch(
+            "src.routes.health.acquire", new=lambda: _fake_acquire_yielding(mock_conn)
+        ):
+            result = await _check_database()
         assert result == "ok"
         mock_conn.execute.assert_called_once_with("SELECT 1")
-        mock_conn.close.assert_called_once()
 
-    async def test_error_when_connection_fails(self) -> None:
+    async def test_error_when_acquire_fails(self) -> None:
         with patch(
-            "src.routes.health.asyncpg.connect",
-            new=AsyncMock(side_effect=OSError("Connection refused")),
+            "src.routes.health.acquire",
+            new=MagicMock(side_effect=OSError("Connection refused")),
         ):
-            result = await _check_database("postgresql://bad-host/epsca")
+            result = await _check_database()
+        assert result == "error"
+
+    async def test_error_when_pool_uninitialized(self) -> None:
+        # Outside a lifespan the pool holder is empty; the probe must degrade,
+        # not raise (the app boots even when Postgres is down, #147).
+        with patch.object(src.db, "_pool", None):
+            result = await _check_database()
         assert result == "error"
 
     async def test_error_when_execute_fails(self) -> None:
         mock_conn = AsyncMock()
         mock_conn.execute.side_effect = RuntimeError("query failed")
-        with patch("src.routes.health.asyncpg.connect", new=AsyncMock(return_value=mock_conn)):
-            result = await _check_database("postgresql://user:pass@localhost/epsca")
+        with patch(
+            "src.routes.health.acquire", new=lambda: _fake_acquire_yielding(mock_conn)
+        ):
+            result = await _check_database()
         assert result == "error"
-        mock_conn.close.assert_called_once()  # connection must be closed even on failure
 
 
 def _make_http_client_mock(

@@ -198,7 +198,7 @@ class TestApiKeyDependency:
     def test_valid_api_key_authenticates_with_null_user(self) -> None:
         client = _auth_app(_settings())
         record = _api_key_record()
-        with patch("src.auth.dependencies.connect", _fake_connect), patch(
+        with patch("src.auth.dependencies.acquire", _fake_connect), patch(
             "src.auth.dependencies.get_active_api_key_by_hash",
             new=AsyncMock(return_value=record),
         ), patch("src.auth.dependencies.touch_last_used", new=AsyncMock()) as touch:
@@ -211,7 +211,7 @@ class TestApiKeyDependency:
 
     def test_unknown_or_inactive_key_returns_401(self) -> None:
         client = _auth_app(_settings())
-        with patch("src.auth.dependencies.connect", _fake_connect), patch(
+        with patch("src.auth.dependencies.acquire", _fake_connect), patch(
             "src.auth.dependencies.get_active_api_key_by_hash",
             new=AsyncMock(return_value=None),
         ):
@@ -222,7 +222,7 @@ class TestApiKeyDependency:
 
     def test_last_used_failure_does_not_break_auth(self) -> None:
         client = _auth_app(_settings())
-        with patch("src.auth.dependencies.connect", _fake_connect), patch(
+        with patch("src.auth.dependencies.acquire", _fake_connect), patch(
             "src.auth.dependencies.get_active_api_key_by_hash",
             new=AsyncMock(return_value=_api_key_record()),
         ), patch(

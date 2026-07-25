@@ -23,7 +23,7 @@ from src.auth.api_keys import hash_api_key, looks_like_api_key
 from src.auth.rate_limit import SlidingWindowLimiter
 from src.auth.tokens import TokenError, decode_access_token
 from src.config import Settings, get_settings
-from src.db import connect
+from src.db import acquire
 from src.db.api_keys import get_active_api_key_by_hash, touch_last_used
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ async def _authenticate_api_key(settings: Settings, raw_key: str) -> CurrentUser
     ``query_logs.user_id`` column is nullable to allow exactly this).
     """
     key_hash = hash_api_key(raw_key)
-    async with connect(settings.database_url) as conn:
+    async with acquire() as conn:
         record = await get_active_api_key_by_hash(conn, key_hash)
         if record is None:
             raise _unauthorized()
