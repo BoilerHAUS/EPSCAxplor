@@ -586,23 +586,24 @@ class TestRetrieve:
             await retrieve("overtime rates", settings=settings)
 
         # Unset key (fixture default) → the reader is built keyless (api_key=None),
-        # preserving local/dev behavior (#144).
+        # preserving local/dev behavior (#155).
         mock_qdrant_cls.assert_called_once_with(
-            url=settings.qdrant_url, api_key=settings.qdrant_api_key
+            url=settings.qdrant_url, api_key=settings.qdrant_read_only_api_key
         )
-        assert settings.qdrant_api_key is None
+        assert settings.qdrant_read_only_api_key is None
 
     @pytest.mark.asyncio
-    async def test_qdrant_initialised_with_api_key_when_configured(self) -> None:
-        # When QDRANT_API_KEY is set, the reader must forward it so it is not
-        # locked out once Qdrant enforces auth (#144).
+    async def test_qdrant_initialised_with_read_only_key_when_configured(self) -> None:
+        # When QDRANT_READ_ONLY_API_KEY is set, the reader forwards the
+        # least-privilege read-only key so it is not locked out once Qdrant
+        # enforces auth (#155) — never the write-capable key.
         settings = Settings(
             database_url="postgresql://user:pass@localhost/epsca",
             qdrant_url="http://localhost:6333",
             ollama_url="http://localhost:11434",
             anthropic_api_key="test-key",
             jwt_secret="test-jwt-secret",  # noqa: S106
-            qdrant_api_key="reader-secret",  # noqa: S106
+            qdrant_read_only_api_key="reader-secret",  # noqa: S106
         )
         with (
             patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
@@ -2376,7 +2377,7 @@ class TestQdrantClientLifecycle:
 
             assert first is second is retrieval_module.get_shared_qdrant_client()
             mock_cls.assert_called_once_with(
-                url=settings.qdrant_url, api_key=settings.qdrant_api_key
+                url=settings.qdrant_url, api_key=settings.qdrant_read_only_api_key
             )
 
             asyncio.run(retrieval_module.close_qdrant_client())

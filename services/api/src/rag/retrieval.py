@@ -48,15 +48,17 @@ TOP_K: int = 10
 # Process-wide Qdrant client owned by the app lifespan (#147). ``retrieve``
 # falls back to a per-call client (created *and closed*) when the lifespan has
 # not run — direct callers such as the eval harness keep working unchanged.
+# The client uses the least-privilege READ-ONLY key (#155): the query path only
+# reads, so it never holds the write-capable key.
 _shared_qdrant: AsyncQdrantClient | None = None
 
 
 def init_qdrant_client(settings: Settings) -> AsyncQdrantClient:
-    """Create (once) and return the shared Qdrant client. No I/O happens here."""
+    """Create (once) and return the shared read-only Qdrant client. No I/O here."""
     global _shared_qdrant
     if _shared_qdrant is None:
         _shared_qdrant = AsyncQdrantClient(
-            url=settings.qdrant_url, api_key=settings.qdrant_api_key
+            url=settings.qdrant_url, api_key=settings.qdrant_read_only_api_key
         )
     return _shared_qdrant
 
@@ -1003,7 +1005,9 @@ async def retrieve(
             rate_classification=rate_classification,
             settings=settings,
         )
-    own_client = AsyncQdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key)
+    own_client = AsyncQdrantClient(
+        url=settings.qdrant_url, api_key=settings.qdrant_read_only_api_key
+    )
     try:
         return await _retrieve_with_client(
             own_client,
