@@ -23,6 +23,7 @@ Design notes
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, date, datetime
 from typing import Any, cast
 
@@ -43,6 +44,34 @@ from src.config import Settings
 
 COLLECTION: str = "epsca_chunks"
 TOP_K: int = 10
+
+# Process-wide Qdrant client owned by the app lifespan (#147). ``retrieve``
+# falls back to a per-call client (created *and closed*) when the lifespan has
+# not run — direct callers such as the eval harness keep working unchanged.
+_shared_qdrant: AsyncQdrantClient | None = None
+
+
+def init_qdrant_client(settings: Settings) -> AsyncQdrantClient:
+    """Create (once) and return the shared Qdrant client. No I/O happens here."""
+    global _shared_qdrant
+    if _shared_qdrant is None:
+        _shared_qdrant = AsyncQdrantClient(
+            url=settings.qdrant_url, api_key=settings.qdrant_api_key
+        )
+    return _shared_qdrant
+
+
+async def close_qdrant_client() -> None:
+    """Close and reset the shared client. Safe to call when uninitialized."""
+    global _shared_qdrant
+    if _shared_qdrant is not None:
+        await _shared_qdrant.close()
+        _shared_qdrant = None
+
+
+def get_shared_qdrant_client() -> AsyncQdrantClient | None:
+    """Return the lifespan-owned client, or None outside an app lifespan."""
+    return _shared_qdrant
 
 # Guaranteed Nuclear Project Agreement chunks surfaced on nuclear-context
 # queries (issue #115).  NPAs modify a base CA, so a handful of NPA chunks
@@ -748,10 +777,12 @@ async def _query_provision_vectors(
     Takes pre-computed vectors (not raw terms) so the caller embeds each term
     once and reuses it across per-union fan-out queries.
     """
-    term_sets: list[list[ChunkResult]] = []
-    for vector in term_vectors:
-        term_sets.append(
-            await _query_qdrant(
+    # Independent per-term reads run concurrently (#147); gather preserves the
+    # argument order, so the merged interleave stays deterministic, and its
+    # default return_exceptions=False propagates the first failure.
+    term_sets: list[list[ChunkResult]] = await asyncio.gather(
+        *(
+            _query_qdrant(
                 qdrant,
                 vector=vector,
                 union_filter=union_filter,
@@ -759,7 +790,9 @@ async def _query_provision_vectors(
                 agreement_scope=agreement_scope,
                 limit=per_term_limit,
             )
+            for vector in term_vectors
         )
+    )
     return _merge_union_results(term_sets, limit=_PROVISION_MERGED_LIMIT)
 
 
@@ -801,17 +834,19 @@ async def _collect_wage_chunks(
     instead of one union's high-cosine tables monopolizing the wage slots.
     """
     if len(union_filters) > 1:
-        wage_sets = [
-            await _query_wage_schedules(
-                qdrant,
-                vector=vector,
-                query=query,
-                union_filter=union_filter,
-                agreement_scope=agreement_scope,
-                limit=3,
+        wage_sets = await asyncio.gather(
+            *(
+                _query_wage_schedules(
+                    qdrant,
+                    vector=vector,
+                    query=query,
+                    union_filter=union_filter,
+                    agreement_scope=agreement_scope,
+                    limit=3,
+                )
+                for union_filter in union_filters
             )
-            for union_filter in union_filters
-        ]
+        )
         return _merge_union_results(wage_sets, limit=6)
     union_filter = union_filters[0] if union_filters else None
     return await _query_wage_schedules(
@@ -835,16 +870,18 @@ async def _collect_nuclear_pa_chunks(
     from unions not named in the query are not pulled in by an unfiltered pass.
     """
     if len(union_filters) > 1:
-        npa_sets = [
-            await _query_nuclear_pa(
-                qdrant,
-                vector=vector,
-                union_filter=union_filter,
-                agreement_scope=agreement_scope,
-                limit=_NUCLEAR_PA_PER_UNION,
+        npa_sets = await asyncio.gather(
+            *(
+                _query_nuclear_pa(
+                    qdrant,
+                    vector=vector,
+                    union_filter=union_filter,
+                    agreement_scope=agreement_scope,
+                    limit=_NUCLEAR_PA_PER_UNION,
+                )
+                for union_filter in union_filters
             )
-            for union_filter in union_filters
-        ]
+        )
         return _merge_union_results(npa_sets, limit=_NUCLEAR_PA_MERGED_LIMIT)
     union_filter = union_filters[0] if union_filters else None
     return await _query_nuclear_pa(
@@ -875,17 +912,19 @@ async def _collect_provision_chunks(
     """
     term_vectors = [await _embed(term, settings) for term in terms[:_PROVISION_MAX_TERMS]]
     if len(union_filters) > 1:
-        provision_sets = [
-            await _query_provision_vectors(
-                qdrant,
-                term_vectors=term_vectors,
-                union_filter=union_filter,
-                include_nuclear_pa=include_nuclear_pa,
-                agreement_scope=agreement_scope,
-                per_term_limit=_PROVISION_PER_UNION,
+        provision_sets = await asyncio.gather(
+            *(
+                _query_provision_vectors(
+                    qdrant,
+                    term_vectors=term_vectors,
+                    union_filter=union_filter,
+                    include_nuclear_pa=include_nuclear_pa,
+                    agreement_scope=agreement_scope,
+                    per_term_limit=_PROVISION_PER_UNION,
+                )
+                for union_filter in union_filters
             )
-            for union_filter in union_filters
-        ]
+        )
         return _merge_union_results(provision_sets, limit=_PROVISION_MERGED_LIMIT)
     union_filter = union_filters[0] if union_filters else None
     return await _query_provision_vectors(
@@ -907,6 +946,7 @@ async def retrieve(
     provision_terms: list[str] | None = None,
     rate_classification: str | None = None,
     settings: Settings,
+    qdrant: AsyncQdrantClient | None = None,
 ) -> list[ChunkResult]:
     """Embed *query* and retrieve the top-k matching chunks from Qdrant.
 
@@ -940,27 +980,78 @@ async def retrieve(
             existing re-ranked wage pass is the sole wage source.  Skipped for
             multi-union queries.
         settings: Application settings providing Qdrant and Ollama URLs.
+        qdrant: An externally-owned client to reuse (the app lifespan's shared
+            client, #147). When ``None``, the module-level shared client is
+            used if initialized; otherwise a per-call client is created and
+            closed before returning.
 
     Returns:
         Up to ``TOP_K`` ``ChunkResult`` objects ordered by descending cosine
         similarity score for single-union queries, or a deterministic
         interleaving of per-union top results for multi-union queries.
     """
+    client = qdrant if qdrant is not None else _shared_qdrant
+    if client is not None:
+        return await _retrieve_with_client(
+            client,
+            query,
+            union_filters=union_filters,
+            include_nuclear_pa=include_nuclear_pa,
+            agreement_scope=agreement_scope,
+            is_wage_query=is_wage_query,
+            provision_terms=provision_terms,
+            rate_classification=rate_classification,
+            settings=settings,
+        )
+    own_client = AsyncQdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key)
+    try:
+        return await _retrieve_with_client(
+            own_client,
+            query,
+            union_filters=union_filters,
+            include_nuclear_pa=include_nuclear_pa,
+            agreement_scope=agreement_scope,
+            is_wage_query=is_wage_query,
+            provision_terms=provision_terms,
+            rate_classification=rate_classification,
+            settings=settings,
+        )
+    finally:
+        await own_client.close()
+
+
+async def _retrieve_with_client(
+    qdrant: AsyncQdrantClient,
+    query: str,
+    *,
+    union_filters: list[str] | None,
+    include_nuclear_pa: bool,
+    agreement_scope: str | None,
+    is_wage_query: bool,
+    provision_terms: list[str] | None,
+    rate_classification: str | None,
+    settings: Settings,
+) -> list[ChunkResult]:
+    """Run the retrieval pipeline against an already-constructed client."""
     vector = await _embed(query, settings)
-    qdrant = AsyncQdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key)
 
     unique_union_filters = list(dict.fromkeys(union_filters or []))
     if len(unique_union_filters) > 1:
-        result_sets = [
-            await _query_qdrant(
-                qdrant,
-                vector=vector,
-                union_filter=union_filter,
-                include_nuclear_pa=include_nuclear_pa,
-                agreement_scope=agreement_scope,
+        # Per-union primary reads are independent; run them concurrently.
+        # gather returns in argument order, so the round-robin merge below is
+        # exactly as deterministic as the previous sequential loop.
+        result_sets = await asyncio.gather(
+            *(
+                _query_qdrant(
+                    qdrant,
+                    vector=vector,
+                    union_filter=union_filter,
+                    include_nuclear_pa=include_nuclear_pa,
+                    agreement_scope=agreement_scope,
+                )
+                for union_filter in unique_union_filters
             )
-            for union_filter in unique_union_filters
-        ]
+        )
         primary = _merge_union_results(result_sets)
     else:
         union_filter = unique_union_filters[0] if unique_union_filters else None

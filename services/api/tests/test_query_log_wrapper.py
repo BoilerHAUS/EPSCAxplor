@@ -34,17 +34,17 @@ def _kwargs() -> dict[str, Any]:
 
 async def test_wrapper_returns_str_id_on_success() -> None:
     new_id = uuid.uuid4()
-    with patch("src.routes.query.connect", _fake_connect), patch(
+    with patch("src.routes.query.acquire", _fake_connect), patch(
         "src.routes.query.insert_query_log", new=AsyncMock(return_value=new_id)
     ):
-        result = await _write_query_log("postgresql://x", **_kwargs())
+        result = await _write_query_log(**_kwargs())
     assert result == str(new_id)
 
 
 async def test_wrapper_returns_none_and_swallows_errors() -> None:
-    with patch("src.routes.query.connect", _fake_connect), patch(
+    with patch("src.routes.query.acquire", _fake_connect), patch(
         "src.routes.query.insert_query_log",
         new=AsyncMock(side_effect=RuntimeError("db down")),
     ):
-        result = await _write_query_log("postgresql://x", **_kwargs())
+        result = await _write_query_log(**_kwargs())
     assert result is None

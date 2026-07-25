@@ -48,7 +48,7 @@ async def _fake_connect(*_a: object, **_k: object) -> Any:
 
 async def test_lists_documents_with_total() -> None:
     docs = [_doc(), _doc(union_name="Sheet Metal Workers", title="SMW CA")]
-    with patch("src.routes.documents.connect", _fake_connect), patch(
+    with patch("src.routes.documents.acquire", _fake_connect), patch(
         "src.routes.documents.list_documents", new=AsyncMock(return_value=docs)
     ):
         resp = await list_documents_route(
@@ -61,7 +61,7 @@ async def test_lists_documents_with_total() -> None:
 
 
 async def test_passes_filters_through() -> None:
-    with patch("src.routes.documents.connect", _fake_connect), patch(
+    with patch("src.routes.documents.acquire", _fake_connect), patch(
         "src.routes.documents.list_documents", new=AsyncMock(return_value=[])
     ) as listed:
         await list_documents_route(

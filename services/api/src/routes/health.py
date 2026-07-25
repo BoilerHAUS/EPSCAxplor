@@ -1,12 +1,12 @@
 import asyncio
 from typing import Annotated, Literal
 
-import asyncpg
 import httpx
 from fastapi import APIRouter, Depends, Response, status
 from pydantic import BaseModel
 
 from src.config import Settings, get_settings
+from src.db import acquire
 
 router = APIRouter()
 
@@ -25,17 +25,16 @@ class HealthResponse(BaseModel):
     dependencies: DependencyStatuses
 
 
-async def _check_database(database_url: str) -> HealthStatus:
-    conn = None
+async def _check_database() -> HealthStatus:
+    # A genuine round-trip through the shared pool (#147): acquire opens a real
+    # connection on demand, so this reports "error" both when the pool is not
+    # initialized and when Postgres is unreachable.
     try:
-        conn = await asyncpg.connect(database_url, timeout=5)
-        await conn.execute("SELECT 1")
+        async with acquire() as conn:
+            await conn.execute("SELECT 1")
         return "ok"
     except Exception:  # noqa: BLE001
         return "error"
-    finally:
-        if conn is not None:
-            await conn.close()
 
 
 async def _check_qdrant(qdrant_url: str, api_key: str | None) -> HealthStatus:
@@ -71,7 +70,7 @@ async def health(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> HealthResponse:
     database_status, qdrant_status, ollama_status = await asyncio.gather(
-        _check_database(settings.database_url),
+        _check_database(),
         _check_qdrant(settings.qdrant_url, settings.qdrant_api_key),
         _check_ollama(settings.ollama_url),
     )

@@ -15,7 +15,7 @@ from fastapi import Depends, HTTPException
 
 from src.auth.dependencies import CurrentUser, get_current_user
 from src.config import Settings, get_settings
-from src.db import connect
+from src.db import acquire
 from src.db.query_logs import count_queries_since
 from src.db.subscriptions import get_tenant_subscription
 
@@ -37,7 +37,7 @@ async def enforce_tier_limit(
     count reflects prior queries — a tenant gets exactly ``query_limit_monthly``
     successful queries per period.
     """
-    async with connect(settings.database_url) as conn:
+    async with acquire() as conn:
         sub = await get_tenant_subscription(conn, current_user.tenant_id)
         if sub is None or sub.query_limit_monthly is None:
             return

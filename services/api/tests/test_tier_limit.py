@@ -54,7 +54,7 @@ async def _fake_connect(*_a: object, **_k: object) -> Any:
 
 @contextlib.contextmanager
 def _env(*, sub: SubscriptionRecord | None, used: int = 0) -> Iterator[AsyncMock]:
-    with patch("src.auth.tier_limit.connect", _fake_connect), patch(
+    with patch("src.auth.tier_limit.acquire", _fake_connect), patch(
         "src.auth.tier_limit.get_tenant_subscription", new=AsyncMock(return_value=sub)
     ), patch(
         "src.auth.tier_limit.count_queries_since", new=AsyncMock(return_value=used)

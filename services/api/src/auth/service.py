@@ -22,7 +22,7 @@ from src.auth.tokens import (
     hash_refresh_token,
 )
 from src.config import Settings
-from src.db import connect
+from src.db import acquire
 from src.db.tokens import (
     get_refresh_token_by_hash,
     insert_refresh_token,
@@ -61,7 +61,7 @@ def _timing_equalizer_hash() -> str:
 
 async def authenticate_user(settings: Settings, email: str, password: str) -> UserRecord:
     """Return the user for valid credentials, else raise a uniform ``AuthError``."""
-    async with connect(settings.database_url) as conn:
+    async with acquire() as conn:
         user = await get_user_by_email(conn, email)
 
     if user is None or not user.is_active:
@@ -89,7 +89,7 @@ async def issue_token_pair(settings: Settings, user: UserRecord) -> TokenPair:
     """Start a new refresh-token family for a freshly authenticated user."""
     raw_refresh = generate_refresh_token()
     expires_at = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_expiry_days)
-    async with connect(settings.database_url) as conn, conn.transaction():
+    async with acquire() as conn, conn.transaction():
         await insert_refresh_token(
             conn,
             user_id=user.id,
@@ -117,7 +117,7 @@ async def rotate_refresh_token(settings: Settings, raw_refresh: str) -> TokenPai
     token_hash = hash_refresh_token(raw_refresh)
     now = datetime.now(UTC)
 
-    async with connect(settings.database_url) as conn:
+    async with acquire() as conn:
         record = await get_refresh_token_by_hash(conn, token_hash)
 
         if record is None or record.status == "revoked" or record.expires_at <= now:
@@ -169,7 +169,7 @@ async def rotate_refresh_token(settings: Settings, raw_refresh: str) -> TokenPai
 async def revoke_refresh_token(settings: Settings, raw_refresh: str) -> None:
     """Revoke the whole family for a refresh token (logout). Idempotent."""
     token_hash = hash_refresh_token(raw_refresh)
-    async with connect(settings.database_url) as conn:
+    async with acquire() as conn:
         record = await get_refresh_token_by_hash(conn, token_hash)
         if record is None:
             return
