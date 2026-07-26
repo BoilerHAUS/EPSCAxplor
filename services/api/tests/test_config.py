@@ -1,10 +1,13 @@
 """Settings parsing tests.
 
-Focused coverage for the optional ``qdrant_api_key`` field (#144): it must
-parse from the environment when set, default to ``None`` when unset, and
-normalize a blank value to ``None`` so an empty ``QDRANT_API_KEY`` (what an
-unset ``${QDRANT_API_KEY}`` compose var expands to) never becomes an empty
-``api-key`` header on the wire.
+Focused coverage for the optional ``qdrant_read_only_api_key`` field (#155):
+the API reads Qdrant with a least-privilege read-only key, so the field must
+parse from ``QDRANT_READ_ONLY_API_KEY`` when set, default to ``None`` when
+unset, and normalize a blank value to ``None`` so an empty
+``${QDRANT_READ_ONLY_API_KEY}`` (what an unset compose var expands to) never
+becomes an empty ``api-key`` header on the wire. The write-capable
+``QDRANT_API_KEY`` is deliberately NOT a field on the API Settings (only
+ingestion/backups hold it), so the API cannot forward a write key.
 """
 
 import pytest
@@ -26,39 +29,48 @@ def _set_required(monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv(key, value)
 
 
-class TestQdrantApiKeySetting:
+class TestQdrantReadOnlyApiKeySetting:
     def test_parsed_from_env_when_set(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _set_required(monkeypatch)
-        monkeypatch.setenv("QDRANT_API_KEY", "super-secret-key")
+        monkeypatch.setenv("QDRANT_READ_ONLY_API_KEY", "reader-secret-key")
         settings = Settings(_env_file=None)  # type: ignore[call-arg]
-        assert settings.qdrant_api_key == "super-secret-key"
+        assert settings.qdrant_read_only_api_key == "reader-secret-key"
 
     def test_defaults_to_none_when_unset(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _set_required(monkeypatch)
-        monkeypatch.delenv("QDRANT_API_KEY", raising=False)
+        monkeypatch.delenv("QDRANT_READ_ONLY_API_KEY", raising=False)
         settings = Settings(_env_file=None)  # type: ignore[call-arg]
-        assert settings.qdrant_api_key is None
+        assert settings.qdrant_read_only_api_key is None
 
     def test_empty_string_normalized_to_none(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _set_required(monkeypatch)
-        monkeypatch.setenv("QDRANT_API_KEY", "")
+        monkeypatch.setenv("QDRANT_READ_ONLY_API_KEY", "")
         settings = Settings(_env_file=None)  # type: ignore[call-arg]
-        assert settings.qdrant_api_key is None
+        assert settings.qdrant_read_only_api_key is None
 
     def test_whitespace_only_normalized_to_none(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _set_required(monkeypatch)
-        monkeypatch.setenv("QDRANT_API_KEY", "   ")
+        monkeypatch.setenv("QDRANT_READ_ONLY_API_KEY", "   ")
         settings = Settings(_env_file=None)  # type: ignore[call-arg]
-        assert settings.qdrant_api_key is None
+        assert settings.qdrant_read_only_api_key is None
 
     def test_real_key_is_not_altered(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # A real key must pass through byte-for-byte so the client and the
-        # Qdrant service (both reading the same ${QDRANT_API_KEY}) stay matched.
+        # Qdrant service (reading QDRANT__SERVICE__READ_ONLY_API_KEY) stay matched.
         key = "  spaced-but-real  "
         _set_required(monkeypatch)
-        monkeypatch.setenv("QDRANT_API_KEY", key)
+        monkeypatch.setenv("QDRANT_READ_ONLY_API_KEY", key)
         settings = Settings(_env_file=None)  # type: ignore[call-arg]
-        assert settings.qdrant_api_key == key
+        assert settings.qdrant_read_only_api_key == key
+
+    def test_write_key_field_is_absent(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # Least-privilege (#155): the write-capable key must NOT be a field on
+        # the API Settings, so the query path cannot forward it even if the env
+        # var is present on the container.
+        _set_required(monkeypatch)
+        monkeypatch.setenv("QDRANT_API_KEY", "write-capable-key")
+        settings = Settings(_env_file=None)  # type: ignore[call-arg]
+        assert not hasattr(settings, "qdrant_api_key")
 
 
 class TestCorsOriginsList:

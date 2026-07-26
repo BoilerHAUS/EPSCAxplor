@@ -20,12 +20,15 @@ class Settings(BaseSettings):
 
     database_url: str
     qdrant_url: str
-    # Optional Qdrant API key (#144). Blank ⇒ None so an unset ${QDRANT_API_KEY}
+    # Optional Qdrant READ-ONLY API key (#155). The API only ever reads from
+    # Qdrant, so it holds the least-privilege read-only key — never the
+    # write-capable QDRANT_API_KEY (that stays with host ingestion + backups),
+    # which is deliberately NOT a field here so a compromised API cannot rewrite
+    # the collection. Blank ⇒ None so an unset ${QDRANT_READ_ONLY_API_KEY}
     # (which a compose variable expands to "") never becomes an empty "api-key"
-    # header on the wire; local/dev stays keyless. A real key is forwarded
-    # byte-for-byte to stay matched with the Qdrant service, which reads the
-    # same value from QDRANT__SERVICE__API_KEY.
-    qdrant_api_key: str | None = None
+    # header; local/dev stays keyless. A real key is forwarded byte-for-byte to
+    # stay matched with the Qdrant service (QDRANT__SERVICE__READ_ONLY_API_KEY).
+    qdrant_read_only_api_key: str | None = None
     ollama_url: str
     ollama_embed_model: str = "nomic-embed-text"
     anthropic_api_key: str
@@ -66,12 +69,12 @@ class Settings(BaseSettings):
     # can confirm the freshly built image is actually serving (#75).
     git_sha: str = "unknown"
 
-    @field_validator("qdrant_api_key", mode="before")
+    @field_validator("qdrant_read_only_api_key", mode="before")
     @classmethod
     def _blank_qdrant_key_to_none(cls, value: str | None) -> str | None:
-        """Treat a blank ``QDRANT_API_KEY`` as unset (keyless), but never strip
-        a real key — the Qdrant service reads the same raw value, so trimming
-        here would desync the client from the server."""
+        """Treat a blank ``QDRANT_READ_ONLY_API_KEY`` as unset (keyless), but
+        never strip a real key — the Qdrant service reads the same raw value, so
+        trimming here would desync the client from the server."""
         if isinstance(value, str) and value.strip() == "":
             return None
         return value

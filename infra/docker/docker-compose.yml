@@ -14,10 +14,14 @@ services:
   epsca-qdrant:
     image: qdrant/qdrant:latest
     environment:
-      # Enable API-key auth on the shared overlay (#144). Sourced from the same
-      # ${QDRANT_API_KEY} var the API and ingestion read, so a single redeploy
-      # flips server enforcement and every client together. Empty ⇒ keyless.
+      # API-key auth on the shared overlay (#144/#155). Two keys are registered
+      # simultaneously so clients get least-privilege access:
+      #   - QDRANT_API_KEY (read-write): host ingestion + backups (snapshot
+      #     create/delete are writes).
+      #   - QDRANT_READ_ONLY_API_KEY (read-only): the API query path (below).
+      # Either empty ⇒ that key disabled. Set both on this service's Dokploy env.
       QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY}
+      QDRANT__SERVICE__READ_ONLY_API_KEY: ${QDRANT_READ_ONLY_API_KEY}
     volumes:
       - epsca-qdrant-data:/qdrant/storage
     networks:
@@ -29,7 +33,10 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       QDRANT_URL: ${QDRANT_URL}
-      QDRANT_API_KEY: ${QDRANT_API_KEY}
+      # Least-privilege: the API reads Qdrant with the READ-ONLY key only, never
+      # the write-capable QDRANT_API_KEY, so a compromised API cannot rewrite the
+      # collection (#155).
+      QDRANT_READ_ONLY_API_KEY: ${QDRANT_READ_ONLY_API_KEY}
       OLLAMA_URL: ${OLLAMA_URL}
       OLLAMA_EMBED_MODEL: ${OLLAMA_EMBED_MODEL}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}

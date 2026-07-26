@@ -41,7 +41,8 @@ async def _check_qdrant(qdrant_url: str, api_key: str | None) -> HealthStatus:
     # /healthz is an auth-exempt liveness endpoint, so this probe reports
     # reachability, not key correctness (the query path validates the key).
     # The api-key header is still forwarded when configured to keep client
-    # wiring uniform across every Qdrant caller (#144).
+    # wiring uniform across every Qdrant caller (#144); the API forwards its
+    # read-only key here (#155).
     headers = {"api-key": api_key} if api_key else None
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
@@ -71,7 +72,7 @@ async def health(
 ) -> HealthResponse:
     database_status, qdrant_status, ollama_status = await asyncio.gather(
         _check_database(),
-        _check_qdrant(settings.qdrant_url, settings.qdrant_api_key),
+        _check_qdrant(settings.qdrant_url, settings.qdrant_read_only_api_key),
         _check_ollama(settings.ollama_url),
     )
 
