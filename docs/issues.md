@@ -96,6 +96,7 @@ prioritized: #85 (urgent) → #86 → #87 → #75 → #89 → #78.
 | [#104](https://github.com/BoilerHAUS/EPSCAxplor/issues/104) | pr | [x] | fix(auth): CSRF protection on cookie-authenticated /auth/refresh and /auth/logout (Origin verified against CORS_ORIGINS + Sec-Fetch-Site fallback, 403 on cross-site; refresh cookie now SameSite=Strict; headerless non-browser clients unaffected) |
 | [#119](https://github.com/BoilerHAUS/EPSCAxplor/issues/119) | pr | [x] | fix(api): out-of-corpus refusal stripper zeroes citations on partially-grounded answers (found verifying #115; removed refusal stripper — rely solely on [SOURCE N] extraction, PR #121) |
 | [#123](https://github.com/BoilerHAUS/EPSCAxplor/issues/123) | pr | [x] | test(eval): cover union-less nuclear path in nightly smoke eval (regression guard for #119 — every prior gold question named a union, so the un-scoped path had no automated coverage; adds N07 + expect_citations assertion) |
+| [#163](https://github.com/BoilerHAUS/EPSCAxplor/issues/163) | pr | [x] | test(eval): stabilize nightly smoke gate — drop nondeterministic N07/R03 from the subset, guard grounding via N06 expect_citations (root cause was NOT the Qdrant RO key — health + 3/5 richly-cited queries proved retrieval fine; citations derive from model-written [SOURCE N] at temperature 1.0, so borderline union-less N07 / out-of-corpus R03 flip-flop night to night. N07/R03 kept in the full gold set for the periodic eval) |
 
 ---
 
