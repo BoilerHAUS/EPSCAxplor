@@ -1,9 +1,13 @@
 name: Nightly Smoke Eval
 
 # Turns silent production breakage (expired tokens, wiped vectors, stale images)
-# into a red workflow within a day. Runs a 5-question subset of the gold set plus
-# a /health probe against the live API. Cost: ~5 Claude queries/day on Haiku.
-# N07 is a union-less nuclear query that guards the #119 citation-stripper path.
+# into a red workflow within a day. Runs a deterministic 3-question subset of the
+# gold set plus a /health probe against the live API. Cost: ~3 Claude queries/day.
+# Gates: W10 (wage figure) + C03 (cross-union figures, Sonnet path) + N06 (in-corpus
+# nuclear, must stay grounded/cited — the #119 guard). The borderline union-less N07
+# and out-of-corpus refusal R03 were dropped in #163: at temperature 1.0 their
+# citation counts flip-flop night to night, so they live in the periodic full eval
+# (run_eval.py with no --ids), not this binary nightly gate.
 
 on:
   schedule:
@@ -58,6 +62,6 @@ jobs:
           QUERY_API_TOKEN: ${{ secrets.SMOKE_API_KEY }}
         run: |
           python eval/run_eval.py \
-            --ids W10,R03,N06,N07,C03 \
+            --ids W10,N06,C03 \
             --fail-on-regression \
             --output "$RUNNER_TEMP/smoke_results.md"

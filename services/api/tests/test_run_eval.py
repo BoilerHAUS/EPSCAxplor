@@ -52,10 +52,51 @@ def test_filter_questions_raises_on_unknown_id() -> None:
         filter_questions(["W10", "ZZ99"])
 
 
+# The nightly workflow runs this exact subset — keep in sync with
+# .github/workflows/nightly-smoke.yml. Only DETERMINISTIC gates belong here:
+# specific-figure auto-checks (W10 wage / C03 cross-union) plus one in-corpus
+# nuclear question that reliably cites (N06). The nondeterministic borderline
+# gates — union-less N07 and out-of-corpus refusal R03 — were removed in #163
+# after they flip-flopped night to night at temperature 1.0; they stay in the
+# full gold set for the periodic manual eval.
+SMOKE_SUBSET_IDS = ["W10", "N06", "C03"]
+
+
 def test_smoke_subset_ids_all_exist() -> None:
-    # The nightly workflow runs this exact subset — guard against a future rename.
-    ids = ["W10", "R03", "N06", "N07", "C03"]
-    assert [q.id for q in filter_questions(ids)] == ids
+    # Guard against a future gold-question rename breaking the nightly subset.
+    assert [q.id for q in filter_questions(SMOKE_SUBSET_IDS)] == SMOKE_SUBSET_IDS
+
+
+def test_smoke_subset_gates_are_deterministic() -> None:
+    # Regression guard against re-introducing a flaky gate (#163). Every nightly
+    # smoke question must be a deterministic pass/fail: never a refusal (which
+    # reds the build whenever the model happens to cite a tangential chunk), and
+    # always targeting a real in-corpus union (so retrieval reliably returns
+    # citeable chunks — excludes the union-less / out-of-corpus shapes whose
+    # citation count is nondeterministic at temperature 1.0). Each must also
+    # carry a concrete assertion: an expected figure or a citation requirement.
+    for q in filter_questions(SMOKE_SUBSET_IDS):
+        assert not q.is_refusal, f"{q.id}: refusal gates are nondeterministic"
+        assert not q.union.startswith("N/A"), (
+            f"{q.id}: union-less/out-of-corpus gates are nondeterministic"
+        )
+        assert q.expected_contains or q.expect_citations, (
+            f"{q.id}: nightly gate needs a deterministic assertion"
+        )
+
+
+def test_n06_carries_the_nightly_citation_guard() -> None:
+    # N06 (in-corpus Boilermakers/Darlington nuclear) reliably returns citations,
+    # so in the nightly it carries the "grounded answers keep their [SOURCE N]
+    # citations" guard (the #119 property) in place of the nondeterministic
+    # union-less N07 (#163). N07 keeps the same assertion in the full gold set.
+    q = _gold("N06")
+    assert q.expect_citations is True
+    assert q.is_nuclear is True
+    assert not q.union.startswith("N/A")
+    # 0 citations on N06 must red the nightly.
+    problems = find_regressions([_result(q, answer="Conditions apply.", citations=[])])
+    assert len(problems) == 1 and "N06" in problems[0]
 
 
 def test_n07_is_union_less_nuclear_expecting_citations() -> None:
