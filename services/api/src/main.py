@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import Settings, get_settings
+from src.csp import ContentSecurityPolicyMiddleware
 from src.db import close_pool, init_pool
 from src.rag.retrieval import close_qdrant_client, init_qdrant_client
 from src.routes.auth import router as auth_router
@@ -55,6 +56,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type", "Authorization"],
     )
+
+    # Per-surface CSP (#156). Added last so it is the OUTERMOST middleware and
+    # stamps every response — JSON, errors, CORS preflights, and the
+    # Swagger/ReDoc HTML — with a policy. Strict everywhere except the docs
+    # UIs, which get a scoped relaxed policy; see src/csp.py.
+    app.add_middleware(ContentSecurityPolicyMiddleware)
 
     app.include_router(health_router)
     app.include_router(auth_router)

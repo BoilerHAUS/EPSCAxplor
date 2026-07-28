@@ -137,7 +137,7 @@ throttling) first, then #141/#144/#142, then #145/#146/#147.
 | [#146](https://github.com/BoilerHAUS/EPSCAxplor/issues/146) | pr | [x] | chore(security): add HTTP security headers and unify CORS config source |
 | [#147](https://github.com/BoilerHAUS/EPSCAxplor/issues/147) | pr | [x] | perf(api): asyncpg connection pool + Qdrant client lifecycle |
 | [#155](https://github.com/BoilerHAUS/EPSCAxplor/issues/155) | pr | [x] | chore(security): separate read-only vs read-write Qdrant API keys (least-privilege) |
-| [#156](https://github.com/BoilerHAUS/EPSCAxplor/issues/156) | pr | [ ] | chore(security): enforced Content-Security-Policy (per-surface, Report-Only ramp) |
+| [#156](https://github.com/BoilerHAUS/EPSCAxplor/issues/156) | pr | [x] | chore(security): enforced Content-Security-Policy (per-surface, Report-Only ramp) |
 | [#159](https://github.com/BoilerHAUS/EPSCAxplor/issues/159) | pr | [x] | chore(security): re-deliver HTTP security headers via Dokploy middleware; remove dead compose traefik labels |
 
 ---
