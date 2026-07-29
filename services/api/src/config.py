@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     anthropic_api_key: str
     claude_haiku_model: str = "claude-haiku-4-5-20251001"
     claude_sonnet_model: str = "claude-sonnet-4-6"
+    # Cheap model for history-aware query condensation (#167). Independently
+    # configurable so the multi-turn rewrite step can be tuned/swapped without
+    # touching the generation model; defaults to the Haiku id.
+    claude_condense_model: str = "claude-haiku-4-5-20251001"
     jwt_secret: str
     jwt_access_expiry_seconds: int = 900
     jwt_refresh_expiry_days: int = 7

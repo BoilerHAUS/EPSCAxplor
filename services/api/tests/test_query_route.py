@@ -20,6 +20,11 @@ from pydantic import ValidationError
 from src.auth import CurrentUser
 from src.config import Settings, get_settings
 from src.rag.citation_extractor import CitationRef
+from src.rag.condense import (
+    MAX_HISTORY_TURNS,
+    PER_TURN_CHAR_CAP,
+    TOTAL_HISTORY_CHAR_BUDGET,
+)
 from src.rag.generator import GeneratorResult
 from src.rag.retrieval import ChunkResult
 from src.routes.query import QueryRequest, QueryResponse, query_handler
@@ -89,14 +94,28 @@ def _pipeline_patches(
     known_unions: list[str] | None = None,
     title_map: dict[str, str] | None = None,
     log_id: str | None = "aaaaaaaa-0000-0000-0000-000000000001",
+    condensed: str | None = None,
 ) -> Any:
-    """Context manager providing standard pipeline mocks."""
+    """Context manager providing standard pipeline mocks.
+
+    When ``condensed`` is given, the condense step is stubbed to return it (used
+    by multi-turn tests). When ``None`` the real ``condense_query`` runs and — on
+    the empty default history — short-circuits without any LLM call, so existing
+    single-turn tests keep exercising the unchanged path.
+    """
     from contextlib import ExitStack
     import contextlib
 
     @contextlib.contextmanager  # type: ignore[arg-type]
     def _stack() -> Any:
         with ExitStack() as stack:
+            if condensed is not None:
+                stack.enter_context(
+                    patch(
+                        "src.routes.query.condense_query",
+                        new=AsyncMock(return_value=condensed),
+                    )
+                )
             stack.enter_context(
                 patch(
                     "src.routes.query._get_known_unions",
@@ -549,3 +568,302 @@ async def test_unpinned_chunks_leave_has_pinned_rate_false(
         )
 
     assert mock_generate.call_args.kwargs["has_pinned_rate"] is False
+
+
+# ─── conversational memory: history validation (issue #167) ──────────────────
+
+
+def test_history_defaults_to_empty_list() -> None:
+    # The eval harness and every current caller POST {"query": ...} with no
+    # history; the field must default to [] so that path is byte-for-byte intact.
+    req = QueryRequest(query="What is overtime?")
+    assert req.history == []
+
+
+def test_history_within_bounds_accepted() -> None:
+    req = QueryRequest.model_validate(
+        {
+            "query": "what about the boilermakers?",
+            "history": [
+                {"role": "user", "content": "What is the foreman rate for all unions?"},
+                {"role": "assistant", "content": "Rates vary by union..."},
+            ],
+        }
+    )
+    assert [t.role for t in req.history] == ["user", "assistant"]
+    assert req.history[0].content == "What is the foreman rate for all unions?"
+
+
+def test_history_too_many_turns_rejected() -> None:
+    hist = [{"role": "user", "content": "q"} for _ in range(MAX_HISTORY_TURNS + 1)]
+    with pytest.raises(ValidationError):
+        QueryRequest.model_validate({"query": "x", "history": hist})
+
+
+def test_history_oversized_total_rejected() -> None:
+    # Each turn is under the per-turn cap, but together they exceed the total
+    # budget — isolates the aggregate-budget validator from the per-turn cap.
+    per = (TOTAL_HISTORY_CHAR_BUDGET // MAX_HISTORY_TURNS) + 1
+    assert per <= PER_TURN_CHAR_CAP  # guard: stays under the per-turn cap
+    hist = [{"role": "user", "content": "x" * per} for _ in range(MAX_HISTORY_TURNS)]
+    with pytest.raises(ValidationError):
+        QueryRequest.model_validate({"query": "x", "history": hist})
+
+
+def test_history_oversized_single_turn_rejected() -> None:
+    with pytest.raises(ValidationError):
+        QueryRequest.model_validate(
+            {
+                "query": "x",
+                "history": [{"role": "user", "content": "x" * (PER_TURN_CHAR_CAP + 1)}],
+            }
+        )
+
+
+def test_history_invalid_role_rejected() -> None:
+    with pytest.raises(ValidationError):
+        QueryRequest.model_validate(
+            {"query": "x", "history": [{"role": "system", "content": "hi"}]}
+        )
+
+
+def test_valid_multi_exchange_history_accepted() -> None:
+    req = QueryRequest.model_validate(
+        {
+            "query": "and the apprentice rate?",
+            "history": [
+                {"role": "user", "content": "IBEW journeyperson rate?"},
+                {"role": "assistant", "content": "$54.30/hr [SOURCE 1]."},
+                {"role": "user", "content": "what about foreman?"},
+                {"role": "assistant", "content": "A 15% premium [SOURCE 1]."},
+            ],
+        }
+    )
+    assert len(req.history) == 4
+
+
+def test_history_starting_with_assistant_rejected() -> None:
+    with pytest.raises(ValidationError):
+        QueryRequest.model_validate(
+            {
+                "query": "x",
+                "history": [
+                    {"role": "assistant", "content": "a"},
+                    {"role": "user", "content": "q"},
+                ],
+            }
+        )
+
+
+def test_history_non_alternating_rejected() -> None:
+    with pytest.raises(ValidationError):
+        QueryRequest.model_validate(
+            {
+                "query": "x",
+                "history": [
+                    {"role": "user", "content": "q1"},
+                    {"role": "user", "content": "q2"},
+                ],
+            }
+        )
+
+
+def test_history_ending_with_user_rejected() -> None:
+    # Odd-length, user-first, alternating — but appending the current user turn
+    # would create two consecutive user turns (Anthropic 400). Must be rejected.
+    with pytest.raises(ValidationError):
+        QueryRequest.model_validate(
+            {
+                "query": "x",
+                "history": [
+                    {"role": "user", "content": "q1"},
+                    {"role": "assistant", "content": "a1"},
+                    {"role": "user", "content": "q2"},
+                ],
+            }
+        )
+
+
+# ─── conversational memory: pipeline wiring (issue #167) ─────────────────────
+
+
+async def test_rewritten_query_flows_to_preprocess_and_retrieve(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    """The crux of the history-aware-retriever pattern: retrieval (and the
+    preprocess that feeds it) must run on the REWRITTEN standalone query, not the
+    raw follow-up.
+
+    The follow-up "what about them?" names no union, so the only way retrieval
+    receives a Boilermakers filter is if ``preprocess`` ran on the condensed
+    "Boilermaker foreman wage rate" — proving the rewrite reached BOTH stages.
+    """
+    chunk = make_chunk(union_name="Boilermakers", text="Boilermaker foreman rate clause.")
+    mock_retrieve = AsyncMock(return_value=[chunk])
+
+    with patch(
+        "src.routes.query.condense_query",
+        new=AsyncMock(return_value="Boilermaker foreman wage rate"),
+    ), patch(
+        "src.routes.query._get_known_unions",
+        new=AsyncMock(return_value=["IBEW", "Boilermakers"]),
+    ), patch("src.routes.query.retrieve", new=mock_retrieve), patch(
+        "src.routes.query._get_title_map", new=AsyncMock(return_value={})
+    ), patch(
+        "src.routes.query.generate", new=AsyncMock(return_value=make_generator_result())
+    ), patch(
+        "src.routes.query._write_query_log", new=AsyncMock(return_value=None)
+    ):
+        await query_handler(
+            QueryRequest.model_validate(
+                {
+                    "query": "what about them?",
+                    "history": [
+                        {"role": "user", "content": "What is the foreman rate for all unions?"},
+                        {"role": "assistant", "content": "Rates vary by union..."},
+                    ],
+                }
+            ),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    # Retrieval embedded the rewritten standalone query, not the raw follow-up.
+    assert mock_retrieve.call_args.args[0] == "Boilermaker foreman wage rate"
+    # preprocess consumed the rewrite too: the union filter derives from
+    # "Boilermaker", a token absent from the raw "what about them?".
+    assert mock_retrieve.call_args.kwargs["union_filters"] == ["Boilermakers"]
+
+
+async def test_condense_invoked_with_original_query_and_history(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    mock_condense = AsyncMock(return_value="standalone query")
+
+    with patch("src.routes.query.condense_query", new=mock_condense), patch(
+        "src.routes.query._get_known_unions", new=AsyncMock(return_value=["IBEW"])
+    ), patch(
+        "src.routes.query.retrieve", new=AsyncMock(return_value=[make_chunk()])
+    ), patch(
+        "src.routes.query._get_title_map", new=AsyncMock(return_value={})
+    ), patch(
+        "src.routes.query.generate", new=AsyncMock(return_value=make_generator_result())
+    ), patch(
+        "src.routes.query._write_query_log", new=AsyncMock(return_value=None)
+    ):
+        await query_handler(
+            QueryRequest.model_validate(
+                {
+                    "query": "follow up",
+                    "history": [
+                        {"role": "user", "content": "prior q"},
+                        {"role": "assistant", "content": "prior a"},
+                    ],
+                }
+            ),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    assert mock_condense.call_args.args[0] == "follow up"
+    assert [t.content for t in mock_condense.call_args.args[1]] == ["prior q", "prior a"]
+
+
+async def test_generator_receives_original_query_and_history(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    mock_generate = AsyncMock(return_value=make_generator_result())
+
+    with patch(
+        "src.routes.query.condense_query",
+        new=AsyncMock(return_value="Boilermaker foreman wage rate"),
+    ), patch(
+        "src.routes.query._get_known_unions", new=AsyncMock(return_value=["Boilermakers"])
+    ), patch(
+        "src.routes.query.retrieve",
+        new=AsyncMock(return_value=[make_chunk(union_name="Boilermakers")]),
+    ), patch(
+        "src.routes.query._get_title_map", new=AsyncMock(return_value={})
+    ), patch("src.routes.query.generate", new=mock_generate), patch(
+        "src.routes.query._write_query_log", new=AsyncMock(return_value=None)
+    ):
+        await query_handler(
+            QueryRequest.model_validate(
+                {
+                    "query": "what about them?",
+                    "history": [
+                        {"role": "user", "content": "What is the foreman rate for all unions?"},
+                        {"role": "assistant", "content": "Rates vary by union..."},
+                    ],
+                }
+            ),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    # The generator reads the ORIGINAL follow-up (natural phrasing)...
+    assert mock_generate.call_args.args[0] == "what about them?"
+    # ...plus the prior turns as conversational history.
+    passed_history = mock_generate.call_args.kwargs["history"]
+    assert [t.role for t in passed_history] == ["user", "assistant"]
+    assert passed_history[0].content == "What is the foreman rate for all unions?"
+
+
+async def test_query_log_records_original_query_not_rewrite(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    mock_log = AsyncMock(return_value=None)
+
+    with patch(
+        "src.routes.query.condense_query", new=AsyncMock(return_value="REWRITTEN STANDALONE")
+    ), patch(
+        "src.routes.query._get_known_unions", new=AsyncMock(return_value=["IBEW"])
+    ), patch(
+        "src.routes.query.retrieve", new=AsyncMock(return_value=[make_chunk()])
+    ), patch(
+        "src.routes.query._get_title_map", new=AsyncMock(return_value={})
+    ), patch(
+        "src.routes.query.generate", new=AsyncMock(return_value=make_generator_result())
+    ), patch("src.routes.query._write_query_log", new=mock_log):
+        await query_handler(
+            QueryRequest.model_validate(
+                {
+                    "query": "raw follow up",
+                    "history": [
+                        {"role": "user", "content": "prior q"},
+                        {"role": "assistant", "content": "prior a"},
+                    ],
+                }
+            ),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    assert mock_log.call_args.kwargs["query_text"] == "raw follow up"
+
+
+async def test_disclaimer_present_with_history(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    with _pipeline_patches(
+        [make_chunk(union_name="Boilermakers")],
+        make_generator_result(answer="Boilermaker foreman rate is $X [SOURCE 1]"),
+        known_unions=["Boilermakers"],
+        title_map={"doc-001": "Boilermakers 2025-2030 Collective Agreement"},
+        condensed="Boilermaker foreman wage rate",
+    ):
+        response = await query_handler(
+            QueryRequest.model_validate(
+                {
+                    "query": "what about them?",
+                    "history": [
+                        {"role": "user", "content": "What is the foreman rate for all unions?"},
+                        {"role": "assistant", "content": "Rates vary by union..."},
+                    ],
+                }
+            ),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    assert "legal advice" in response.disclaimer

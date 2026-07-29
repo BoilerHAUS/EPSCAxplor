@@ -14,6 +14,7 @@ import pytest
 from anthropic.types import TextBlock, Usage
 
 from src.config import Settings
+from src.rag.condense import Turn
 from src.rag.generator import DISCLAIMER, GeneratorResult, build_system_prompt, generate
 
 
@@ -201,3 +202,77 @@ async def test_generate_passes_pinned_rate_prompt(settings: Settings) -> None:
 
     system_blocks = mock_create.call_args.kwargs["system"]
     assert "PINNED RATE SOURCE RULES" in system_blocks[0]["text"]
+
+
+# ─── conversational history threading (issue #167) ───────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_generate_threads_history_before_final_user_turn(settings: Settings) -> None:
+    history = [
+        Turn(role="user", content="What is the foreman rate for all unions?"),
+        Turn(role="assistant", content="Here are the foreman rates [SOURCE 1]..."),
+    ]
+    mock_create = AsyncMock(return_value=_make_mock_response("Boilermaker foreman rate [SOURCE 1]"))
+
+    with patch(
+        "src.rag.generator.anthropic.AsyncAnthropic", return_value=_mock_client(mock_create)
+    ):
+        await generate(
+            "what about the boilermakers?",
+            "SOURCE 1 context block",
+            is_cross_union=False,
+            history=history,
+            settings=settings,
+        )
+
+    messages = mock_create.call_args.kwargs["messages"]
+    # Prior turns lead, in order...
+    assert messages[0] == {
+        "role": "user",
+        "content": "What is the foreman rate for all unions?",
+    }
+    assert messages[1] == {
+        "role": "assistant",
+        "content": "Here are the foreman rates [SOURCE 1]...",
+    }
+    # ...and the FINAL user turn carries the freshly retrieved context block +
+    # the original follow-up, so grounding is never diluted by history.
+    assert messages[-1]["role"] == "user"
+    assert "SOURCE 1 context block" in messages[-1]["content"]
+    assert "what about the boilermakers?" in messages[-1]["content"]
+    assert len(messages) == 3
+
+
+@pytest.mark.asyncio
+async def test_generate_without_history_sends_single_user_turn(settings: Settings) -> None:
+    """Single-turn parity: no history ⇒ byte-for-byte the pre-#167 messages list."""
+    mock_create = AsyncMock(return_value=_make_mock_response("Answer [SOURCE 1]"))
+
+    with patch(
+        "src.rag.generator.anthropic.AsyncAnthropic", return_value=_mock_client(mock_create)
+    ):
+        await generate("What is overtime?", "ctx", is_cross_union=False, settings=settings)
+
+    messages = mock_create.call_args.kwargs["messages"]
+    assert messages == [{"role": "user", "content": "What is overtime?\n\nctx"}]
+
+
+@pytest.mark.asyncio
+async def test_generate_history_does_not_leak_into_system(settings: Settings) -> None:
+    history = [
+        Turn(role="user", content="SECRET-PRIOR-TURN"),
+        Turn(role="assistant", content="prior answer"),
+    ]
+    mock_create = AsyncMock(return_value=_make_mock_response("Answer"))
+
+    with patch(
+        "src.rag.generator.anthropic.AsyncAnthropic", return_value=_mock_client(mock_create)
+    ):
+        await generate("q", "ctx", is_cross_union=False, history=history, settings=settings)
+
+    system_blocks = mock_create.call_args.kwargs["system"]
+    # System stays the stable, cached anchor — first, unchanged, and history-free.
+    assert system_blocks[0]["cache_control"] == {"type": "ephemeral"}
+    assert system_blocks[0]["text"] == build_system_prompt(is_cross_union=False)
+    assert "SECRET-PRIOR-TURN" not in system_blocks[0]["text"]
