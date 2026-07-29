@@ -23,6 +23,12 @@ from src.config import Settings, get_settings
 from src.db import acquire
 from src.db.query_logs import insert_query_log
 from src.rag.citation_extractor import CitationRef, extract_citations
+from src.rag.condense import (
+    MAX_HISTORY_TURNS,
+    TOTAL_HISTORY_CHAR_BUDGET,
+    Turn,
+    condense_query,
+)
 from src.rag.context import assemble_context
 from src.rag.generator import DISCLAIMER, GeneratorResult, generate
 from src.rag.preprocess import QueryContext, preprocess
@@ -35,12 +41,43 @@ router = APIRouter()
 
 class QueryRequest(BaseModel):
     query: str = Field(min_length=1, max_length=2000)
+    # Prior conversation turns for history-aware retrieval (#167). Optional and
+    # defaulted so single-turn callers (and the eval harness) are unaffected.
+    # Per-turn content is capped by ``Turn`` itself; the aggregate bounds below
+    # are enforced here so the API boundary rejects oversized/abusive histories.
+    history: list[Turn] = Field(default_factory=list)
 
     @field_validator("query")
     @classmethod
     def query_not_blank(cls, v: str) -> str:
         if not v.strip():
             raise ValueError("query must not be blank")
+        return v
+
+    @field_validator("history")
+    @classmethod
+    def validate_history(cls, v: list[Turn]) -> list[Turn]:
+        if len(v) > MAX_HISTORY_TURNS:
+            raise ValueError(f"history must not exceed {MAX_HISTORY_TURNS} turns")
+        total_chars = sum(len(turn.content) for turn in v)
+        if total_chars > TOTAL_HISTORY_CHAR_BUDGET:
+            raise ValueError(
+                f"history content must not exceed {TOTAL_HISTORY_CHAR_BUDGET} characters"
+            )
+        # The Anthropic Messages API requires strictly alternating user/assistant
+        # turns. The pipeline appends the current question as a final user turn,
+        # so a well-formed history is completed exchanges — user-first, strictly
+        # alternating, ending with an assistant turn. Enforce it here (fail-closed
+        # 422) instead of letting a malformed sequence 400 from Anthropic and
+        # surface as an opaque 500.
+        for index, turn in enumerate(v):
+            expected_role = "user" if index % 2 == 0 else "assistant"
+            if turn.role != expected_role:
+                raise ValueError(
+                    "history must alternate user/assistant turns starting with a user turn"
+                )
+        if v and v[-1].role != "assistant":
+            raise ValueError("history must end with an assistant turn")
         return v
 
 
@@ -127,13 +164,19 @@ async def query_handler(
     """Execute the full RAG pipeline for a user query."""
     pipeline_start = time.monotonic()
 
-    # Step 1 — pre-process
-    known_unions = await _get_known_unions()
-    ctx: QueryContext = preprocess(body.query, known_unions)
+    # Step 0 — condense recent turns into a standalone retrieval query (#167).
+    # With empty history this returns body.query unchanged and makes NO LLM call,
+    # so the single-turn path is byte-for-byte unaffected.
+    retrieval_query = await condense_query(body.query, body.history, settings=settings)
 
-    # Step 2 — retrieve (reusing the lifespan-owned Qdrant client, #147)
+    # Step 1 — pre-process the STANDALONE query so union / nuclear / wage / rate
+    # intent carried over from prior turns is detected.
+    known_unions = await _get_known_unions()
+    ctx: QueryContext = preprocess(retrieval_query, known_unions)
+
+    # Step 2 — retrieve the standalone query (reusing the lifespan-owned Qdrant client, #147)
     chunks: list[ChunkResult] = await retrieve(
-        body.query,
+        retrieval_query,
         union_filters=ctx.union_filters,
         include_nuclear_pa=ctx.include_nuclear_pa,
         agreement_scope=ctx.agreement_scope,
@@ -149,13 +192,15 @@ async def query_handler(
     title_map = await _get_title_map(doc_ids)
     context_block = assemble_context(chunks, title_map=title_map)
 
-    # Step 4 — generate
+    # Step 4 — generate. The model reads the ORIGINAL follow-up (natural phrasing)
+    # plus any prior turns; retrieval already ran on the condensed query (#167).
     result: GeneratorResult = await generate(
         body.query,
         context_block,
         is_cross_union=ctx.is_cross_union,
         # True only when the structured rate lookup pinned a chunk (issue #89).
         has_pinned_rate=any(c.pinned for c in chunks),
+        history=body.history,
         settings=settings,
     )
 

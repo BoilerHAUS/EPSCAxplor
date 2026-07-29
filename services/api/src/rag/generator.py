@@ -13,10 +13,11 @@ from __future__ import annotations
 import time
 
 import anthropic
-from anthropic.types import TextBlock
+from anthropic.types import MessageParam, TextBlock
 from pydantic import BaseModel
 
 from src.config import Settings
+from src.rag.condense import Turn
 
 DISCLAIMER = (
     "This answer is for reference only and does not constitute legal advice. "
@@ -122,16 +123,22 @@ async def generate(
     *,
     is_cross_union: bool,
     has_pinned_rate: bool = False,
+    history: list[Turn] | None = None,
     settings: Settings,
 ) -> GeneratorResult:
     """Call Claude with the query and assembled context, returning a GeneratorResult.
 
     Args:
-        query: Raw user question.
+        query: Raw user question (the original follow-up, unmodified — retrieval
+            uses the condensed standalone form, but the model reads the natural
+            phrasing here).
         context: Assembled source blocks from assemble_context().
         is_cross_union: Routes to Sonnet when True, Haiku when False.
         has_pinned_rate: When True, append the pinned-rate rules so the model
             quotes the structured rate lookup source verbatim (issue #89).
+        history: Prior conversation turns (bounded/validated upstream) threaded
+            before the current turn so multi-turn answers read conversationally
+            (issue #167). ``None``/empty ⇒ the pre-#167 single-turn message list.
         settings: Application settings (API key, model IDs).
 
     Returns:
@@ -142,6 +149,14 @@ async def generate(
     )
     system_prompt = build_system_prompt(is_cross_union, has_pinned_rate)
     user_content = f"{query}\n\n{context}" if context else query
+
+    # Prior turns lead so the answer reads as a conversation; the FINAL user turn
+    # always carries the freshly retrieved context block last, so grounding and
+    # the [SOURCE N] citation rules apply to the current question undiluted (#167).
+    messages: list[MessageParam] = [
+        {"role": turn.role, "content": turn.content} for turn in (history or [])
+    ]
+    messages.append({"role": "user", "content": user_content})
 
     start = time.monotonic()
     async with anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key) as client:
@@ -155,7 +170,7 @@ async def generate(
                     "cache_control": {"type": "ephemeral"},
                 }
             ],
-            messages=[{"role": "user", "content": user_content}],
+            messages=messages,
         )
     latency_ms = int((time.monotonic() - start) * 1000)
 
