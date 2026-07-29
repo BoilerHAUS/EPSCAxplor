@@ -128,6 +128,121 @@
   overflow-wrap: anywhere;
 }
 
+/* ---- Markdown formatting inside an answer ----------------------------- */
+/* Answers arrive as Markdown (headings, lists, tables, emphasis). The body keeps
+   pre-wrap for safety, but the markdown wrapper flows as normal blocks so element
+   margins — not literal newlines — set the vertical rhythm. */
+.record__body .markdown {
+  white-space: normal;
+}
+.record__body .markdown > :first-child {
+  margin-top: 0;
+}
+.record__body .markdown > :last-child {
+  margin-bottom: 0;
+}
+.markdown p {
+  margin: 0 0 0.7em;
+}
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  margin: 1.1em 0 0.5em;
+  font-weight: 650;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+.markdown h1 {
+  font-size: 1.3em;
+}
+.markdown h2 {
+  font-size: 1.16em;
+}
+.markdown h3 {
+  font-size: 1.04em;
+}
+.markdown h4 {
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+}
+.markdown ul,
+.markdown ol {
+  margin: 0 0 0.7em;
+  padding-left: 1.4em;
+}
+.markdown li {
+  margin: 0.2em 0;
+}
+.markdown li::marker {
+  color: var(--text-secondary);
+}
+.markdown strong {
+  font-weight: 650;
+  color: var(--text-primary);
+}
+.markdown em {
+  font-style: italic;
+}
+.markdown a {
+  color: var(--accent-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown code {
+  font: 0.9em/1.4 var(--font-mono);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.35em;
+}
+.markdown pre {
+  margin: 0 0 0.7em;
+  padding: 12px 14px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+.markdown pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.markdown blockquote {
+  margin: 0 0 0.7em;
+  padding-left: 12px;
+  border-left: 2px solid var(--accent-border);
+  color: var(--text-secondary);
+}
+.markdown hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 1em 0;
+}
+/* Wage schedules routinely arrive as tables — make them read as data. */
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 0.7em;
+  font: var(--text-mono-small);
+}
+.markdown th,
+.markdown td {
+  border: 1px solid var(--border-subtle);
+  padding: 5px 9px;
+  text-align: left;
+}
+.markdown th {
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+
 /* ---- Citation ledger (under an answer) -------------------------------- */
 .citations {
   display: flex;

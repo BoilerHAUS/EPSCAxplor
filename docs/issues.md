@@ -142,6 +142,23 @@ throttling) first, then #141/#144/#142, then #145/#146/#147.
 
 ---
 
+## Chat Quality & UX — Pre-Launch Review (2026-07-28)
+
+Surfaced while evaluating whether the chat is sellable as a paid service. Quality and
+UX gaps that make the product feel unfinished before a paid launch — not exploitable
+bugs. Suggested order: #166 (quick win) → #167 → #169 → #168. (Note: an "is the Ollama
+embedding model the problem?" question was investigated and dismissed — Ollama only
+does embeddings; nomic-embed-text is fine and is not the cause of any item below.)
+
+| # | type | status | title |
+|---|------|--------|-------|
+| [#166](https://github.com/BoilerHAUS/EPSCAxplor/issues/166) | pr | [x] | fix(web): render Markdown in grounded answer output (currently shown as raw text) |
+| [#167](https://github.com/BoilerHAUS/EPSCAxplor/issues/167) | pr | [ ] | feat(rag): conversational memory for multi-turn chat (history-aware query rewriting) |
+| [#168](https://github.com/BoilerHAUS/EPSCAxplor/issues/168) | pr | [ ] | feat(rag): enumeration-query retrieval fan-out ("all unions" coverage) |
+| [#169](https://github.com/BoilerHAUS/EPSCAxplor/issues/169) | pr | [ ] | feat(web): deep-link answer citations to source documents (builds on #145) |
+
+---
+
 ## Phase 4 — Go to Market
 
 Goal: Paid product with billing and white-label capability.
