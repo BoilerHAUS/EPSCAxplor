@@ -90,6 +90,28 @@ _NUCLEAR_PA_MERGED_LIMIT: int = 4
 # can produce enough leading chunks to displace every primary chunk otherwise.
 _MIN_PRIMARY_SLOTS: int = 3
 
+# Enumeration fan-out (issue #168).  A broad "all unions" query is structurally
+# poor for a single top-k, which clusters on a few semantically central unions.
+# Instead the PRIMARY pass fans out one bounded read per known union so every
+# union is represented before the budget is spent.  Cost is bounded HARD and
+# documented here:
+#   * _ENUM_PER_UNION       — chunks read per union; the cost anchor multiplied
+#                             across the union list, so kept tiny.
+#   * _ENUM_MAX_UNIONS      — hard cap on unions fanned out (guards corpus
+#                             growth); worst case = this many concurrent reads.
+#   * _ENUM_PRIMARY_LIMIT   — merged breadth cap = total chunks fed to the
+#                             generator from the enumeration primary pass.
+#   * _ENUM_PRIMARY_RESERVE — primary slots reserved in the final merge so the
+#                             per-union breadth dominates the window over the
+#                             union-less guaranteed wage/NPA cluster.
+# The expensive secondary passes (wage's _WAGE_CANDIDATE_POOL, NPA, provision)
+# are NOT fanned out per union for enumeration — they run ONCE union-less — so
+# the only added cost is the bounded primary fan-out above.
+_ENUM_PER_UNION: int = 2
+_ENUM_MAX_UNIONS: int = 24
+_ENUM_PRIMARY_LIMIT: int = 12
+_ENUM_PRIMARY_RESERVE: int = 6
+
 # Provision-recall (issue #78): focused key terms are re-embedded and searched
 # against the existing vectors to surface the definitive clause that plain
 # cosine on the full query misses.  Per-term Qdrant limit, a smaller per-term
@@ -947,6 +969,7 @@ async def retrieve(
     is_wage_query: bool = False,
     provision_terms: list[str] | None = None,
     rate_classification: str | None = None,
+    is_enumeration: bool = False,
     settings: Settings,
     qdrant: AsyncQdrantClient | None = None,
 ) -> list[ChunkResult]:
@@ -981,6 +1004,14 @@ async def retrieve(
             chunk is pinned at the head of the context window; otherwise the
             existing re-ranked wage pass is the sole wage source.  Skipped for
             multi-union queries.
+        is_enumeration: When ``True``, treat ``union_filters`` as the KNOWN-union
+            fan-out set for a broad "all unions" coverage query (issue #168): the
+            primary pass runs one bounded read per union (``_ENUM_PER_UNION``,
+            capped at ``_ENUM_MAX_UNIONS``, merged to ``_ENUM_PRIMARY_LIMIT``) so
+            every union is represented.  The expensive secondary passes run once
+            union-less to keep cost bounded.  The caller (routes/query) sets this
+            only when enumeration intent is detected AND no specific union is
+            named; defaults to ``False`` so ordinary queries are unaffected.
         settings: Application settings providing Qdrant and Ollama URLs.
         qdrant: An externally-owned client to reuse (the app lifespan's shared
             client, #147). When ``None``, the module-level shared client is
@@ -1003,6 +1034,7 @@ async def retrieve(
             is_wage_query=is_wage_query,
             provision_terms=provision_terms,
             rate_classification=rate_classification,
+            is_enumeration=is_enumeration,
             settings=settings,
         )
     own_client = AsyncQdrantClient(
@@ -1018,6 +1050,7 @@ async def retrieve(
             is_wage_query=is_wage_query,
             provision_terms=provision_terms,
             rate_classification=rate_classification,
+            is_enumeration=is_enumeration,
             settings=settings,
         )
     finally:
@@ -1034,13 +1067,36 @@ async def _retrieve_with_client(
     is_wage_query: bool,
     provision_terms: list[str] | None,
     rate_classification: str | None,
+    is_enumeration: bool = False,
     settings: Settings,
 ) -> list[ChunkResult]:
     """Run the retrieval pipeline against an already-constructed client."""
     vector = await _embed(query, settings)
 
     unique_union_filters = list(dict.fromkeys(union_filters or []))
-    if len(unique_union_filters) > 1:
+    if is_enumeration and unique_union_filters:
+        # Enumeration fan-out (#168): one bounded read per known union so every
+        # union is represented before the top-k budget is spent.  Capped at
+        # _ENUM_MAX_UNIONS unions × _ENUM_PER_UNION chunks (the cost anchor),
+        # merged to _ENUM_PRIMARY_LIMIT.  Independent reads run concurrently;
+        # gather preserves argument order so the round-robin merge is
+        # deterministic.
+        fan_out_unions = unique_union_filters[:_ENUM_MAX_UNIONS]
+        result_sets = await asyncio.gather(
+            *(
+                _query_qdrant(
+                    qdrant,
+                    vector=vector,
+                    union_filter=union_filter,
+                    include_nuclear_pa=include_nuclear_pa,
+                    agreement_scope=agreement_scope,
+                    limit=_ENUM_PER_UNION,
+                )
+                for union_filter in fan_out_unions
+            )
+        )
+        primary = _merge_union_results(result_sets, limit=_ENUM_PRIMARY_LIMIT)
+    elif len(unique_union_filters) > 1:
         # Per-union primary reads are independent; run them concurrently.
         # gather returns in argument order, so the round-robin merge below is
         # exactly as deterministic as the previous sequential loop.
@@ -1074,6 +1130,13 @@ async def _retrieve_with_client(
     # leads in priority order (provision → NPA → wage), but no earlier pass can
     # starve a later one out of the window — e.g. provision + NPA hits filling
     # every slot and dropping the guaranteed wage table on a rate query.
+    #
+    # For enumeration these secondary passes run ONCE union-less (empty filters)
+    # rather than fanning out across the whole known-union list: the wage pass
+    # alone reads a _WAGE_CANDIDATE_POOL per union, so a per-union fan-out over
+    # ~20 unions would be a cost explosion (#168).  Per-union breadth already
+    # comes from the enumeration primary pass above.
+    secondary_union_filters = [] if is_enumeration else unique_union_filters
     leading_sets: list[list[ChunkResult]] = []
     if rate_classification and len(unique_union_filters) <= 1:
         pinned = await _structured_rate_lookup(
@@ -1093,7 +1156,7 @@ async def _retrieve_with_client(
                 qdrant,
                 terms=provision_terms,
                 settings=settings,
-                union_filters=unique_union_filters,
+                union_filters=secondary_union_filters,
                 include_nuclear_pa=include_nuclear_pa,
                 agreement_scope=agreement_scope,
             )
@@ -1103,7 +1166,7 @@ async def _retrieve_with_client(
             await _collect_nuclear_pa_chunks(
                 qdrant,
                 vector=vector,
-                union_filters=unique_union_filters,
+                union_filters=secondary_union_filters,
                 agreement_scope=agreement_scope,
             )
         )
@@ -1113,7 +1176,7 @@ async def _retrieve_with_client(
                 qdrant,
                 vector=vector,
                 query=query,
-                union_filters=unique_union_filters,
+                union_filters=secondary_union_filters,
                 agreement_scope=agreement_scope,
             )
         )
@@ -1123,6 +1186,13 @@ async def _retrieve_with_client(
     # Reserve a floor of primary-CA slots so the base agreement is never fully
     # displaced by the guaranteed leading chunks — a nuclear cross-union rate
     # query can otherwise produce TOP_K leading chunks and zero CA context.
-    reserve = min(_MIN_PRIMARY_SLOTS, len(primary))
-    leading = _merge_union_results(leading_sets, limit=TOP_K - reserve)
-    return _merge_with_priority(primary, leading)
+    #
+    # Enumeration widens the window to _ENUM_PRIMARY_LIMIT and reserves more
+    # primary slots (_ENUM_PRIMARY_RESERVE), so the per-union breadth dominates
+    # the answer while the union-less guaranteed wage/NPA cluster still gets the
+    # remaining (window − reserve) leading slots and is never fully starved.
+    window = _ENUM_PRIMARY_LIMIT if is_enumeration else TOP_K
+    reserve_cap = _ENUM_PRIMARY_RESERVE if is_enumeration else _MIN_PRIMARY_SLOTS
+    reserve = min(reserve_cap, len(primary))
+    leading = _merge_union_results(leading_sets, limit=window - reserve)
+    return _merge_with_priority(primary, leading, limit=window)

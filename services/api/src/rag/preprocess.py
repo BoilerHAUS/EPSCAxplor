@@ -48,6 +48,35 @@ _CROSS_UNION_PHRASES: list[str] = [
     "across trades",
 ]
 
+# Enumeration intent (#168): broad "coverage" queries that ask about the whole
+# union corpus at once ("all unions", "every union's X", "each trade", "which
+# unions ...", "list ... unions", "across trades", "per union").  A single query
+# vector top-k clusters on the most semantically central unions, so retrieval
+# must fan out one bounded pass per known union (see retrieval.retrieve).  The
+# patterns are deliberately tight — they require an explicit corpus-spanning
+# determiner applied to a union/trade/local token — so an ordinary single-union
+# or two-union comparison query never matches and pays no extra latency.  The
+# corpus-wide fan-out is ADDITIONALLY gated on "no specific union named" by the
+# caller (routes/query), so even a matched phrase cannot fan out when the user
+# named a union.
+_ENUMERATION_PATTERNS: list[re.Pattern[str]] = [
+    # all / every / each (of the) union(s) / trade(s) / local(s).  Requires a
+    # union/trade/local token, so "all workers" (everyone) does not match.
+    re.compile(
+        r"\b(?:all|every|each)\s+(?:of\s+the\s+|the\s+)?(?:unions?|trades?|locals?)\b",
+        re.IGNORECASE,
+    ),
+    # Plural "which unions/trades/locals" — singular "which union" is a lookup
+    # ("which union has the higher rate: IBEW or UA"), not an enumeration, so
+    # the trailing plural is required.
+    re.compile(r"\bwhich\s+(?:unions|trades|locals)\b", re.IGNORECASE),
+    # "list ... unions/trades/locals" (co-occurrence anywhere in the query).
+    re.compile(r"\blist\b.*\b(?:unions?|trades?|locals?)\b", re.IGNORECASE),
+    # "across (all) unions/trades" and "per union/trade".
+    re.compile(r"\bacross\s+(?:all\s+(?:the\s+)?)?(?:unions|trades)\b", re.IGNORECASE),
+    re.compile(r"\bper\s+(?:union|trade)\b", re.IGNORECASE),
+]
+
 # Word-boundary aliases for union names that users rarely spell out in full.
 # Keyed by the canonical union_name stored in PostgreSQL / Qdrant payloads.
 _UNION_ALIASES: dict[str, list[re.Pattern[str]]] = {
@@ -195,6 +224,10 @@ class QueryContext(BaseModel):
     agreement_scope: str | None
     is_cross_union: bool
     is_wage_query: bool
+    # True for broad corpus-wide "all unions" coverage queries (#168).  When set
+    # and no specific union is named, retrieval fans out one bounded pass per
+    # known union so every union is represented before the top-k budget is spent.
+    is_enumeration: bool = False
     provision_terms: list[str] = Field(default_factory=list)
     rate_classification: str | None = None
 
@@ -279,6 +312,21 @@ def classify_complexity(query: str) -> bool:
     return any(phrase in lower for phrase in _CROSS_UNION_PHRASES)
 
 
+def detect_enumeration(query: str) -> bool:
+    """Return True if the query asks for corpus-wide, per-union coverage.
+
+    Enumeration queries ("foreman rate for all unions", "list every union's
+    overtime rule") are structurally poor for a single-vector top-k, which
+    clusters on the most semantically central unions and answers only a handful
+    (#168).  When True — and no specific union is named — retrieval fans out one
+    bounded pass per known union so every union is represented.  Matching is
+    intentionally precise (see ``_ENUMERATION_PATTERNS``) so ordinary
+    single-union and two-union comparison queries never trigger the fan-out and
+    add no latency.
+    """
+    return any(pattern.search(query) is not None for pattern in _ENUMERATION_PATTERNS)
+
+
 def detect_wage_query(query: str) -> bool:
     """Return True if the query is asking about wages, rates, or pay.
 
@@ -344,7 +392,14 @@ def preprocess(query: str, known_unions: list[str]) -> QueryContext:
     """
     detected_unions = detect_unions(query, known_unions)
     is_wage_query = detect_wage_query(query)
-    is_cross_union = classify_complexity(query) or len(detected_unions) > 1
+    is_enumeration = detect_enumeration(query)
+    # An enumeration answer is a synthesis spanning many unions, so route it to
+    # Sonnet + the comparison addendum (address each union separately, note
+    # silences) even when it uses no _CROSS_UNION_PHRASES word — "every union"
+    # / "each trade" name zero unions and match no phrase, but are cross-union.
+    is_cross_union = (
+        classify_complexity(query) or len(detected_unions) > 1 or is_enumeration
+    )
 
     return QueryContext(
         union_filters=detected_unions,
@@ -352,6 +407,7 @@ def preprocess(query: str, known_unions: list[str]) -> QueryContext:
         agreement_scope=detect_scope(query),
         is_cross_union=is_cross_union,
         is_wage_query=is_wage_query,
+        is_enumeration=is_enumeration,
         provision_terms=detect_provision_terms(query),
         # The structured rate lookup needs wage intent — a lone classification
         # word ("foreman safety duties") is not a rate question — and must not

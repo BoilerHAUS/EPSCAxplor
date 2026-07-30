@@ -867,3 +867,91 @@ async def test_disclaimer_present_with_history(
         )
 
     assert "legal advice" in response.disclaimer
+
+
+# ─── enumeration fan-out wiring (issue #168) ─────────────────────────────────
+
+
+async def test_enumeration_query_fans_out_over_known_unions(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    """A broad "all unions" query names no union, so the handler passes the full
+    known-union list as the fan-out set and flags ``is_enumeration=True``."""
+    known = ["Carpenters", "IBEW", "United Association"]
+    mock_retrieve = AsyncMock(return_value=[make_chunk()])
+
+    with patch(
+        "src.routes.query._get_known_unions", new=AsyncMock(return_value=known)
+    ), patch("src.routes.query.retrieve", new=mock_retrieve), patch(
+        "src.routes.query._get_title_map", new=AsyncMock(return_value={})
+    ), patch(
+        "src.routes.query.generate", new=AsyncMock(return_value=make_generator_result())
+    ), patch(
+        "src.routes.query._write_query_log", new=AsyncMock(return_value=None)
+    ):
+        await query_handler(
+            QueryRequest(query="What is the foreman rate for all unions covered under EPSCA?"),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    kwargs = mock_retrieve.call_args.kwargs
+    assert kwargs["is_enumeration"] is True
+    assert kwargs["union_filters"] == known
+
+
+async def test_non_enumeration_query_does_not_fan_out(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    """An ordinary single-union query is byte-for-byte unchanged: no fan-out
+    flag, only the detected union passed."""
+    mock_retrieve = AsyncMock(return_value=[make_chunk()])
+
+    with patch(
+        "src.routes.query._get_known_unions",
+        new=AsyncMock(return_value=["IBEW", "United Association"]),
+    ), patch("src.routes.query.retrieve", new=mock_retrieve), patch(
+        "src.routes.query._get_title_map", new=AsyncMock(return_value={})
+    ), patch(
+        "src.routes.query.generate", new=AsyncMock(return_value=make_generator_result())
+    ), patch(
+        "src.routes.query._write_query_log", new=AsyncMock(return_value=None)
+    ):
+        await query_handler(
+            QueryRequest(query="What is the overtime rate for IBEW?"),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    kwargs = mock_retrieve.call_args.kwargs
+    assert kwargs["is_enumeration"] is False
+    assert kwargs["union_filters"] == ["IBEW"]
+
+
+async def test_enumeration_phrase_with_named_union_does_not_fan_out(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    """The double-gate: even when an enumeration phrase matches, a query that
+    ALSO names a specific union takes the normal per-union path — never the
+    corpus-wide fan-out (so "compare X and Y" style queries are never widened)."""
+    mock_retrieve = AsyncMock(return_value=[make_chunk()])
+
+    with patch(
+        "src.routes.query._get_known_unions",
+        new=AsyncMock(return_value=["IBEW", "United Association", "Carpenters"]),
+    ), patch("src.routes.query.retrieve", new=mock_retrieve), patch(
+        "src.routes.query._get_title_map", new=AsyncMock(return_value={})
+    ), patch(
+        "src.routes.query.generate", new=AsyncMock(return_value=make_generator_result())
+    ), patch(
+        "src.routes.query._write_query_log", new=AsyncMock(return_value=None)
+    ):
+        await query_handler(
+            QueryRequest(query="list the overtime rules for all unions including IBEW"),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    kwargs = mock_retrieve.call_args.kwargs
+    assert kwargs["is_enumeration"] is False
+    assert kwargs["union_filters"] == ["IBEW"]

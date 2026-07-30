@@ -27,6 +27,10 @@ from qdrant_client.models import (
 import src.rag.retrieval as retrieval_module
 from src.config import Settings
 from src.rag.retrieval import (
+    _ENUM_MAX_UNIONS,
+    _ENUM_PER_UNION,
+    _ENUM_PRIMARY_LIMIT,
+    _ENUM_PRIMARY_RESERVE,
     _MIN_PRIMARY_SLOTS,
     _NUCLEAR_PA_PER_UNION,
     _NUCLEAR_PA_SLOTS,
@@ -2408,3 +2412,326 @@ class TestQdrantClientLifecycle:
                     union_filters=["IBEW", "United Association"],
                     settings=settings,
                 )
+
+
+class TestRetrieveEnumeration:
+    """Enumeration fan-out (#168): a broad "all unions" query fans the PRIMARY
+    pass out one bounded read per known union so every union is represented,
+    while the (expensive) secondary passes stay union-less to bound cost."""
+
+    def _make_hit(
+        self,
+        point_id: str,
+        document_type: str = "primary_ca",
+        union: str = "IBEW",
+    ) -> ScoredPoint:
+        hit = MagicMock(spec=ScoredPoint)
+        hit.id = point_id
+        hit.score = 0.85
+        hit.payload = {
+            "document_id": str(uuid.uuid4()),
+            "source_filename": "test.pdf",
+            "union_name": union,
+            "document_type": document_type,
+            "agreement_scope": None,
+            "effective_date": "2025-05-01",
+            "expiry_date": None,
+            "article_number": None,
+            "article_title": None,
+            "section_number": None,
+            "page_number": None,
+            "is_table": document_type == "wage_schedule",
+            "text": "text",
+        }
+        return hit
+
+    @pytest.mark.asyncio
+    async def test_fans_out_one_primary_read_per_known_union(
+        self, settings: Settings
+    ) -> None:
+        unions = ["IBEW", "Sheet Metal Workers", "United Association"]
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response([self._make_hit(f"{u}-1", union=u)])
+                    for u in unions
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "foreman rate for all unions",
+                union_filters=unions,
+                is_enumeration=True,
+                settings=settings,
+            )
+
+        # One bounded primary read per union — no secondary passes fired.
+        assert mock_qdrant.query_points.await_count == len(unions)
+        filters = [
+            _union_filter_value(c.kwargs["query_filter"])
+            for c in mock_qdrant.query_points.await_args_list
+        ]
+        assert filters == unions
+        # Every union is represented in the merged breadth.
+        assert {c.union_name for c in results} == set(unions)
+
+    @pytest.mark.asyncio
+    async def test_primary_reads_use_tiny_per_union_limit(
+        self, settings: Settings
+    ) -> None:
+        # The cost anchor: enumeration reads few chunks per union (not TOP_K).
+        unions = ["IBEW", "Sheet Metal Workers", "United Association"]
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                return_value=_make_query_response([self._make_hit("h")])
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "overtime rule for every union",
+                union_filters=unions,
+                is_enumeration=True,
+                settings=settings,
+            )
+
+        limits = {c.kwargs["limit"] for c in mock_qdrant.query_points.await_args_list}
+        assert limits == {_ENUM_PER_UNION}
+
+    @pytest.mark.asyncio
+    async def test_fan_out_capped_at_max_unions(self, settings: Settings) -> None:
+        # A corpus-growth guard: never fan out to more than _ENUM_MAX_UNIONS.
+        unions = [f"Union {i}" for i in range(_ENUM_MAX_UNIONS + 6)]
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                return_value=_make_query_response([self._make_hit("h")])
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "list every union's overtime rule",
+                union_filters=unions,
+                is_enumeration=True,
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == _ENUM_MAX_UNIONS
+
+    @pytest.mark.asyncio
+    async def test_merged_breadth_capped_at_primary_limit(
+        self, settings: Settings
+    ) -> None:
+        # 10 unions × 2 distinct hits = 20 candidates, merged down to the cap.
+        unions = [f"Union {i}" for i in range(10)]
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    _make_query_response(
+                        [
+                            self._make_hit(f"{u}-1", union=u),
+                            self._make_hit(f"{u}-2", union=u),
+                        ]
+                    )
+                    for u in unions
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "which unions offer a pension?",
+                union_filters=unions,
+                is_enumeration=True,
+                settings=settings,
+            )
+
+        assert len(results) == _ENUM_PRIMARY_LIMIT
+
+    @pytest.mark.asyncio
+    async def test_wage_secondary_pass_stays_union_less(
+        self, settings: Settings
+    ) -> None:
+        # The cost-explosion guard: the wage pass (1000-candidate pool) must run
+        # ONCE union-less for enumeration, NOT once per fanned-out union.
+        unions = ["IBEW", "Sheet Metal Workers", "United Association"]
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    *(
+                        _make_query_response([self._make_hit(f"{u}-ca", union=u)])
+                        for u in unions
+                    ),
+                    _make_query_response([self._make_hit("ws-1", "wage_schedule")]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "foreman rate for all unions",
+                union_filters=unions,
+                is_enumeration=True,
+                is_wage_query=True,
+                settings=settings,
+            )
+
+        # 3 primary fan-out reads + exactly ONE union-less wage read.
+        assert mock_qdrant.query_points.await_count == len(unions) + 1
+        wage_call = mock_qdrant.query_points.await_args_list[-1]
+        assert _union_filter_value(wage_call.kwargs["query_filter"]) is None
+        assert "wage_schedule" in _doc_type_values(wage_call.kwargs["query_filter"])
+
+    @pytest.mark.asyncio
+    async def test_nuclear_secondary_pass_stays_union_less(
+        self, settings: Settings
+    ) -> None:
+        unions = ["IBEW", "Sheet Metal Workers", "United Association"]
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    *(
+                        _make_query_response([self._make_hit(f"{u}-ca", union=u)])
+                        for u in unions
+                    ),
+                    _make_query_response([self._make_hit("npa-1", "nuclear_pa")]),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "nuclear provisions for every union",
+                union_filters=unions,
+                is_enumeration=True,
+                include_nuclear_pa=True,
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == len(unions) + 1
+        npa_call = mock_qdrant.query_points.await_args_list[-1]
+        assert _union_filter_value(npa_call.kwargs["query_filter"]) is None
+        assert _doc_type_values(npa_call.kwargs["query_filter"]) == ["nuclear_pa"]
+
+    @pytest.mark.asyncio
+    async def test_per_union_breadth_dominates_but_wage_survives(
+        self, settings: Settings
+    ) -> None:
+        # An enumeration RATE query fills leading slots with the union-less wage
+        # cluster, but the per-union breadth must dominate the window (reserve),
+        # while the guaranteed wage table still survives (not fully evicted).
+        unions = [f"Union {i}" for i in range(8)]
+        wage_hits = [self._make_hit(f"ws-{i}", "wage_schedule") for i in range(5)]
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                side_effect=[
+                    *(
+                        _make_query_response([self._make_hit(f"{u}-ca", union=u)])
+                        for u in unions
+                    ),
+                    _make_query_response(wage_hits),
+                ]
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "foreman rate for all unions",
+                union_filters=unions,
+                is_enumeration=True,
+                is_wage_query=True,
+                settings=settings,
+            )
+
+        assert len(results) <= _ENUM_PRIMARY_LIMIT
+        doc_types = [c.document_type for c in results]
+        # Per-union breadth keeps at least the reserved primary slots ...
+        assert doc_types.count("primary_ca") >= _ENUM_PRIMARY_RESERVE
+        # ... and the guaranteed wage table is not starved out of the window.
+        assert "wage_schedule" in doc_types
+
+    @pytest.mark.asyncio
+    async def test_flag_off_leaves_single_union_path_unchanged(
+        self, settings: Settings
+    ) -> None:
+        # is_enumeration defaults False: a single named-union query still makes
+        # exactly one filtered Qdrant call (byte-for-byte parity, no fan-out).
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(return_value=_make_query_response([]))
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            await retrieve(
+                "IBEW foreman rate",
+                union_filters=["IBEW"],
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 1
+        query_filter = mock_qdrant.query_points.await_args.kwargs["query_filter"]
+        assert _union_filter_value(query_filter) == "IBEW"
+
+    @pytest.mark.asyncio
+    async def test_enumeration_with_empty_union_list_degrades_to_single_pass(
+        self, settings: Settings
+    ) -> None:
+        # Defensive: is_enumeration=True but no known unions supplied must fall
+        # back to one unfiltered primary read, never crash. (query.py never sends
+        # this, but retrieve must not assume a non-empty fan-out set.)
+        with (
+            patch("src.rag.retrieval.httpx.AsyncClient") as mock_http,
+            patch("src.rag.retrieval.AsyncQdrantClient") as mock_qdrant_cls,
+        ):
+            _make_ollama_mock(mock_http)
+            mock_qdrant = AsyncMock()
+            mock_qdrant.query_points = AsyncMock(
+                return_value=_make_query_response([self._make_hit("h")])
+            )
+            mock_qdrant_cls.return_value = mock_qdrant
+
+            results = await retrieve(
+                "all unions overtime",
+                union_filters=[],
+                is_enumeration=True,
+                settings=settings,
+            )
+
+        assert mock_qdrant.query_points.await_count == 1
+        assert _union_filter_value(
+            mock_qdrant.query_points.await_args.kwargs["query_filter"]
+        ) is None
+        assert len(results) == 1

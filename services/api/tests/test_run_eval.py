@@ -204,3 +204,92 @@ def test_error_does_not_double_report_as_auto_check_fail() -> None:
     problems = find_regressions([_result(_gold("W10"), error="timeout")])
     assert len(problems) == 1
     assert "error" in problems[0].lower()
+
+
+# ── enumeration coverage (issue #168) ────────────────────────────────────────
+
+
+def _coverage_question(threshold: int, qid: str = "EC1") -> GoldQuestion:
+    """An enumeration question asserting ≥``threshold`` distinct unions cited."""
+    return GoldQuestion(
+        id=qid,
+        category="Enumeration Coverage",
+        union="All unions",
+        question="What is the foreman rate for all unions covered under EPSCA?",
+        is_cross_union=True,
+        min_union_coverage=threshold,
+    )
+
+
+def test_min_union_coverage_defaults_to_zero() -> None:
+    # Existing questions must be unaffected: coverage grading only applies when
+    # a question opts in with a positive threshold.
+    assert _gold("W10").min_union_coverage == 0
+
+
+def test_union_coverage_counts_distinct_cited_unions() -> None:
+    result = _result(
+        _coverage_question(3),
+        answer="Rates vary by union. [SOURCE 1] [SOURCE 2] [SOURCE 3]",
+        citations=[
+            {"source_number": 1, "union_name": "IBEW"},
+            {"source_number": 2, "union_name": "Carpenters"},
+            {"source_number": 3, "union_name": "IBEW"},  # duplicate union
+        ],
+    )
+    assert result.union_coverage == 2
+
+
+def test_min_union_coverage_shortfall_is_a_regression() -> None:
+    problems = find_regressions(
+        [
+            _result(
+                _coverage_question(3),
+                answer="Only two unions cited. [SOURCE 1] [SOURCE 2]",
+                citations=[
+                    {"source_number": 1, "union_name": "IBEW"},
+                    {"source_number": 2, "union_name": "Carpenters"},
+                ],
+            )
+        ]
+    )
+    assert len(problems) == 1
+    assert "EC1" in problems[0]
+    assert "coverage" in problems[0].lower()
+
+
+def test_min_union_coverage_met_is_clean() -> None:
+    problems = find_regressions(
+        [
+            _result(
+                _coverage_question(3),
+                answer="Broad coverage. [SOURCE 1] [SOURCE 2] [SOURCE 3]",
+                citations=[
+                    {"source_number": 1, "union_name": "IBEW"},
+                    {"source_number": 2, "union_name": "Carpenters"},
+                    {"source_number": 3, "union_name": "United Association"},
+                ],
+            )
+        ]
+    )
+    assert problems == []
+
+
+def test_coverage_error_reports_only_error() -> None:
+    # An errored coverage question has zero citations, but the report must
+    # surface only the API error — not also a spurious coverage-shortfall line.
+    problems = find_regressions(
+        [_result(_coverage_question(3), error="HTTP 502: bad gateway")]
+    )
+    assert len(problems) == 1
+    assert "error" in problems[0].lower()
+
+
+def test_e01_enumeration_gold_question_is_full_eval_only() -> None:
+    # The shipped enumeration gold question: asserts multi-union coverage, routes
+    # cross-union, and is deliberately kept OUT of the nightly smoke subset (its
+    # breadth is nondeterministic at temperature 1.0, like N07/R03 — see #163).
+    q = _gold("E01")
+    assert q.min_union_coverage >= 2
+    assert q.is_cross_union is True
+    assert "E01" not in SMOKE_SUBSET_IDS
