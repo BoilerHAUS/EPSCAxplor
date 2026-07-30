@@ -9,6 +9,7 @@
  *   the original request exactly once.
  */
 import type {
+  ChatTurn,
   DocumentFilters,
   DocumentListResponse,
   QueryHistoryParams,
@@ -97,10 +98,10 @@ export class ApiClient {
     }
   }
 
-  async query(query: string): Promise<QueryResponse> {
+  async query(query: string, history: ChatTurn[] = []): Promise<QueryResponse> {
     return this.request<QueryResponse>("/query", {
       method: "POST",
-      body: { query },
+      body: { query, history },
     });
   }
 

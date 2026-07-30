@@ -28,6 +28,12 @@ export interface Citation {
   excerpt: string;
 }
 
+/** One prior conversation turn sent for history-aware retrieval (#167). */
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export interface QueryResponse {
   answer: string;
   citations: Citation[];

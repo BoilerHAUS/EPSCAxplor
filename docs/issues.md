@@ -153,7 +153,7 @@ does embeddings; nomic-embed-text is fine and is not the cause of any item below
 | # | type | status | title |
 |---|------|--------|-------|
 | [#166](https://github.com/BoilerHAUS/EPSCAxplor/issues/166) | pr | [x] | fix(web): render Markdown in grounded answer output (currently shown as raw text) |
-| [#167](https://github.com/BoilerHAUS/EPSCAxplor/issues/167) | pr | [ ] | feat(rag): conversational memory for multi-turn chat (history-aware query rewriting) |
+| [#167](https://github.com/BoilerHAUS/EPSCAxplor/issues/167) | pr | [x] | feat(rag): conversational memory for multi-turn chat (history-aware query rewriting) |
 | [#168](https://github.com/BoilerHAUS/EPSCAxplor/issues/168) | pr | [ ] | feat(rag): enumeration-query retrieval fan-out ("all unions" coverage) |
 | [#169](https://github.com/BoilerHAUS/EPSCAxplor/issues/169) | pr | [ ] | feat(web): deep-link answer citations to source documents (builds on #145) |
 
