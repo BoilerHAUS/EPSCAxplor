@@ -156,6 +156,7 @@ does embeddings; nomic-embed-text is fine and is not the cause of any item below
 | [#167](https://github.com/BoilerHAUS/EPSCAxplor/issues/167) | pr | [x] | feat(rag): conversational memory for multi-turn chat (history-aware query rewriting) |
 | [#168](https://github.com/BoilerHAUS/EPSCAxplor/issues/168) | pr | [ ] | feat(rag): enumeration-query retrieval fan-out ("all unions" coverage) |
 | [#169](https://github.com/BoilerHAUS/EPSCAxplor/issues/169) | pr | [ ] | feat(web): deep-link answer citations to source documents (builds on #145) |
+| [#173](https://github.com/BoilerHAUS/EPSCAxplor/issues/173) | pr | [ ] | chore(security): treat client-supplied chat history as untrusted in the generator system prompt (#167 follow-up) |
 
 ---
 
