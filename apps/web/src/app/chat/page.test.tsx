@@ -100,7 +100,7 @@ describe("ChatPage", () => {
     // user bubble + loading state while in flight
     expect(screen.getByText("What is the Ironworkers overtime rate?")).toBeDefined();
     expect(screen.getByLabelText("Generating answer")).toBeDefined();
-    expect(mocked.query).toHaveBeenCalledWith("What is the Ironworkers overtime rate?");
+    expect(mocked.query).toHaveBeenCalledWith("What is the Ironworkers overtime rate?", []);
 
     resolveQuery(RESPONSE);
     await waitFor(() => {
@@ -111,6 +111,51 @@ describe("ChatPage", () => {
     expect(screen.getByText("Ironworkers")).toBeDefined();
     expect(screen.getByText(/one and one-half/)).toBeDefined();
     expect(screen.getByRole("note").textContent).toContain("does not constitute legal advice");
+  });
+
+  it("sends prior user and assistant turns as history on a follow-up", async () => {
+    mocked.query.mockResolvedValue(RESPONSE);
+
+    render(<ChatPage />);
+    await submitQuery("What is the foreman rate for all unions?");
+    await waitFor(() => {
+      expect(screen.getByText(/Overtime is paid at 1\.5x the regular rate/)).toBeDefined();
+    });
+
+    await submitQuery("what about the boilermakers?");
+    await waitFor(() => {
+      expect(mocked.query).toHaveBeenCalledTimes(2);
+    });
+
+    // The follow-up carries the prior completed exchange as alternating turns;
+    // the current turn is NOT double-counted (snapshot taken before the push).
+    expect(mocked.query.mock.calls[1]).toEqual([
+      "what about the boilermakers?",
+      [
+        { role: "user", content: "What is the foreman rate for all unions?" },
+        { role: "assistant", content: RESPONSE.answer },
+      ],
+    ]);
+  });
+
+  it("excludes an errored turn from the follow-up history", async () => {
+    mocked.query
+      .mockRejectedValueOnce(new ApiError(503, "upstream error"))
+      .mockResolvedValueOnce(RESPONSE);
+
+    render(<ChatPage />);
+    await submitQuery("a question that fails");
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeDefined();
+    });
+
+    await submitQuery("a second question");
+    await waitFor(() => {
+      expect(mocked.query).toHaveBeenCalledTimes(2);
+    });
+
+    // The failed turn produced no assistant answer, so history stays empty.
+    expect(mocked.query.mock.calls[1][1]).toEqual([]);
   });
 
   it("shows a rate-limit message on 429", async () => {

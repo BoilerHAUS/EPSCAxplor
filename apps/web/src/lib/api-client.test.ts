@@ -144,7 +144,27 @@ describe("ApiClient", () => {
       expect(init.method).toBe("POST");
       expect(init.credentials).toBe("include");
       expect(init.headers.Authorization).toBe("Bearer jwt-1");
-      expect(JSON.parse(init.body)).toEqual({ query: "What is the overtime rate?" });
+      expect(JSON.parse(init.body)).toEqual({
+        query: "What is the overtime rate?",
+        history: [],
+      });
+    });
+
+    it("sends prior turns as history on a follow-up", async () => {
+      client.setAccessToken("jwt-1");
+      fetchMock.mockResolvedValueOnce(jsonResponse(200, QUERY_RESPONSE));
+      const history = [
+        { role: "user" as const, content: "What is the foreman rate for all unions?" },
+        { role: "assistant" as const, content: "Rates vary by union..." },
+      ];
+
+      await client.query("what about the boilermakers?", history);
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse(init.body)).toEqual({
+        query: "what about the boilermakers?",
+        history,
+      });
     });
 
     it("on 401, silently refreshes then retries once with the new token", async () => {

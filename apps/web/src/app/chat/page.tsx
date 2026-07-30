@@ -16,6 +16,7 @@ import { LegalDisclaimer } from "@/components/LegalDisclaimer";
 import { QueryInput } from "@/components/QueryInput";
 import { ApiError, apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth";
+import { buildHistory } from "@/lib/chatHistory";
 import type { QueryResponse } from "@/lib/types";
 
 type MessageInput =
@@ -101,10 +102,13 @@ export default function ChatPage() {
   }
 
   async function handleSubmit(query: string) {
+    // Snapshot prior turns BEFORE pushing the current question, so the current
+    // turn is never double-counted into its own history (#167).
+    const history = buildHistory(messages);
     push({ kind: "user", text: query });
     setPending(true);
     try {
-      const response = await apiClient.query(query);
+      const response = await apiClient.query(query, history);
       if (mountedRef.current) push({ kind: "answer", response });
     } catch (error) {
       if (mountedRef.current) push({ kind: "error", text: errorMessage(error) });
