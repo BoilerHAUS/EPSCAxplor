@@ -43,6 +43,7 @@ function doc(overrides: Partial<CorpusDocument>): CorpusDocument {
     union_name: "IBEW",
     document_type: "primary_ca",
     title: "IBEW CA",
+    source_url: null,
     effective_date: "2025-05-01",
     expiry_date: null,
     is_expired: false,

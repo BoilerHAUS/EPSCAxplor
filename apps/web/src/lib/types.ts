@@ -47,6 +47,8 @@ export interface CorpusDocument {
   union_name: string;
   document_type: string;
   title: string;
+  /** Original download URL; null for manually-downloaded docs (see isSafeHttpUrl). */
+  source_url: string | null;
   effective_date: string | null;
   expiry_date: string | null;
   is_expired: boolean;

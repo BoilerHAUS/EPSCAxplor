@@ -119,18 +119,23 @@ async def _upsert_document_row(
         )
 
         if existing:
+            # source_url is refreshed here so a changed manifest URL (or a
+            # PLACEHOLDER that has since been resolved) propagates on re-ingest;
+            # omitting it previously left the row's URL frozen at first insert.
             row = await conn.fetchrow(
                 """
                 UPDATE documents
                    SET file_hash    = $1,
                        chunk_count  = $2,
+                       source_url   = $3,
                        ingested_at  = NOW(),
                        updated_at   = NOW()
-                 WHERE id = $3
+                 WHERE id = $4
                  RETURNING id
                 """,
                 file_hash,
                 chunk_count,
+                doc.metadata.source_url,
                 existing["id"],
             )
         else:

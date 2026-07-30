@@ -31,6 +31,7 @@ def _doc(**overrides: Any) -> DocumentRecord:
         union_name="IBEW",
         document_type="primary_ca",
         title="IBEW Generation 2025-2030 Collective Agreement",
+        source_url="https://www.epsca.org/upload/request/5?file=IBEW.pdf&download=1",
         effective_date=date(2025, 5, 1),
         expiry_date=date(2030, 4, 30),
         is_expired=False,
@@ -75,6 +76,29 @@ async def test_passes_filters_through() -> None:
         "document_type": "primary_ca",
         "is_expired": False,
     }
+
+
+async def test_response_includes_source_url() -> None:
+    url = "https://www.epsca.org/upload/request/5?file=IBEW.pdf&download=1"
+    docs = [_doc(source_url=url)]
+    with patch("src.routes.documents.acquire", _fake_connect), patch(
+        "src.routes.documents.list_documents", new=AsyncMock(return_value=docs)
+    ):
+        resp = await list_documents_route(
+            settings=_settings(), union_name=None, document_type=None, is_expired=None
+        )
+    assert resp.documents[0].source_url == url
+
+
+async def test_source_url_null_passthrough() -> None:
+    docs = [_doc(source_url=None)]
+    with patch("src.routes.documents.acquire", _fake_connect), patch(
+        "src.routes.documents.list_documents", new=AsyncMock(return_value=docs)
+    ):
+        resp = await list_documents_route(
+            settings=_settings(), union_name=None, document_type=None, is_expired=None
+        )
+    assert resp.documents[0].source_url is None
 
 
 def test_requires_auth(client: TestClient) -> None:
