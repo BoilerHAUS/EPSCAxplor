@@ -2,6 +2,7 @@ from src.rag.preprocess import (
     NUCLEAR_KEYWORDS,
     QueryContext,
     classify_complexity,
+    detect_enumeration,
     detect_nuclear,
     detect_provision_terms,
     detect_rate_classification,
@@ -241,6 +242,92 @@ class TestClassifyComplexity:
         assert classify_complexity("DIFFERENCE BETWEEN IBEW and UA") is True
 
 
+class TestDetectEnumeration:
+    """Enumeration intent (#168): broad "all unions" coverage queries.
+
+    The detector must be precise — a normal single-union or two-union
+    comparison query must NEVER read as an enumeration, or it would trigger
+    the corpus-wide fan-out and add latency to ordinary queries.
+    """
+
+    # ── Positives ──────────────────────────────────────────────────────────
+    def test_all_unions(self) -> None:
+        assert detect_enumeration("what is the foreman rate for all unions?") is True
+
+    def test_all_the_unions(self) -> None:
+        assert detect_enumeration("foreman rate for all the unions under EPSCA") is True
+
+    def test_all_of_the_unions(self) -> None:
+        assert detect_enumeration("overtime rules for all of the unions") is True
+
+    def test_every_union(self) -> None:
+        assert detect_enumeration("does every union offer a pension?") is True
+
+    def test_every_union_apostrophe_s(self) -> None:
+        assert detect_enumeration("list every union's overtime rule") is True
+
+    def test_each_trade(self) -> None:
+        assert detect_enumeration("what does each trade pay a foreman?") is True
+
+    def test_each_union(self) -> None:
+        assert detect_enumeration("subsistence allowance for each union") is True
+
+    def test_which_unions_plural(self) -> None:
+        assert detect_enumeration("which unions cover nuclear work?") is True
+
+    def test_list_the_unions(self) -> None:
+        assert detect_enumeration("list the unions that work at Darlington") is True
+
+    def test_across_trades(self) -> None:
+        assert detect_enumeration("shift premiums across trades") is True
+
+    def test_across_all_unions(self) -> None:
+        assert detect_enumeration("compare travel allowance across all unions") is True
+
+    def test_per_union(self) -> None:
+        assert detect_enumeration("break down the foreman rate per union") is True
+
+    def test_all_trades(self) -> None:
+        assert detect_enumeration("what is the apprentice rate for all trades?") is True
+
+    def test_case_insensitive_all_unions(self) -> None:
+        assert detect_enumeration("FOREMAN RATE FOR ALL UNIONS") is True
+
+    def test_case_insensitive_every_trade(self) -> None:
+        assert detect_enumeration("Every Trade overtime rule") is True
+
+    # ── Negatives ──────────────────────────────────────────────────────────
+    def test_empty_query(self) -> None:
+        assert detect_enumeration("") is False
+
+    def test_single_union_query(self) -> None:
+        assert detect_enumeration("IBEW foreman rate") is False
+
+    def test_compare_two_named_unions(self) -> None:
+        assert detect_enumeration("compare IBEW and UA overtime rules") is False
+
+    def test_which_union_singular_comparison(self) -> None:
+        # The hard negative: singular "which union" comparing two named unions
+        # must NOT read as enumeration (the plural "which unions" is the signal).
+        assert (
+            detect_enumeration(
+                "which union has the higher rate: IBEW or United Association?"
+            )
+            is False
+        )
+
+    def test_which_union_singular_lookup(self) -> None:
+        assert detect_enumeration("which union covers Darlington?") is False
+
+    def test_plain_wage_query(self) -> None:
+        assert detect_enumeration("what is the overtime rate for welders?") is False
+
+    def test_all_workers_does_not_trigger(self) -> None:
+        # "all workers" is not "all unions/trades" — a general question about
+        # everyone, not an enumeration over the union corpus.
+        assert detect_enumeration("general overtime rules for all workers") is False
+
+
 class TestDetectWageQuery:
     def test_empty_query_returns_false(self) -> None:
         assert detect_wage_query("") is False
@@ -474,6 +561,27 @@ class TestQueryContext:
         )
         assert ctx.provision_terms == ["double time overtime rate"]
 
+    def test_is_enumeration_defaults_to_false(self) -> None:
+        ctx = QueryContext(
+            union_filters=[],
+            include_nuclear_pa=False,
+            agreement_scope=None,
+            is_cross_union=False,
+            is_wage_query=False,
+        )
+        assert ctx.is_enumeration is False
+
+    def test_is_enumeration_can_be_set(self) -> None:
+        ctx = QueryContext(
+            union_filters=[],
+            include_nuclear_pa=False,
+            agreement_scope=None,
+            is_cross_union=True,
+            is_wage_query=False,
+            is_enumeration=True,
+        )
+        assert ctx.is_enumeration is True
+
 
 class TestPreprocess:
     def test_simple_query_returns_all_defaults(self) -> None:
@@ -588,3 +696,51 @@ class TestPreprocess:
         )
         assert ctx.is_cross_union is True
         assert ctx.rate_classification is None
+
+    def test_enumeration_query_sets_is_enumeration(self) -> None:
+        ctx = preprocess(
+            "what is the foreman rate for all unions covered under EPSCA?",
+            KNOWN_UNIONS,
+        )
+        assert ctx.is_enumeration is True
+        assert ctx.union_filters == []
+
+    def test_enumeration_alone_flips_cross_union(self) -> None:
+        # "every union" is NOT a _CROSS_UNION_PHRASES entry and names zero unions,
+        # so without enumeration this would route to Haiku. Enumeration must flip
+        # is_cross_union → Sonnet + the comparison addendum (address each union
+        # separately, note absences) which is exactly the coverage answer shape.
+        ctx = preprocess("does every union offer a pension?", KNOWN_UNIONS)
+        assert ctx.is_enumeration is True
+        assert ctx.is_cross_union is True
+
+    def test_enumeration_wage_query_has_no_rate_classification(self) -> None:
+        # Enumeration ⇒ is_cross_union ⇒ the #89 single-chunk pin is suppressed:
+        # a "rate for every union" question must not pin ONE union's wage table.
+        ctx = preprocess("journeyperson rate for every union", KNOWN_UNIONS)
+        assert ctx.is_enumeration is True
+        assert ctx.is_wage_query is True
+        assert ctx.rate_classification is None
+
+    def test_non_enumeration_query_leaves_is_enumeration_false(self) -> None:
+        # Byte-for-byte parity for ordinary single-union queries: no enumeration,
+        # no forced cross-union, union filter intact, rate classification intact.
+        ctx = preprocess(
+            "What is the journeyperson hourly rate for IBEW?", KNOWN_UNIONS
+        )
+        assert ctx.is_enumeration is False
+        assert ctx.is_cross_union is False
+        assert ctx.union_filters == ["IBEW"]
+        assert ctx.rate_classification == "journeyman"
+
+    def test_singular_two_union_comparison_is_not_enumeration(self) -> None:
+        # "which union … IBEW or United Association" is cross-union via the two
+        # detected unions, NOT via enumeration — so the corpus-wide fan-out gate
+        # (is_enumeration AND no named unions) can never fire here.
+        ctx = preprocess(
+            "which union has the higher rate: IBEW or United Association?",
+            KNOWN_UNIONS,
+        )
+        assert ctx.is_enumeration is False
+        assert ctx.is_cross_union is True
+        assert ctx.union_filters == ["IBEW", "United Association"]

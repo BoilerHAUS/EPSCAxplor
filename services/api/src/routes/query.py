@@ -174,15 +174,24 @@ async def query_handler(
     known_unions = await _get_known_unions()
     ctx: QueryContext = preprocess(retrieval_query, known_unions)
 
+    # Enumeration fan-out (#168): a broad "all unions" query names no specific
+    # union, so pass the full known-union list as the bounded per-union fan-out
+    # set.  Double-gated on "no specific union named": a query that DOES name a
+    # union (even alongside an enumeration phrase) takes the normal per-union
+    # path, so "compare IBEW and UA" is never widened to a corpus-wide fan-out.
+    enumerate_all = ctx.is_enumeration and not ctx.union_filters
+    retrieval_union_filters = known_unions if enumerate_all else ctx.union_filters
+
     # Step 2 — retrieve the standalone query (reusing the lifespan-owned Qdrant client, #147)
     chunks: list[ChunkResult] = await retrieve(
         retrieval_query,
-        union_filters=ctx.union_filters,
+        union_filters=retrieval_union_filters,
         include_nuclear_pa=ctx.include_nuclear_pa,
         agreement_scope=ctx.agreement_scope,
         is_wage_query=ctx.is_wage_query,
         provision_terms=ctx.provision_terms,
         rate_classification=ctx.rate_classification,
+        is_enumeration=enumerate_all,
         settings=settings,
         qdrant=get_shared_qdrant_client(),
     )

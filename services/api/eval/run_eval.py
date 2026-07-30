@@ -48,6 +48,10 @@ class GoldQuestion:
     # Assert the answer stays grounded: a non-empty citation list is required.
     # Inverse of is_refusal; guards the union-less nuclear path that #119 broke.
     expect_citations: bool = False
+    # Minimum distinct unions that must appear in citations (issue #168). 0 (the
+    # default) disables the check; a positive value asserts corpus-wide coverage
+    # for a broad enumeration question ("foreman rate for all unions").
+    min_union_coverage: int = 0
 
 
 GOLD_QUESTIONS: list[GoldQuestion] = [
@@ -372,6 +376,21 @@ GOLD_QUESTIONS: list[GoldQuestion] = [
         question="What does the Sprinkler Fitters collective agreement say about overtime pay?",
         is_refusal=True,
     ),
+
+    # ── Enumeration Coverage (added 2026-07-30 for #168) ─────────────────────
+    # A broad "all unions" query must return coverage across many unions, not a
+    # partial cluster. min_union_coverage asserts ≥3 DISTINCT unions appear in
+    # the citations (the enumeration fan-out property), while grounding + the
+    # "rates vary by union/local" caveat still hold. FULL-EVAL-ONLY: like N07 and
+    # R03 (#163), the exact set of unions cited is nondeterministic at
+    # temperature 1.0, so this question is deliberately excluded from the nightly
+    # smoke subset (--ids W10,N06,C03) and runs only in the periodic full eval.
+    GoldQuestion(
+        id="E01", category="Enumeration Coverage", union="All unions",
+        question="What is the foreman rate for all the unions covered under EPSCA?",
+        is_cross_union=True,
+        min_union_coverage=3,
+    ),
 ]
 
 
@@ -405,6 +424,11 @@ class EvalResult:
     @property
     def citation_count(self) -> int:
         return len(self.citations)
+
+    @property
+    def union_coverage(self) -> int:
+        """Number of distinct unions cited — the enumeration coverage metric (#168)."""
+        return len({c.get("union_name") for c in self.citations if c.get("union_name")})
 
     @property
     def expected_missing(self) -> list[str]:
@@ -442,7 +466,9 @@ def find_regressions(results: list[EvalResult]) -> list[str]:
       - citations returned on a refusal question (out-of-corpus answers must
         not cite sources),
       - zero citations on an ``expect_citations`` question (a grounded answer
-        that lost its sources — the #119 refusal-stripper failure shape).
+        that lost its sources — the #119 refusal-stripper failure shape),
+      - fewer distinct unions cited than ``min_union_coverage`` (a broad
+        enumeration question that returned a partial cluster — issue #168).
 
     An empty list means the smoke run is clean.
     """
@@ -465,6 +491,14 @@ def find_regressions(results: list[EvalResult]) -> list[str]:
             problems.append(
                 f"{qid}: expected a grounded answer but got 0 citations "
                 "(out-of-corpus refusal-stripper regression? see #119)"
+            )
+        if (
+            r.question.min_union_coverage
+            and r.union_coverage < r.question.min_union_coverage
+        ):
+            problems.append(
+                f"{qid}: enumeration coverage {r.union_coverage} distinct union(s) "
+                f"< required {r.question.min_union_coverage} (partial cluster — see #168)"
             )
     return problems
 
@@ -554,11 +588,13 @@ def _write_json(results: list[EvalResult], path: Path) -> None:
             "query_log_id": r.query_log_id,
             "latency_ms": r.latency_ms,
             "error": r.error,
+            "union_coverage": r.union_coverage,
             "flags": {
                 "is_nuclear": r.question.is_nuclear,
                 "is_cross_union": r.question.is_cross_union,
                 "is_refusal": r.question.is_refusal,
                 "expect_citations": r.question.expect_citations,
+                "min_union_coverage": r.question.min_union_coverage,
             },
         })
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False))

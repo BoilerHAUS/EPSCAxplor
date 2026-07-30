@@ -154,8 +154,19 @@ does embeddings; nomic-embed-text is fine and is not the cause of any item below
 |---|------|--------|-------|
 | [#166](https://github.com/BoilerHAUS/EPSCAxplor/issues/166) | pr | [x] | fix(web): render Markdown in grounded answer output (currently shown as raw text) |
 | [#167](https://github.com/BoilerHAUS/EPSCAxplor/issues/167) | pr | [x] | feat(rag): conversational memory for multi-turn chat (history-aware query rewriting) |
-| [#168](https://github.com/BoilerHAUS/EPSCAxplor/issues/168) | pr | [ ] | feat(rag): enumeration-query retrieval fan-out ("all unions" coverage) |
+| [#168](https://github.com/BoilerHAUS/EPSCAxplor/issues/168) | pr | [x] | feat(rag): enumeration-query retrieval fan-out ("all unions" coverage) |
 | [#169](https://github.com/BoilerHAUS/EPSCAxplor/issues/169) | pr | [ ] | feat(web): deep-link answer citations to source documents (builds on #145) |
+
+**#168 shipped:** `preprocess.detect_enumeration` flags broad "all unions/every union/each
+trade/which unions" queries (precise gate — single-union and "compare X and Y" queries never
+match) and forces `is_cross_union` (Sonnet + comparison addendum). When enumeration is set
+**and no specific union is named**, `retrieve()` fans the primary pass out one bounded read
+per known union so every union is represented. Cost is bounded HARD: `_ENUM_PER_UNION=2`
+chunks/union, `_ENUM_MAX_UNIONS=24` unions max, merged to `_ENUM_PRIMARY_LIMIT=12`
+(`_ENUM_PRIMARY_RESERVE=6` primary slots so breadth dominates the window); the expensive
+wage/NPA/provision secondary passes run **once union-less** (no per-union fan-out of the
+1000-candidate wage pool). Eval gold **E01** asserts ≥3 distinct cited unions via a new
+`min_union_coverage` check (full-eval only — excluded from the nightly smoke subset).
 
 ---
 
