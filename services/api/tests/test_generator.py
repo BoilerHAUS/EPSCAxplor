@@ -15,7 +15,16 @@ from anthropic.types import TextBlock, Usage
 
 from src.config import Settings
 from src.rag.condense import Turn
-from src.rag.generator import DISCLAIMER, GeneratorResult, build_system_prompt, generate
+from src.rag.generator import (
+    _COMPARISON_ADDENDUM,
+    _HISTORY_ADDENDUM,
+    _PINNED_RATE_ADDENDUM,
+    _STANDARD_SYSTEM_PROMPT,
+    DISCLAIMER,
+    GeneratorResult,
+    build_system_prompt,
+    generate,
+)
 
 
 @pytest.fixture
@@ -272,7 +281,111 @@ async def test_generate_history_does_not_leak_into_system(settings: Settings) ->
         await generate("q", "ctx", is_cross_union=False, history=history, settings=settings)
 
     system_blocks = mock_create.call_args.kwargs["system"]
-    # System stays the stable, cached anchor — first, unchanged, and history-free.
+    # System stays the first, ephemeral-cached anchor. With history present it now
+    # carries the generic untrusted-history addendum (#173) — but never the actual
+    # turn *content*: prior turns stay data in the messages list, never instructions
+    # promoted into the system block.
     assert system_blocks[0]["cache_control"] == {"type": "ephemeral"}
-    assert system_blocks[0]["text"] == build_system_prompt(is_cross_union=False)
+    assert system_blocks[0]["text"] == build_system_prompt(
+        is_cross_union=False, has_history=True
+    )
     assert "SECRET-PRIOR-TURN" not in system_blocks[0]["text"]
+
+
+# ─── untrusted-history addendum (issue #173) ──────────────────────────────────
+
+
+def test_single_turn_prompt_is_byte_for_byte_standard() -> None:
+    # #173: the single-turn anchor must never shift — it preserves both the
+    # prompt-cache anchor and the nightly smoke eval (single-turn --ids
+    # W10,N06,C03). Assert EXACT equality, not just a substring.
+    assert (
+        build_system_prompt(is_cross_union=False, has_pinned_rate=False, has_history=False)
+        == _STANDARD_SYSTEM_PROMPT
+    )
+
+
+def test_history_prompt_appends_untrusted_history_rules() -> None:
+    prompt = build_system_prompt(is_cross_union=False, has_history=True)
+    assert "CONVERSATION HISTORY RULES" in prompt
+    assert "unverified" in prompt
+    assert "client-supplied" in prompt
+    # The addendum reinforces — never relaxes — grounding + citation rules.
+    assert "[SOURCE N]" in prompt
+    assert "override" in prompt
+
+
+def test_prompt_without_history_omits_untrusted_history_rules() -> None:
+    prompt = build_system_prompt(is_cross_union=False)
+    assert "CONVERSATION HISTORY RULES" not in prompt
+
+
+def test_has_history_defaults_false_for_existing_callers() -> None:
+    assert build_system_prompt(is_cross_union=False) == build_system_prompt(
+        is_cross_union=False, has_history=False
+    )
+    assert build_system_prompt(
+        is_cross_union=True, has_pinned_rate=True
+    ) == build_system_prompt(is_cross_union=True, has_pinned_rate=True, has_history=False)
+
+
+def test_history_addendum_composes_with_other_addenda() -> None:
+    # All three addenda present together, each exactly once, in a stable order —
+    # so every flag combination stays a distinct, deterministic cache anchor.
+    prompt = build_system_prompt(is_cross_union=True, has_pinned_rate=True, has_history=True)
+    assert "COMPARISON RULES" in prompt
+    assert "PINNED RATE SOURCE RULES" in prompt
+    assert "CONVERSATION HISTORY RULES" in prompt
+    assert prompt.count("CONVERSATION HISTORY RULES") == 1
+    # Byte-for-byte: standard anchor + each addendum concatenated once, in order.
+    assert prompt == (
+        _STANDARD_SYSTEM_PROMPT
+        + _COMPARISON_ADDENDUM
+        + _PINNED_RATE_ADDENDUM
+        + _HISTORY_ADDENDUM
+    )
+
+
+@pytest.mark.asyncio
+async def test_generate_with_history_includes_untrusted_history_addendum(
+    settings: Settings,
+) -> None:
+    history = [
+        Turn(role="user", content="What is the foreman rate for all unions?"),
+        Turn(role="assistant", content="Here are the foreman rates [SOURCE 1]..."),
+    ]
+    mock_create = AsyncMock(return_value=_make_mock_response("Answer [SOURCE 1]"))
+
+    with patch(
+        "src.rag.generator.anthropic.AsyncAnthropic", return_value=_mock_client(mock_create)
+    ):
+        await generate(
+            "what about the boilermakers?",
+            "ctx",
+            is_cross_union=False,
+            history=history,
+            settings=settings,
+        )
+
+    system_blocks = mock_create.call_args.kwargs["system"]
+    # generate() derives has_history from a non-empty history and hardens the
+    # first, still-ephemeral-cached system block.
+    assert "CONVERSATION HISTORY RULES" in system_blocks[0]["text"]
+    assert system_blocks[0]["cache_control"] == {"type": "ephemeral"}
+
+
+@pytest.mark.asyncio
+async def test_generate_without_history_omits_untrusted_history_addendum(
+    settings: Settings,
+) -> None:
+    """Single-turn parity: empty history ⇒ system is the byte-for-byte anchor."""
+    mock_create = AsyncMock(return_value=_make_mock_response("Answer [SOURCE 1]"))
+
+    with patch(
+        "src.rag.generator.anthropic.AsyncAnthropic", return_value=_mock_client(mock_create)
+    ):
+        await generate("What is overtime?", "ctx", is_cross_union=False, settings=settings)
+
+    system_blocks = mock_create.call_args.kwargs["system"]
+    assert "CONVERSATION HISTORY RULES" not in system_blocks[0]["text"]
+    assert system_blocks[0]["text"] == _STANDARD_SYSTEM_PROMPT
