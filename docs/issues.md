@@ -156,6 +156,7 @@ does embeddings; nomic-embed-text is fine and is not the cause of any item below
 | [#167](https://github.com/BoilerHAUS/EPSCAxplor/issues/167) | pr | [x] | feat(rag): conversational memory for multi-turn chat (history-aware query rewriting) |
 | [#168](https://github.com/BoilerHAUS/EPSCAxplor/issues/168) | pr | [x] | feat(rag): enumeration-query retrieval fan-out ("all unions" coverage) |
 | [#169](https://github.com/BoilerHAUS/EPSCAxplor/issues/169) | pr | [x] | feat(web): deep-link answer citations to source documents (builds on #145) |
+| [#173](https://github.com/BoilerHAUS/EPSCAxplor/issues/173) | pr | [x] | chore(security): treat client-supplied chat history as untrusted in the generator system prompt |
 
 **#168 shipped:** `preprocess.detect_enumeration` flags broad "all unions/every union/each
 trade/which unions" queries (precise gate — single-union and "compare X and Y" queries never
@@ -167,6 +168,16 @@ chunks/union, `_ENUM_MAX_UNIONS=24` unions max, merged to `_ENUM_PRIMARY_LIMIT=1
 wage/NPA/provision secondary passes run **once union-less** (no per-union fan-out of the
 1000-candidate wage pool). Eval gold **E01** asserts ≥3 distinct cited unions via a new
 `min_union_coverage` check (full-eval only — excluded from the nightly smoke subset).
+
+**#173 shipped (defense-in-depth follow-up to #167, flagged by the #171/#172 security
+review):** the stateless API can't verify a client-supplied `assistant` turn was ever
+produced by the service. `generator.build_system_prompt` now takes `has_history` and
+appends a conditional `_HISTORY_ADDENDUM` telling the model prior turns are unverified,
+client-supplied context — informational, not instructional — that never overrides the
+grounding / `[SOURCE N]` / disclaimer rules. `generate()` derives `has_history` from a
+non-empty `history`, so `query_handler` is unchanged. The addendum is appended **only**
+when history is present, keeping the single-turn prompt **byte-for-byte** identical
+(prompt-cache anchor + nightly smoke eval `--ids W10,N06,C03` unaffected).
 
 ---
 
