@@ -6,6 +6,7 @@
  * system ("precision reads as data").
  */
 import type { Citation } from "@/lib/types";
+import { citationSourceHref } from "@/lib/citationSourceHref";
 import { SourceMarker } from "./SourceMarker";
 
 export interface CitationListProps {
@@ -37,13 +38,24 @@ export function CitationList({ citations }: CitationListProps) {
       </div>
       {citations.map((citation) => {
         const meta = metadataLine(citation);
+        // Deep-link to the source at the cited page when a safe URL is known;
+        // otherwise the title is plain text (no dead or unsafe links) — #169.
+        const href = citationSourceHref(citation.source_url, citation.page_number);
         return (
           <div key={citation.source_number} className="citation">
             <div className="citation__head">
               <SourceMarker number={citation.source_number} size="md" />
               <span className="citation__union">{citation.union_name}</span>
             </div>
-            <div className="citation__doc">{citation.document_title}</div>
+            <div className="citation__doc">
+              {href ? (
+                <a href={href} target="_blank" rel="noopener noreferrer nofollow">
+                  {citation.document_title}
+                </a>
+              ) : (
+                citation.document_title
+              )}
+            </div>
             {meta ? <div className="citation__meta">{meta}</div> : null}
             <div className="citation__excerpt">{citation.excerpt}</div>
           </div>

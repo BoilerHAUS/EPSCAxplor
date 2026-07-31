@@ -27,12 +27,17 @@ class CitationRef(BaseModel):
     article_title: str | None
     page_number: int | None
     excerpt: str
+    # Resolvable link target for the cited document (#169); None for
+    # manually-downloaded docs or when unknown. Defaulted so historical
+    # query-log citations (logged before this field existed) still validate.
+    source_url: str | None = None
 
 
 def extract_citations(
     answer: str,
     chunks: list[ChunkResult],
     title_map: dict[str, str] | None = None,
+    source_url_map: dict[str, str | None] | None = None,
 ) -> list[CitationRef]:
     """Extract structured citations from an answer referencing retrieved chunks.
 
@@ -45,11 +50,15 @@ def extract_citations(
         answer: Generated text from Claude containing [SOURCE N] markers.
         chunks: Chunks in the same order passed to assemble_context() (1-indexed).
         title_map: Optional document_id → human-readable title mapping.
+        source_url_map: Optional document_id → source_url mapping (#169). A
+            missing key or a None value both yield ``source_url=None`` so a
+            citation without a resolvable source degrades to no link.
 
     Returns:
         List of CitationRef objects, one per unique referenced source.
     """
     resolved: dict[str, str] = title_map or {}
+    source_urls: dict[str, str | None] = source_url_map or {}
     seen: set[int] = set()
     citations: list[CitationRef] = []
 
@@ -72,6 +81,7 @@ def extract_citations(
                 article_title=chunk.article_title,
                 page_number=chunk.page_number,
                 excerpt=chunk.text,
+                source_url=source_urls.get(chunk.document_id),
             )
         )
 

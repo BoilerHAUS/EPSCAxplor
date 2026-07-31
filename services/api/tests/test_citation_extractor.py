@@ -133,6 +133,37 @@ def test_missing_title_falls_back_to_filename() -> None:
     assert result[0].document_title == "fallback.pdf"
 
 
+# ─── source_url_map (#169) ────────────────────────────────────────────────────
+
+
+def test_source_url_map_populates_source_url() -> None:
+    chunk = make_chunk(document_id="doc-001")
+    source_url_map = {"doc-001": "https://www.epsca.org/upload/request/5?file=IBEW.pdf&download=1"}
+    result = extract_citations("[SOURCE 1]", [chunk], source_url_map=source_url_map)
+    assert result[0].source_url == source_url_map["doc-001"]
+
+
+def test_source_url_none_when_no_map() -> None:
+    chunk = make_chunk(document_id="doc-001")
+    result = extract_citations("[SOURCE 1]", [chunk])
+    assert result[0].source_url is None
+
+
+def test_source_url_none_when_document_absent_from_map() -> None:
+    chunk = make_chunk(document_id="doc-001")
+    result = extract_citations(
+        "[SOURCE 1]", [chunk], source_url_map={"other-doc": "https://example.com/x.pdf"}
+    )
+    assert result[0].source_url is None
+
+
+def test_source_url_map_none_value_stays_none() -> None:
+    """A document known to the map but with a NULL source_url yields None (no link)."""
+    chunk = make_chunk(document_id="doc-001")
+    result = extract_citations("[SOURCE 1]", [chunk], source_url_map={"doc-001": None})
+    assert result[0].source_url is None
+
+
 # ─── Edge cases ───────────────────────────────────────────────────────────────
 
 

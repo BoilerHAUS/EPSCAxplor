@@ -155,7 +155,7 @@ does embeddings; nomic-embed-text is fine and is not the cause of any item below
 | [#166](https://github.com/BoilerHAUS/EPSCAxplor/issues/166) | pr | [x] | fix(web): render Markdown in grounded answer output (currently shown as raw text) |
 | [#167](https://github.com/BoilerHAUS/EPSCAxplor/issues/167) | pr | [x] | feat(rag): conversational memory for multi-turn chat (history-aware query rewriting) |
 | [#168](https://github.com/BoilerHAUS/EPSCAxplor/issues/168) | pr | [x] | feat(rag): enumeration-query retrieval fan-out ("all unions" coverage) |
-| [#169](https://github.com/BoilerHAUS/EPSCAxplor/issues/169) | pr | [ ] | feat(web): deep-link answer citations to source documents (builds on #145) |
+| [#169](https://github.com/BoilerHAUS/EPSCAxplor/issues/169) | pr | [x] | feat(web): deep-link answer citations to source documents (builds on #145) |
 
 **#168 shipped:** `preprocess.detect_enumeration` flags broad "all unions/every union/each
 trade/which unions" queries (precise gate — single-union and "compare X and Y" queries never

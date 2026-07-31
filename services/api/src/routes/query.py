@@ -108,6 +108,24 @@ async def _get_title_map(doc_ids: list[str]) -> dict[str, str]:
         return {row["id"]: row["title"] for row in rows}
 
 
+async def _get_source_url_map(doc_ids: list[str]) -> dict[str, str | None]:
+    """Return a document_id → source_url mapping for the given UUIDs (#169).
+
+    Source lives on the documents row (not the Qdrant chunk payload), so it is
+    resolved here to give each citation a link target. Kept separate from the
+    title lookup so that well-tested path is untouched; both are cheap
+    primary-key lookups over the same handful of doc_ids.
+    """
+    if not doc_ids:
+        return {}
+    async with acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT id::text, source_url FROM documents WHERE id = ANY($1::uuid[])",
+            doc_ids,
+        )
+        return {row["id"]: row["source_url"] for row in rows}
+
+
 async def _write_query_log(
     *,
     tenant_id: uuid.UUID,
@@ -199,6 +217,8 @@ async def query_handler(
     # Step 3 — assemble context (with title lookup)
     doc_ids = list({c.document_id for c in chunks})
     title_map = await _get_title_map(doc_ids)
+    # source_url is resolved alongside so citations can deep-link to the source (#169).
+    source_url_map = await _get_source_url_map(doc_ids)
     context_block = assemble_context(chunks, title_map=title_map)
 
     # Step 4 — generate. The model reads the ORIGINAL follow-up (natural phrasing)
@@ -217,7 +237,9 @@ async def query_handler(
     # Citations come solely from resolvable [SOURCE N] markers the model wrote,
     # so a pure refusal (no markers) yields none while a partially-grounded
     # answer keeps the sources it actually referenced (see issue #119).
-    citations = extract_citations(result.answer, chunks, title_map=title_map)
+    citations = extract_citations(
+        result.answer, chunks, title_map=title_map, source_url_map=source_url_map
+    )
 
     # Step 6 — log query (best-effort)
     union_filter_list = ctx.union_filters or None

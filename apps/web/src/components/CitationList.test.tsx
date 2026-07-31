@@ -16,6 +16,7 @@ const FULL_CITATION: Citation = {
   article_title: "Overtime",
   page_number: 21,
   excerpt: "Overtime shall be paid at one and one-half (1.5) times the regular hourly rate.",
+  source_url: "https://www.epsca.org/upload/request/13?file=Ironworkers.pdf&download=1",
 };
 
 const SPARSE_CITATION: Citation = {
@@ -29,6 +30,7 @@ const SPARSE_CITATION: Citation = {
   article_title: null,
   page_number: null,
   excerpt: "Foreman rate: $54.12/hr.",
+  source_url: null,
 };
 
 describe("CitationList", () => {
@@ -65,5 +67,34 @@ describe("CitationList", () => {
   it("renders nothing for an empty citation list", () => {
     const { container } = render(<CitationList citations={[]} />);
     expect(container.textContent).toBe("");
+  });
+
+  it("links the document title to the source at the cited page, in a new tab", () => {
+    render(<CitationList citations={[FULL_CITATION]} />);
+
+    const link = screen.getByRole("link", { name: FULL_CITATION.document_title });
+    expect(link.getAttribute("href")).toBe(`${FULL_CITATION.source_url}#page=21`);
+    expect(link.getAttribute("target")).toBe("_blank");
+    const rel = link.getAttribute("rel") ?? "";
+    expect(rel).toContain("noopener");
+    expect(rel).toContain("noreferrer");
+    expect(rel).toContain("nofollow");
+  });
+
+  it("renders the document title as plain text when there is no source", () => {
+    render(<CitationList citations={[SPARSE_CITATION]} />);
+
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getByText(SPARSE_CITATION.document_title)).toBeDefined();
+  });
+
+  it("does not render an unsafe source_url as a link (XSS guard)", () => {
+    render(
+      <CitationList
+        citations={[{ ...FULL_CITATION, source_url: "javascript:alert(1)" }]}
+      />,
+    );
+
+    expect(screen.queryByRole("link")).toBeNull();
   });
 });

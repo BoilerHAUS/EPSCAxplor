@@ -22,6 +22,7 @@ const ITEM: HistoryItem = {
       article_title: "Overtime",
       page_number: 21,
       excerpt: "Overtime shall be paid at one and one-half (1.5) times the regular hourly rate.",
+      source_url: null,
     },
   ],
   created_at: "2026-07-14T18:22:00Z",

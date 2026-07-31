@@ -53,6 +53,7 @@ const RESPONSE: QueryResponse = {
       article_title: "Overtime",
       page_number: 21,
       excerpt: "Overtime shall be paid at one and one-half (1.5) times the regular hourly rate.",
+      source_url: null,
     },
   ],
   model_used: "claude-haiku",
