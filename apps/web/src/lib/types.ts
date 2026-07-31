@@ -26,6 +26,8 @@ export interface Citation {
   article_title: string | null;
   page_number: number | null;
   excerpt: string;
+  /** Resolvable source-document URL for a deep-link, or null when unknown (#169). */
+  source_url: string | null;
 }
 
 /** One prior conversation turn sent for history-aware retrieval (#167). */

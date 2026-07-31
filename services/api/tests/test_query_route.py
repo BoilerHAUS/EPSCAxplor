@@ -38,6 +38,15 @@ def clear_cache() -> None:
     get_settings.cache_clear()
 
 
+@pytest.fixture(autouse=True)
+def _stub_source_url_map() -> Any:
+    """#169 added a documents.source_url lookup to the query pipeline. Stub it to
+    empty by default so tests that patch the pipeline manually never hit the DB;
+    tests asserting source_url behaviour override this via ``_pipeline_patches``."""
+    with patch("src.routes.query._get_source_url_map", new=AsyncMock(return_value={})):
+        yield
+
+
 @pytest.fixture
 def test_settings() -> Settings:
     return Settings(
@@ -93,6 +102,7 @@ def _pipeline_patches(
     generator_result: GeneratorResult,
     known_unions: list[str] | None = None,
     title_map: dict[str, str] | None = None,
+    source_url_map: dict[str, str | None] | None = None,
     log_id: str | None = "aaaaaaaa-0000-0000-0000-000000000001",
     condensed: str | None = None,
 ) -> Any:
@@ -129,6 +139,12 @@ def _pipeline_patches(
                 patch(
                     "src.routes.query._get_title_map",
                     new=AsyncMock(return_value=title_map or {"doc-001": "IBEW CA 2025"}),
+                )
+            )
+            stack.enter_context(
+                patch(
+                    "src.routes.query._get_source_url_map",
+                    new=AsyncMock(return_value=source_url_map if source_url_map is not None else {}),
                 )
             )
             stack.enter_context(
@@ -183,6 +199,41 @@ async def test_query_response_has_citations(
     assert len(response.citations) == 1
     assert response.citations[0].source_number == 1
     assert response.citations[0].union_name == "IBEW"
+
+
+async def test_query_citations_carry_source_url(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    """#169: the resolved source_url reaches the response citation as a link target."""
+    chunk = make_chunk()
+    gen_result = make_generator_result()
+    url = "https://www.epsca.org/upload/request/5?file=IBEW.pdf&download=1"
+
+    with _pipeline_patches([chunk], gen_result, source_url_map={"doc-001": url}):
+        response = await query_handler(
+            QueryRequest(query="overtime?"),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    assert response.citations[0].source_url == url
+
+
+async def test_query_citation_source_url_none_when_unmapped(
+    test_settings: Settings, stub_user: CurrentUser
+) -> None:
+    """A document with no source_url (or absent from the map) yields no link target."""
+    chunk = make_chunk()
+    gen_result = make_generator_result()
+
+    with _pipeline_patches([chunk], gen_result):
+        response = await query_handler(
+            QueryRequest(query="overtime?"),
+            current_user=stub_user,
+            settings=test_settings,
+        )
+
+    assert response.citations[0].source_url is None
 
 
 async def test_r01_partially_grounded_refusal_keeps_cited_sources(
