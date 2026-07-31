@@ -14,6 +14,7 @@ class DocumentRecord(BaseModel):
     union_name: str
     document_type: str
     title: str
+    source_url: str | None
     effective_date: date | None
     expiry_date: date | None
     is_expired: bool
@@ -35,8 +36,8 @@ async def list_documents(
     """
     rows = await conn.fetch(
         """
-        SELECT id, union_name, document_type, title, effective_date, expiry_date,
-               is_expired, chunk_count, ingested_at
+        SELECT id, union_name, document_type, title, source_url, effective_date,
+               expiry_date, is_expired, chunk_count, ingested_at
         FROM documents
         WHERE ($1::text IS NULL OR union_name = $1)
           AND ($2::text IS NULL OR document_type = $2)

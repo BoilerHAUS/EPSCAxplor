@@ -172,6 +172,60 @@ class TestMetadataFields:
         assert result.metadata.source_url is None
 
 
+class TestSourceUrlNormalisation:
+    """The manifest documents a ``PLACEHOLDER`` sentinel meaning "obtain the URL
+    manually" — semantically the same as absent (NULL). Normalise it (and empty
+    strings) to None at the classify boundary so store/API/UI never see a fake
+    link. Real URLs must pass through untouched. Matching is exact (after strip)
+    so a real path segment is never mistaken for the sentinel."""
+
+    def test_placeholder_normalised_to_none(self, tmp_path: Path) -> None:
+        manifest_path = _write_manifest(
+            tmp_path, [_manifest_entry("ibew.pdf", source_url="PLACEHOLDER")]
+        )
+        doc = _make_extracted("ibew.pdf", tmp_path)
+        result = classify(doc, manifest_path)
+        assert result.metadata.source_url is None
+
+    def test_placeholder_with_surrounding_whitespace_normalised_to_none(
+        self, tmp_path: Path
+    ) -> None:
+        manifest_path = _write_manifest(
+            tmp_path, [_manifest_entry("ibew.pdf", source_url="  PLACEHOLDER  ")]
+        )
+        doc = _make_extracted("ibew.pdf", tmp_path)
+        result = classify(doc, manifest_path)
+        assert result.metadata.source_url is None
+
+    def test_empty_string_normalised_to_none(self, tmp_path: Path) -> None:
+        manifest_path = _write_manifest(
+            tmp_path, [_manifest_entry("ibew.pdf", source_url="")]
+        )
+        doc = _make_extracted("ibew.pdf", tmp_path)
+        result = classify(doc, manifest_path)
+        assert result.metadata.source_url is None
+
+    def test_lowercase_placeholder_is_not_the_sentinel(self, tmp_path: Path) -> None:
+        """Exact-match only: a lowercase 'placeholder' is a value, not the sentinel.
+        (It is still not a valid http(s) URL, so the web layer rejects it — but
+        classify must not silently fold case and mask a real path segment.)"""
+        manifest_path = _write_manifest(
+            tmp_path, [_manifest_entry("ibew.pdf", source_url="placeholder")]
+        )
+        doc = _make_extracted("ibew.pdf", tmp_path)
+        result = classify(doc, manifest_path)
+        assert result.metadata.source_url == "placeholder"
+
+    def test_real_url_passes_through_unchanged(self, tmp_path: Path) -> None:
+        url = "https://www.epsca.org/upload/request/5?file=IBEW.pdf&download=1"
+        manifest_path = _write_manifest(
+            tmp_path, [_manifest_entry("ibew.pdf", source_url=url)]
+        )
+        doc = _make_extracted("ibew.pdf", tmp_path)
+        result = classify(doc, manifest_path)
+        assert result.metadata.source_url == url
+
+
 class TestFilenameMatching:
     def test_matches_by_source_filename(self, tmp_path: Path) -> None:
         manifest_path = _write_manifest(

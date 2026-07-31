@@ -16,6 +16,7 @@ def _row(**overrides: Any) -> dict[str, Any]:
         "union_name": "IBEW",
         "document_type": "primary_ca",
         "title": "IBEW Generation 2025-2030 Collective Agreement",
+        "source_url": "https://www.epsca.org/upload/request/5?file=IBEW.pdf&download=1",
         "effective_date": date(2025, 5, 1),
         "expiry_date": date(2030, 4, 30),
         "is_expired": False,
@@ -50,3 +51,26 @@ async def test_list_empty_returns_empty_list() -> None:
     conn = AsyncMock()
     conn.fetch = AsyncMock(return_value=[])
     assert await list_documents(conn) == []
+
+
+async def test_query_selects_source_url_column() -> None:
+    conn = AsyncMock()
+    conn.fetch = AsyncMock(return_value=[])
+    await list_documents(conn)
+    sql = conn.fetch.await_args.args[0]
+    assert "source_url" in sql
+
+
+async def test_source_url_selected() -> None:
+    url = "https://www.epsca.org/upload/request/5?file=IBEW.pdf&download=1"
+    conn = AsyncMock()
+    conn.fetch = AsyncMock(return_value=[_row(source_url=url)])
+    docs = await list_documents(conn)
+    assert docs[0].source_url == url
+
+
+async def test_source_url_null_ok() -> None:
+    conn = AsyncMock()
+    conn.fetch = AsyncMock(return_value=[_row(source_url=None)])
+    docs = await list_documents(conn)
+    assert docs[0].source_url is None

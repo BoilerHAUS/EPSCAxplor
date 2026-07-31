@@ -25,6 +25,10 @@ class DocumentItem(BaseModel):
     union_name: str
     document_type: str
     title: str
+    # Original download URL, or null for manually-downloaded docs. Normalised to
+    # a real URL or null at ingestion (the "PLACEHOLDER" sentinel becomes null),
+    # so the web layer can render it directly as an external link.
+    source_url: str | None
     effective_date: date | None
     expiry_date: date | None
     is_expired: bool
@@ -62,6 +66,7 @@ async def list_documents_route(
             union_name=r.union_name,
             document_type=r.document_type,
             title=r.title,
+            source_url=r.source_url,
             effective_date=r.effective_date,
             expiry_date=r.expiry_date,
             is_expired=r.is_expired,

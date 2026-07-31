@@ -58,6 +58,29 @@ def _to_date_str(value: object) -> str:
     return str(value)
 
 
+# The manifest documents this exact sentinel for "URL must be obtained manually"
+# — semantically equivalent to absent (NULL). Matched exactly (after strip) so a
+# real path segment is never mistaken for it.
+_SOURCE_URL_PLACEHOLDER = "PLACEHOLDER"
+
+
+def _normalize_source_url(value: object) -> str | None:
+    """
+    Normalise a manifest ``source_url`` at the system boundary.
+
+    ``None``, an empty/whitespace-only string, and the documented
+    ``PLACEHOLDER`` sentinel all collapse to ``None`` so downstream stages
+    (store → API → UI) never persist or render a non-navigable link. Any real
+    URL is returned stripped and otherwise unchanged.
+    """
+    if value is None:
+        return None
+    stripped = str(value).strip()
+    if not stripped or stripped == _SOURCE_URL_PLACEHOLDER:
+        return None
+    return stripped
+
+
 @functools.lru_cache(maxsize=8)
 def _load_manifest_entries(manifest_path: Path) -> tuple[dict[str, object], ...]:
     """
@@ -99,7 +122,6 @@ def classify(
     for entry in entries:
         if entry.get("source_filename") == filename:
             expiry_raw = entry.get("expiry_date")
-            source_url_raw = entry.get("source_url")
             return ClassifiedDocument(
                 extracted=doc,
                 metadata=DocumentMetadata(
@@ -113,7 +135,7 @@ def classify(
                     effective_date=_to_date_str(entry["effective_date"]),
                     expiry_date=_to_date_str(expiry_raw) if expiry_raw is not None else None,
                     title=str(entry.get("title", "")),
-                    source_url=str(source_url_raw) if source_url_raw is not None else None,
+                    source_url=_normalize_source_url(entry.get("source_url")),
                 ),
             )
 

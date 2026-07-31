@@ -46,11 +46,15 @@ def _make_metadata(
     )
 
 
-def _make_doc(tmp_path: Path, filename: str = "ibew.pdf") -> ClassifiedDocument:
+def _make_doc(
+    tmp_path: Path,
+    filename: str = "ibew.pdf",
+    source_url: str | None = "PLACEHOLDER",
+) -> ClassifiedDocument:
     pdf = tmp_path / filename
     pdf.write_bytes(b"%PDF-1.4 fake content for hashing")
     extracted = ExtractedDocument(source_path=pdf, blocks=[], page_count=1)
-    return ClassifiedDocument(extracted=extracted, metadata=_make_metadata())
+    return ClassifiedDocument(extracted=extracted, metadata=_make_metadata(source_url=source_url))
 
 
 def _make_chunk(index: int = 0) -> Chunk:
@@ -314,6 +318,64 @@ class TestStoreDocumentPostgres:
 
         all_args = [arg for c in conn.fetchrow.call_args_list for arg in c.args]
         assert "ibew.pdf" in all_args
+
+    @pytest.mark.asyncio
+    async def test_update_path_refreshes_source_url(self, tmp_path: Path) -> None:
+        """Re-ingesting an existing document must refresh source_url so a changed
+        manifest URL propagates to the row (the UPDATE branch previously dropped it)."""
+        url = "https://example.com/new.pdf"
+        doc = _make_doc(tmp_path, source_url=url)
+        chunks = [_make_chunk(0)]
+        embeddings = [_fake_embedding()]
+        conn = _make_pg_conn(existing=True)
+        pool = _make_pg_pool(conn)
+
+        with (
+            patch("store.asyncpg.create_pool", return_value=pool),
+            patch("store.AsyncQdrantClient", return_value=_make_qdrant_client()),
+        ):
+            await store_document(doc, chunks, embeddings, postgres_dsn=_TEST_DSN)
+
+        all_args = [arg for c in conn.fetchrow.call_args_list for arg in c.args]
+        assert url in all_args
+
+    @pytest.mark.asyncio
+    async def test_insert_path_includes_source_url(self, tmp_path: Path) -> None:
+        """Regression guard: the INSERT branch carries source_url (existing=False)."""
+        url = "https://example.com/new.pdf"
+        doc = _make_doc(tmp_path, source_url=url)
+        chunks = [_make_chunk(0)]
+        embeddings = [_fake_embedding()]
+        conn = _make_pg_conn(existing=False)
+        pool = _make_pg_pool(conn)
+
+        with (
+            patch("store.asyncpg.create_pool", return_value=pool),
+            patch("store.AsyncQdrantClient", return_value=_make_qdrant_client()),
+        ):
+            await store_document(doc, chunks, embeddings, postgres_dsn=_TEST_DSN)
+
+        all_args = [arg for c in conn.fetchrow.call_args_list for arg in c.args]
+        assert url in all_args
+
+    @pytest.mark.asyncio
+    async def test_update_path_handles_none_source_url(self, tmp_path: Path) -> None:
+        """A NULL source_url (manually-downloaded doc) must pass through the UPDATE
+        branch without error — backward compatibility for legacy/absent URLs."""
+        doc = _make_doc(tmp_path, source_url=None)
+        chunks = [_make_chunk(0)]
+        embeddings = [_fake_embedding()]
+        conn = _make_pg_conn(existing=True)
+        pool = _make_pg_pool(conn)
+
+        with (
+            patch("store.asyncpg.create_pool", return_value=pool),
+            patch("store.AsyncQdrantClient", return_value=_make_qdrant_client()),
+        ):
+            await store_document(doc, chunks, embeddings, postgres_dsn=_TEST_DSN)
+
+        all_args = [arg for c in conn.fetchrow.call_args_list for arg in c.args]
+        assert None in all_args
 
     @pytest.mark.asyncio
     async def test_row_none_after_upsert_raises_runtime_error(
