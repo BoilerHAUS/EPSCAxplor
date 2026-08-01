@@ -13,6 +13,7 @@ from pathlib import Path
 from check_corpus_drift import (
     RemoteDoc,
     build_drift_report,
+    check_drift,
     format_report,
     load_manifest_filenames,
     parse_resource_links,
@@ -299,3 +300,56 @@ class TestBuildDriftReport:
         assert "Reissued" in text
         assert "May 1, 2025" in text
         assert "May 1, 2026" in text
+
+
+# A wageSchedules stub carrying the denylisted "Union Dues" table alongside a
+# normal, manifest-tracked schedule.  Union Dues lives in the wageSchedules JSON
+# but fits no per-union bucket and is deferred to the general-doc lane (#179), so
+# it must never surface as drift or the monthly cron reopens an issue every run.
+_DENYLIST_HTML = textwrap.dedent(
+    r"""
+    <html><body><script>
+    var wageSchedules = {"9":{"84":[
+      {"trade_id":"9","folder_id":"84","folder_name":"Administration",
+       "uploaded_file_id":"8401","name":"Union Dues - May 2025.pdf",
+       "download_url":"https:\/\/www.epsca.org\/upload\/request\/84?file=Union%20Dues%20-%20May%202025.pdf&download=1"},
+      {"trade_id":"2","folder_id":"15","folder_name":"Acoustic and Drywall",
+       "uploaded_file_id":"2151","name":"AD-1 LU 494 Windsor - May 1, 2025.pdf",
+       "download_url":"https:\/\/www.epsca.org\/upload\/request\/15?file=AD-1%20LU%20494%20Windsor%20-%20May%201%2C%202025.pdf&download=1"}
+    ]}};
+    </script></body></html>
+    """
+)
+
+
+class TestCheckDriftDenylist:
+    @staticmethod
+    def _manifest(tmp_path: Path, *extra_lines: str) -> Path:
+        manifest = tmp_path / "corpus_manifest.yaml"
+        manifest.write_text(
+            "documents:\n"
+            '  - document_type: "wage_schedule"\n'
+            '    source_filename: "AD-1 LU 494 Windsor - May 1, 2025.pdf"\n'
+            '    source_url: "https://www.epsca.org/upload/request/15?file=AD-1%20LU%20494%20Windsor%20-%20May%201%2C%202025.pdf&download=1"\n'
+            + "".join(extra_lines),
+            encoding="utf-8",
+        )
+        return manifest
+
+    def test_denylisted_doc_not_reported_as_new(self, tmp_path: Path) -> None:
+        report = check_drift(html=_DENYLIST_HTML, manifest_path=self._manifest(tmp_path))
+        assert "Union Dues - May 2025.pdf" not in report.new_wage
+        assert not report.has_drift
+
+    def test_denylist_does_not_suppress_genuine_new_drift(self, tmp_path: Path) -> None:
+        # Regression guard: the denylist must exclude only the named doc, not
+        # silence real drift that shares the page.
+        html = _DENYLIST_HTML.replace(
+            '"uploaded_file_id":"2151","name":"AD-1 LU 494 Windsor - May 1, 2025.pdf"',
+            '"uploaded_file_id":"9999","name":"ZZ-9 LU 999 Newtown - May 1, 2025.pdf"',
+        ).replace(
+            "request\\/15?file=AD-1%20LU%20494%20Windsor%20-%20May%201%2C%202025.pdf",
+            "request\\/15?file=ZZ-9%20LU%20999%20Newtown%20-%20May%201%2C%202025.pdf",
+        )
+        report = check_drift(html=html, manifest_path=self._manifest(tmp_path))
+        assert report.new_wage == ["ZZ-9 LU 999 Newtown - May 1, 2025.pdf"]

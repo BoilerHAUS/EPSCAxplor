@@ -17,7 +17,9 @@ import asyncio
 import logging
 import os
 import time
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("run_pipeline")
@@ -26,6 +28,32 @@ STAGES = ["download", "extract", "classify", "chunk", "embed", "store"]
 
 _HERE = Path(__file__).parent
 MD_CACHE_DIR = _HERE / "corpus_md"
+
+
+# ─── Entry selection ──────────────────────────────────────────────────────────
+
+
+def _select_entries(
+    entries: list[dict[str, Any]],
+    *,
+    doc_type: str | None,
+    source_filenames: Sequence[str] | None,
+) -> list[dict[str, Any]]:
+    """Filter manifest entries by document_type and/or exact source_filename.
+
+    Both filters are ANDed when supplied.  ``source_filenames`` enables a
+    targeted reingest of specific documents — e.g. the handful of wage schedules
+    changed by a corpus-drift update (#178) — instead of re-embedding an entire
+    document_type.  Empty/None filters mean "no filter", so an empty
+    ``source_filenames`` list returns everything rather than nothing.
+    """
+    selected = entries
+    if doc_type:
+        selected = [e for e in selected if e.get("document_type") == doc_type]
+    if source_filenames:
+        wanted = set(source_filenames)
+        selected = [e for e in selected if e.get("source_filename") in wanted]
+    return selected
 
 
 # ─── Single-stage helpers ─────────────────────────────────────────────────────
@@ -43,12 +71,18 @@ async def _run_download() -> None:
 # ─── Full pipeline (per-document) ─────────────────────────────────────────────
 
 
-async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) -> None:
+async def _run_full_pipeline(
+    dry_run: bool,
+    doc_type_filter: str | None = None,
+    source_filenames: Sequence[str] | None = None,
+) -> None:
     """
     Run all stages end-to-end for every document found in the corpus.
 
     Download stage is skipped here (run it separately via --stage download).
-    Remaining stages operate on every PDF already present in corpus/.
+    Remaining stages operate on every PDF already present in corpus/, optionally
+    narrowed by ``doc_type_filter`` and/or ``source_filenames`` for a targeted
+    reingest (#178).
     """
     from chunk import Chunk, chunk_document
 
@@ -69,11 +103,19 @@ async def _run_full_pipeline(dry_run: bool, doc_type_filter: str | None = None) 
 
     with CORPUS_MANIFEST.open() as f:
         manifest_data = yaml.safe_load(f) or {}
-    entries = list(manifest_data.get("documents", []))
+    entries = _select_entries(
+        list(manifest_data.get("documents", [])),
+        doc_type=doc_type_filter,
+        source_filenames=source_filenames,
+    )
 
-    if doc_type_filter:
-        entries = [e for e in entries if e.get("document_type") == doc_type_filter]
-        logger.info("Filtered to %d documents with document_type=%s", len(entries), doc_type_filter)
+    if doc_type_filter or source_filenames:
+        logger.info(
+            "Selected %d documents (document_type=%s, source_filenames=%s)",
+            len(entries),
+            doc_type_filter or "any",
+            list(source_filenames) if source_filenames else "any",
+        )
 
     doc_count = 0
     total_chunks = 0
@@ -208,14 +250,23 @@ async def run_stage(stage: str) -> None:
         logger.warning("Unknown stage '%s'", stage)
 
 
-async def main(stages: list[str], dry_run: bool, doc_type_filter: str | None = None) -> None:
+async def main(
+    stages: list[str],
+    dry_run: bool,
+    doc_type_filter: str | None = None,
+    source_filenames: Sequence[str] | None = None,
+) -> None:
     if stages == STAGES:
         # Full pipeline run
         t0 = time.monotonic()
         logger.info("=== Download ===")
         await _run_download()
         logger.info("=== Pipeline (extract → store) ===")
-        await _run_full_pipeline(dry_run=dry_run, doc_type_filter=doc_type_filter)
+        await _run_full_pipeline(
+            dry_run=dry_run,
+            doc_type_filter=doc_type_filter,
+            source_filenames=source_filenames,
+        )
         logger.info("Total wall time: %.1fs", time.monotonic() - t0)
     else:
         # Single-stage run
@@ -245,6 +296,21 @@ if __name__ == "__main__":
         metavar="DOCUMENT_TYPE",
         help="Process only entries with this document_type (e.g. wage_schedule)",
     )
+    parser.add_argument(
+        "--source-filename",
+        action="append",
+        dest="source_filenames",
+        metavar="FILENAME",
+        help="Reingest only entries with this exact source_filename (repeatable). "
+        "Combine with --doc-type to narrow further. Targeted drift reingest (#178).",
+    )
     args = parser.parse_args()
     selected = [args.stage] if args.stage else STAGES
-    asyncio.run(main(selected, dry_run=args.dry_run, doc_type_filter=args.doc_type))
+    asyncio.run(
+        main(
+            selected,
+            dry_run=args.dry_run,
+            doc_type_filter=args.doc_type,
+            source_filenames=args.source_filenames,
+        )
+    )

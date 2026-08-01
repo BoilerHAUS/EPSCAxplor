@@ -53,6 +53,16 @@ _DATE_SUFFIX_RE = re.compile(
 # those tokens rather than deny-listing the ever-growing set of forms.
 _AGREEMENT_TOKENS = ("agreement", "moa", "memorandum")
 
+# Documents advertised on epsca.org that are intentionally NOT ingested and must
+# therefore never be reported as drift.  "Union Dues" is a cross-union
+# administrative table that lives in the ``var wageSchedules`` JSON but fits no
+# per-union ``union_name`` bucket and is not a wage-schedule form, so it is
+# deferred to the general-document lane rather than mis-ingested under a fake
+# union.  Excluded from both the remote and manifest sides of the diff so it
+# surfaces as neither new, removed, nor reissued.
+# TODO(#179): remove this entry once Union Dues is ingested as a general document.
+_DRIFT_DENYLIST: frozenset[str] = frozenset({"Union Dues - May 2025.pdf"})
+
 
 @dataclass(frozen=True)
 class RemoteDoc:
@@ -324,10 +334,15 @@ def check_drift(
     wage_filenames = {d.filename for d in wage_docs}
     other_docs = parse_resource_links(html, wage_filenames=wage_filenames)
     manifest_wage, manifest_other = load_manifest_filenames(manifest_path)
+    # Drop denylisted documents from both sides so an intentionally un-ingested
+    # doc is reported as neither new (remote-only) nor removed (manifest-only).
+    remote_docs = [
+        doc for doc in (*wage_docs, *other_docs) if doc.filename not in _DRIFT_DENYLIST
+    ]
     return build_drift_report(
-        remote_docs=[*wage_docs, *other_docs],
-        manifest_wage=manifest_wage,
-        manifest_other=manifest_other,
+        remote_docs=remote_docs,
+        manifest_wage=manifest_wage - _DRIFT_DENYLIST,
+        manifest_other=manifest_other - _DRIFT_DENYLIST,
     )
 
 
