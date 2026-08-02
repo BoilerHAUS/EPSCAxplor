@@ -187,7 +187,7 @@ Recurring data-freshness work driven by the monthly epsca.org drift check (#91).
 
 | # | type | status | title |
 |---|------|--------|-------|
-| [#178](https://github.com/BoilerHAUS/EPSCAxplor/issues/178) | pr | [ ] | fix(ingestion): resolve epsca.org corpus drift — 8 IBEW LU 353 wage reissues (→ May 2026) + 2 Sheet Metal LU 504 URL renames. Adds `run_pipeline.py --source-filename` targeted reingest and `purge_documents.py` orphan cleanup (a reissue changes the filename → old rows/points orphan). Union Dues deferred to #179. **Completion gate = VPS reingest + purge (see docs/runbooks/ingestion.md); PR lands manifest + tooling only.** |
+| [#178](https://github.com/BoilerHAUS/EPSCAxplor/issues/178) | pr | [x] | fix(ingestion): resolve epsca.org corpus drift — 8 IBEW LU 353 wage reissues (→ May 2026) + 2 Sheet Metal LU 504 URL renames. Adds `run_pipeline.py --source-filename` targeted reingest and `purge_documents.py` orphan cleanup (a reissue changes the filename → old rows/points orphan). Union Dues deferred to #179. **Done 2026-08-02:** manifest + tooling shipped in PR #180; VPS reingest (10 docs / 126 chunks) + purge (8 orphaned 2025 rows/points) complete, `check_corpus_drift` green. |
 | [#179](https://github.com/BoilerHAUS/EPSCAxplor/issues/179) | pr | [ ] | feat(rag): model cross-union / EPSCA-general documents; ingest Union Dues (May 2025). Needs a `general` document_type migration + `build_filter` retrieval widening + eval; removes the #178 Union Dues drift denylist. |
 
 ---
