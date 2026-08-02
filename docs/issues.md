@@ -196,8 +196,19 @@ Recurring data-freshness work driven by the monthly epsca.org drift check (#91).
 
 Goal: Paid product with billing and white-label capability.
 
+**Payments platform decided 2026-08-02 — Stripe direct gateway + Stripe Tax.** Full rationale and
+comparison (Stripe vs Shopify vs Paddle / Polar / Lemon Squeezy / Stripe Managed Payments) in
+[docs/planning/payments-comparison.md](planning/payments-comparison.md). Decisive factors: Stripe
+Connect is the only path to per-tenant billing for #34 and the platform fork (every merchant-of-record
+option, including Stripe's own, excludes platform models); the MoR premium buys international tax
+relief we don't need for a ~100% domestic Ontario B2B customer base; and only Stripe supports
+Canadian pre-authorized debit and PO/cheque invoicing. #32/#33 keep Stripe but were re-scoped leaner
+— tier enforcement and the `subscriptions` Stripe columns already exist. Revisit an MoR (Paddle is
+the runner-up) only if international revenue exceeds ~20% of MRR.
+
 | # | type | status | title |
 |---|------|--------|-------|
+| [#181](https://github.com/BoilerHAUS/EPSCAxplor/issues/181) | no-pr | [ ] | ops: register for GST/HST and configure Stripe Tax |
 | [#32](https://github.com/BoilerHAUS/EPSCAxplor/issues/32) | pr | [ ] | feat(api): Stripe subscription integration |
 | [#33](https://github.com/BoilerHAUS/EPSCAxplor/issues/33) | pr | [ ] | feat(web): build pricing page and Stripe checkout flow |
 | [#34](https://github.com/BoilerHAUS/EPSCAxplor/issues/34) | pr | [ ] | feat(infra): white-label tenant configuration via Traefik custom domain routing |
