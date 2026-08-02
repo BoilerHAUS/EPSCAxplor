@@ -119,7 +119,7 @@ def subscription_sync_from_event(
     if event_type not in SUBSCRIPTION_EVENT_TYPES:
         return None
 
-    subscription = event.get("data", {}).get("object") or {}
+    subscription = (event.get("data") or {}).get("object") or {}
     price_id = _price_id_from_subscription(subscription)
     tier = tier_for_price_id(settings, price_id)
     if tier is None or price_id is None:

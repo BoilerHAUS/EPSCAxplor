@@ -66,13 +66,16 @@ def _subscription(
     tenant_id: str | None = str(TENANT_ID),
     cancel_at_period_end: bool = False,
     legacy_period: bool = False,
+    expanded_customer: bool = False,
 ) -> dict[str, Any]:
     """Build a Stripe Subscription payload in the current or legacy shape."""
     item: dict[str, Any] = {"id": "si_1", "price": {"id": price_id}}
     sub: dict[str, Any] = {
         "id": "sub_abc",
         "object": "subscription",
-        "customer": "cus_abc",
+        "customer": {"id": "cus_abc", "object": "customer"}
+        if expanded_customer
+        else "cus_abc",
         "status": status,
         "cancel_at_period_end": cancel_at_period_end,
         "metadata": {} if tenant_id is None else {"tenant_id": tenant_id},
@@ -213,6 +216,15 @@ def test_cancel_at_period_end_is_carried_but_stays_entitled() -> None:
     assert sync.cancel_at_period_end is True
     assert sync.status == "active"
     assert sync.query_limit_monthly == 100
+
+
+def test_expanded_customer_object_is_read_as_an_id() -> None:
+    """A webhook endpoint configured with ``expand=["data.object.customer"]``
+    delivers ``customer`` as a nested object rather than a bare id string."""
+    event = _event(_subscription(expanded_customer=True), "customer.subscription.created")
+    sync = subscription_sync_from_event(_settings(), event)
+    assert sync is not None
+    assert sync.stripe_customer_id == "cus_abc"
 
 
 def test_missing_tenant_metadata_leaves_tenant_unresolved() -> None:

@@ -356,6 +356,47 @@ def test_unresolvable_tenant_is_acknowledged_without_writing(client: TestClient)
     mocks["upsert"].assert_not_awaited()
 
 
+def test_invoice_payment_failed_never_writes_a_subscription_row(
+    client: TestClient,
+) -> None:
+    """Pin the invoice handler's read-only contract as an executable invariant.
+
+    ``customer.subscription.updated`` (status=past_due) is emitted for the same
+    failure and is the authoritative carrier of price and period. Writing a row
+    from the invoice instead would race that event and persist a status without
+    a verified tier — so this stays a log-only path, enforced here rather than
+    only by a comment.
+    """
+    payload = json.dumps(
+        {
+            "id": "evt_invoice_failed",
+            "object": "event",
+            "type": "invoice.payment_failed",
+            "created": int(time.time()),
+            "data": {
+                "object": {
+                    "id": "in_1",
+                    "customer": "cus_abc",
+                    "parent": {
+                        "type": "subscription_details",
+                        "subscription_details": {"subscription": "sub_abc"},
+                    },
+                }
+            },
+        }
+    )
+    with _billing_env() as mocks:
+        response = client.post(
+            "/billing/webhook",
+            content=payload,
+            headers={"Stripe-Signature": _sign(payload)},
+        )
+    assert response.status_code == 200
+    # Claimed (so a retry is a no-op) but deliberately never written.
+    mocks["claim"].assert_awaited_once()
+    mocks["upsert"].assert_not_awaited()
+
+
 # ─── checkout + portal: authentication ───────────────────────────────────────
 
 
