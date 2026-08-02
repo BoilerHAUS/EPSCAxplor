@@ -196,7 +196,10 @@ Recurring data-freshness work driven by the monthly epsca.org drift check (#91).
 
 Goal: Paid product with billing and white-label capability.
 
-**Payments platform decided 2026-08-02 — Stripe direct gateway + Stripe Tax.** Full rationale and
+**Payments platform decided 2026-08-02 — Stripe direct gateway.** (Stripe *Tax* is deferred, not
+adopted: the owner is a small supplier under the CAD $30k threshold and is not GST/HST registered,
+so #32 ships it gated off behind `STRIPE_AUTOMATIC_TAX_ENABLED` with tax-exclusive Prices — see
+#181.) Full rationale and
 comparison (Stripe vs Shopify vs Paddle / Polar / Lemon Squeezy / Stripe Managed Payments) in
 [docs/planning/payments-comparison.md](planning/payments-comparison.md). Decisive factors: Stripe
 Connect is the only path to per-tenant billing for #34 and the platform fork (every merchant-of-record
@@ -208,8 +211,8 @@ the runner-up) only if international revenue exceeds ~20% of MRR.
 
 | # | type | status | title |
 |---|------|--------|-------|
-| [#181](https://github.com/BoilerHAUS/EPSCAxplor/issues/181) | no-pr | [ ] | ops: register for GST/HST and configure Stripe Tax |
-| [#32](https://github.com/BoilerHAUS/EPSCAxplor/issues/32) | pr | [ ] | feat(api): Stripe subscription integration |
+| [#181](https://github.com/BoilerHAUS/EPSCAxplor/issues/181) | no-pr | [ ] | ops: register for GST/HST and configure Stripe Tax — **tripwire, keep open.** Owner is a small supplier under CAD $30k and is not registered, so #32 ships with `STRIPE_AUTOMATIC_TAX_ENABLED=false` and tax-exclusive Prices. Threshold is a rolling four-quarter window; exceeding $30k in a single quarter ends small-supplier status immediately. |
+| [#32](https://github.com/BoilerHAUS/EPSCAxplor/issues/32) | pr | [x] | feat(api): Stripe subscription integration — Checkout + Portal + signed webhook, migrations 011/012. **Test mode; migrations must be applied manually before the first webhook** ([runbook](runbooks/stripe-billing.md)). Stripe Tax gated off pending #181. |
 | [#33](https://github.com/BoilerHAUS/EPSCAxplor/issues/33) | pr | [ ] | feat(web): build pricing page and Stripe checkout flow |
 | [#34](https://github.com/BoilerHAUS/EPSCAxplor/issues/34) | pr | [ ] | feat(infra): white-label tenant configuration via Traefik custom domain routing |
 | [#35](https://github.com/BoilerHAUS/EPSCAxplor/issues/35) | pr | [ ] | feat(web): build enterprise API key management dashboard |

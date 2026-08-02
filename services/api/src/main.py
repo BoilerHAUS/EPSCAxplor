@@ -9,6 +9,7 @@ from src.csp import ContentSecurityPolicyMiddleware
 from src.db import close_pool, init_pool
 from src.rag.retrieval import close_qdrant_client, init_qdrant_client
 from src.routes.auth import router as auth_router
+from src.routes.billing import router as billing_router
 from src.routes.documents import router as documents_router
 from src.routes.health import router as health_router
 from src.routes.history import router as history_router
@@ -68,6 +69,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(query_router)
     app.include_router(documents_router)
     app.include_router(history_router)
+    app.include_router(billing_router)
 
     return app
 

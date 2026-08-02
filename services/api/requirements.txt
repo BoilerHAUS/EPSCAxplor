@@ -8,6 +8,10 @@ asyncpg>=0.29.0
 python-jose[cryptography]>=3.3.0
 bcrypt>=4.1.0
 httpx>=0.27.0
+# Stripe subscription billing (#32). >=15.4.0 for the async client
+# (`StripeClient.v1.*.create_async`), which keeps Checkout/Portal calls off the
+# event loop's blocking path.
+stripe>=15.4.0
 
 # Dev / test
 ruff>=0.4.0

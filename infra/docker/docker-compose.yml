@@ -50,6 +50,15 @@ services:
       JWT_REFRESH_EXPIRY_DAYS: ${JWT_REFRESH_EXPIRY_DAYS}
       ENVIRONMENT: ${ENVIRONMENT}
       CORS_ORIGINS: ${CORS_ORIGINS}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL}
+      # Stripe billing (#32). All optional: unset means the billing routes return
+      # 503 and the webhook rejects every delivery — billing off, not open.
+      # STRIPE_AUTOMATIC_TAX_ENABLED stays false until GST/HST registration (#181).
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_PRICE_INDIVIDUAL: ${STRIPE_PRICE_INDIVIDUAL}
+      STRIPE_PRICE_PROFESSIONAL: ${STRIPE_PRICE_PROFESSIONAL}
+      STRIPE_AUTOMATIC_TAX_ENABLED: ${STRIPE_AUTOMATIC_TAX_ENABLED}
     depends_on:
       - epsca-db
       - epsca-qdrant

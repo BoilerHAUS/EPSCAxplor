@@ -8,6 +8,23 @@ before #32 (API subscription integration) and #33 (pricing page + checkout) are 
 **Recommendation up front: keep Stripe (direct gateway) + Stripe Tax. #32/#33 stand as scoped.
 Do not adopt a Merchant of Record now; re-evaluate at the trigger conditions in §9.**
 
+> **Amendment 2026-08-02, during #32 implementation — the Stripe Tax half of this recommendation is
+> DEFERRED, not adopted.** This document assumed tax collection was needed from day one. It is not:
+> the owner is a Canadian **small supplier** (under the CAD $30,000 threshold) and is **not GST/HST
+> registered**, so charging GST/HST would be improper — and Stripe Tax would bill 0.5%/txn to
+> compute a 0% rate.
+>
+> What shipped instead: `automatic_tax` and `tax_id_collection` are both gated behind
+> `STRIPE_AUTOMATIC_TAX_ENABLED`, defaulting to **false**, and Prices are created **tax-exclusive**
+> so that registering later adds tax on top rather than carving it out of revenue (fixing that
+> after the fact would need new Price objects plus migrating every live subscription).
+>
+> This does not change the platform choice. Every fee row below that includes a Stripe Tax line is
+> now *cheaper* than shown for Stripe, which only widens the gap to the MoR options.
+> [#181](https://github.com/BoilerHAUS/EPSCAxplor/issues/181) stays open as the registration
+> tripwire: the threshold is a rolling four-consecutive-calendar-quarter window, and exceeding $30k
+> inside a single quarter ends small-supplier status immediately.
+
 ---
 
 ## 1. What we are actually optimizing for
