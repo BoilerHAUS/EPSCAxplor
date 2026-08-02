@@ -53,8 +53,13 @@ _ARTICLE_RE = re.compile(
 # Markdown H2/H3 headers used in wage schedule documents produced by convert.py
 _MARKDOWN_HEADER_RE = re.compile(r"^#{2,3}\s+(.+)$")
 
-# Section/clause numbers at the start of a line: "1.01", "12.03", "4.02a"
-_SECTION_RE = re.compile(r"^(\d+\.\d+[a-z]?)\s")
+# Section/clause numbers at the start of a line: "1.01", "12.03", "4.02a", "26.2".
+# The item-letter suffix requires a zero-padded two-digit minor, which is the
+# only form EPSCA letters ("4.02a", never "4.2a").  Allowing it after a
+# single-digit minor would read the multiplier that opens a dues line — "2.5x
+# the hourly rate" — as section "2.5x" and stamp that phantom section on every
+# chunk that follows (#179).
+_SECTION_RE = re.compile(r"^(\d+\.\d{2,}[a-z]|\d+\.\d+)\s")
 
 # EPSCA also numbers many sections as bare 3-digit margin numbers whose first
 # item letter opens the clause on the same line ("801 A. …", "806 A. …"); the

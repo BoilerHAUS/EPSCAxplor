@@ -302,11 +302,13 @@ class TestBuildDriftReport:
         assert "May 1, 2026" in text
 
 
-# A wageSchedules stub carrying the denylisted "Union Dues" table alongside a
-# normal, manifest-tracked schedule.  Union Dues lives in the wageSchedules JSON
-# but fits no per-union bucket and is deferred to the general-doc lane (#179), so
-# it must never surface as drift or the monthly cron reopens an issue every run.
-_DENYLIST_HTML = textwrap.dedent(
+# A wageSchedules stub carrying the Teamsters "Union Dues" form alongside a
+# normal, manifest-tracked schedule.  epsca.org files that form inside the
+# wageSchedules JSON, but the manifest tracks it as document_type "general"
+# (#179) — so the remote side calls it a wage schedule while the manifest side
+# does not.  The diff must tolerate that split, or the monthly cron reopens an
+# issue every run reporting the same file as both new and removed.
+_MIXED_BUCKET_HTML = textwrap.dedent(
     r"""
     <html><body><script>
     var wageSchedules = {"9":{"84":[
@@ -322,7 +324,29 @@ _DENYLIST_HTML = textwrap.dedent(
 )
 
 
-class TestCheckDriftDenylist:
+# The same page after EPSCA withdraws the dues form: the manifest still tracks
+# it, so it must surface as removed.
+_WAGE_ONLY_HTML = textwrap.dedent(
+    r"""
+    <html><body><script>
+    var wageSchedules = {"2":{"15":[
+      {"trade_id":"2","folder_id":"15","folder_name":"Acoustic and Drywall",
+       "uploaded_file_id":"2151","name":"AD-1 LU 494 Windsor - May 1, 2025.pdf",
+       "download_url":"https:\/\/www.epsca.org\/upload\/request\/15?file=AD-1%20LU%20494%20Windsor%20-%20May%201%2C%202025.pdf&download=1"}
+    ]}};
+    </script></body></html>
+    """
+)
+
+
+_GENERAL_ENTRY = (
+    '  - document_type: "general"\n'
+    '    source_filename: "Union Dues - May 2025.pdf"\n'
+    '    source_url: "https://www.epsca.org/upload/request/84?file=Union%20Dues%20-%20May%202025.pdf&download=1"\n'
+)
+
+
+class TestCheckDriftAcrossBuckets:
     @staticmethod
     def _manifest(tmp_path: Path, *extra_lines: str) -> Path:
         manifest = tmp_path / "corpus_manifest.yaml"
@@ -336,20 +360,39 @@ class TestCheckDriftDenylist:
         )
         return manifest
 
-    def test_denylisted_doc_not_reported_as_new(self, tmp_path: Path) -> None:
-        report = check_drift(html=_DENYLIST_HTML, manifest_path=self._manifest(tmp_path))
+    def test_wage_listed_doc_tracked_as_general_is_not_drift(self, tmp_path: Path) -> None:
+        report = check_drift(
+            html=_MIXED_BUCKET_HTML,
+            manifest_path=self._manifest(tmp_path, _GENERAL_ENTRY),
+        )
         assert "Union Dues - May 2025.pdf" not in report.new_wage
+        assert "Union Dues - May 2025.pdf" not in report.removed_other
         assert not report.has_drift
 
-    def test_denylist_does_not_suppress_genuine_new_drift(self, tmp_path: Path) -> None:
-        # Regression guard: the denylist must exclude only the named doc, not
-        # silence real drift that shares the page.
-        html = _DENYLIST_HTML.replace(
+    def test_untracked_doc_is_still_reported_as_new(self, tmp_path: Path) -> None:
+        # The tolerance is only for documents the manifest actually tracks: an
+        # unknown file in the wageSchedules JSON is real drift.
+        report = check_drift(html=_MIXED_BUCKET_HTML, manifest_path=self._manifest(tmp_path))
+        assert report.new_wage == ["Union Dues - May 2025.pdf"]
+
+    def test_manifest_only_doc_is_still_reported_as_removed(self, tmp_path: Path) -> None:
+        report = check_drift(
+            html=_WAGE_ONLY_HTML,
+            manifest_path=self._manifest(tmp_path, _GENERAL_ENTRY),
+        )
+        assert report.removed_other == ["Union Dues - May 2025.pdf"]
+
+    def test_genuine_new_drift_is_not_suppressed(self, tmp_path: Path) -> None:
+        # Regression guard: cross-bucket tolerance must not silence real drift
+        # that shares the page.
+        html = _MIXED_BUCKET_HTML.replace(
             '"uploaded_file_id":"2151","name":"AD-1 LU 494 Windsor - May 1, 2025.pdf"',
             '"uploaded_file_id":"9999","name":"ZZ-9 LU 999 Newtown - May 1, 2025.pdf"',
         ).replace(
             "request\\/15?file=AD-1%20LU%20494%20Windsor%20-%20May%201%2C%202025.pdf",
             "request\\/15?file=ZZ-9%20LU%20999%20Newtown%20-%20May%201%2C%202025.pdf",
         )
-        report = check_drift(html=html, manifest_path=self._manifest(tmp_path))
+        report = check_drift(
+            html=html, manifest_path=self._manifest(tmp_path, _GENERAL_ENTRY)
+        )
         assert report.new_wage == ["ZZ-9 LU 999 Newtown - May 1, 2025.pdf"]

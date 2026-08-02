@@ -35,3 +35,15 @@ def test_primary_ca_entry_does_not_match() -> None:
 
 def test_empty_entry_does_not_match() -> None:
     assert is_wage_schedule_entry({}) is False
+
+
+def test_general_dues_entry_does_not_match() -> None:
+    # The Teamsters dues form is filed beside a wage schedule on epsca.org but
+    # carries no rate table, so it must stay on the legacy extraction path —
+    # the EPSCA wage-form parser would find no classification rows in it (#179).
+    entry = {
+        "document_type": "general",
+        "title": "Teamsters Union Dues - May 2025",
+        "source_filename": "Union Dues - May 2025.pdf",
+    }
+    assert is_wage_schedule_entry(entry) is False

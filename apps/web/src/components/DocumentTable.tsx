@@ -16,6 +16,9 @@ const TYPE_LABELS: Record<string, string> = {
   primary_ca: "Primary CA",
   npa: "Nuclear Project Agreement",
   wage_schedule: "Wage Schedule",
+  // Administrative form (dues, remittance) — neither an agreement nor a rate
+  // table. Without this the fallback title-cases it to a bare "General".
+  general: "Administrative",
 };
 
 export function documentTypeLabel(documentType: string): string {

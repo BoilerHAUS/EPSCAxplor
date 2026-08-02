@@ -127,11 +127,21 @@ class TestResolveTitle:
 
 
 class TestDocTypeLabels:
-    def test_all_four_types_defined(self) -> None:
+    def test_all_types_defined(self) -> None:
         assert _DOC_TYPE_LABELS["primary_ca"] == "Primary Collective Agreement"
         assert _DOC_TYPE_LABELS["nuclear_pa"] == "Nuclear Project Agreement"
         assert _DOC_TYPE_LABELS["moa_supplement"] == "MOA / Supplementary Agreement"
         assert _DOC_TYPE_LABELS["wage_schedule"] == "Wage Schedule"
+        assert _DOC_TYPE_LABELS["general"] == "Administrative Document"
+
+    def test_general_chunk_is_not_labelled_as_an_agreement(self) -> None:
+        # A dues form is not a negotiated term, so its citation header must not
+        # present it as one (#179).
+        result = assemble_context([make_chunk(document_type="general")])
+        type_line = next(
+            line for line in result.splitlines() if line.startswith("Document Type:")
+        )
+        assert type_line == "Document Type: Administrative Document"
 
 
 # ─── assemble_context ─────────────────────────────────────────────────────────

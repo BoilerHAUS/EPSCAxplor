@@ -391,6 +391,31 @@ GOLD_QUESTIONS: list[GoldQuestion] = [
         is_cross_union=True,
         min_union_coverage=3,
     ),
+
+    # ── Administrative documents (added 2026-08-02 for #179) ─────────────────
+    # The Teamsters "Union Dues" form is the corpus's first document_type
+    # "general": an administrative form, not an agreement or a rate table.  D01
+    # is the grounding guard — the dues formulas exist only in that form, so a
+    # cited answer proves the general lane is retrievable end to end.
+    #
+    # D02 is the DOCUMENT-FIDELITY guard and the reason the pdfplumber_columns
+    # engine exists.  The form is laid out as side-by-side cards, and a
+    # line-order extraction pairs local 879 with local 230's formula.  Asserting
+    # the 3x figure for 879 fails loudly if the two-column conversion regresses.
+    #
+    # FULL-EVAL-ONLY, like N07/E01 (#163): the nightly smoke subset stays
+    # --ids W10,N06,C03 so its byte-for-byte behaviour is unchanged.
+    GoldQuestion(
+        id="D01", category="Administrative", union="Teamsters",
+        question="How are union dues calculated for Teamsters members under EPSCA?",
+        expect_citations=True,
+    ),
+    GoldQuestion(
+        id="D02", category="Administrative", union="Teamsters",
+        question="What are the union dues for Teamsters Local 879?",
+        expected_contains=["3x"],
+        expect_citations=True,
+    ),
 ]
 
 

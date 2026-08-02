@@ -27,6 +27,10 @@ _DOC_TYPE_LABELS: dict[str, str] = {
     "nuclear_pa": "Nuclear Project Agreement",
     "moa_supplement": "MOA / Supplementary Agreement",
     "wage_schedule": "Wage Schedule",
+    # A union's administrative form — dues, remittance — that is neither an
+    # agreement nor a rate table (#179).  Labelled as a form, not an agreement,
+    # so an answer citing it does not read as quoting a negotiated term.
+    "general": "Administrative Document",
 }
 
 

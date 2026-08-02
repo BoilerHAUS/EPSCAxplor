@@ -411,6 +411,20 @@ class TestDetectProvisionTerms:
         )
         assert any("subsistence" in t.lower() for t in terms)
 
+    # D01 — union dues (Teamsters "Union Dues" form + the CA check-off clause)
+    def test_dues_query_returns_checkoff_term(self) -> None:
+        terms = detect_provision_terms(
+            "What are the union dues for Teamsters Local 879?"
+        )
+        assert any("dues" in t.lower() for t in terms)
+
+    def test_dues_query_without_union_still_triggers(self) -> None:
+        assert detect_provision_terms("How are dues calculated?") != []
+
+    def test_dues_substring_does_not_trigger(self) -> None:
+        # Word-boundary guard: "residues" is not a dues question.
+        assert detect_provision_terms("How are chemical residues handled?") == []
+
     # N02 — nuclear site-specific provision
     def test_darlington_query_returns_site_name(self) -> None:
         terms = detect_provision_terms(

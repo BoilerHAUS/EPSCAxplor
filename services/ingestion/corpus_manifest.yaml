@@ -3,7 +3,9 @@
 #
 # Fields:
 #   union_name:      Union display name (matches documents.union_name in PostgreSQL)
-#   document_type:   primary_ca | nuclear_pa | moa_supplement | wage_schedule
+#   document_type:   primary_ca | nuclear_pa | moa_supplement | wage_schedule | general
+#                    ("general" is a union's administrative form — dues, remittance —
+#                     that is neither an agreement nor a rate table; still per-union)
 #   agreement_scope: generation | transmission | null (only for IBEW and Labourers)
 #   title:           Full document title as listed on epsca.org/resources
 #   source_url:      Direct download URL from epsca.org. Set to PLACEHOLDER if
@@ -3085,6 +3087,22 @@ documents:
     title: "Teamsters Wage Schedule Teamsters - Province of Ontario"
     source_url: "https://www.epsca.org/upload/request/84?file=Teamsters%20-%20Province%20of%20Ontario%20-%20May%202025.pdf&download=1"
     source_filename: "Teamsters - Province of Ontario - May 2025.pdf"
+    effective_date: "2025-05-01"
+    expiry_date: null
+
+  # Administrative form, not an agreement or a rate table (#179).  epsca.org
+  # files it beside the wage schedule above, under the same Teamsters folder;
+  # it states each Teamsters local's dues formula, remittance address and
+  # geographic jurisdiction.  It is a two-column form, so it needs the
+  # pdfplumber_columns engine — reading it line by line pairs each local with
+  # the neighbouring local's formula.
+  - union_name: "Teamsters"
+    document_type: "general"
+    conversion_engine: "pdfplumber_columns"
+    agreement_scope: null
+    title: "Teamsters Union Dues - May 2025"
+    source_url: "https://www.epsca.org/upload/request/84?file=Union%20Dues%20-%20May%202025.pdf&download=1"
+    source_filename: "Union Dues - May 2025.pdf"
     effective_date: "2025-05-01"
     expiry_date: null
 

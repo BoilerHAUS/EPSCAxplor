@@ -185,6 +185,20 @@ class TestBuildFilter:
         # must = [expiry_guard, effective_guard] only
         assert len(must) == 2
 
+    def test_nuclear_pa_is_the_only_document_type_ever_excluded(self) -> None:
+        # The Teamsters dues form is document_type "general" (#179).  It is
+        # reachable purely because it sits in the union's own bucket — no
+        # filter widening — so the primary pass must keep every type except
+        # NPA eligible.  A future doc-type allowlist here would silently make
+        # the general lane unretrievable.
+        f = build_filter("Teamsters", False, None)
+        excluded = [
+            cond.match.value  # type: ignore[union-attr]
+            for cond in (f.must_not or [])
+            if isinstance(cond, FieldCondition) and cond.key == "document_type"
+        ]
+        assert excluded == ["nuclear_pa"]
+
     # --- union_filter ---
 
     def test_union_filter_adds_union_name_condition(self) -> None:
