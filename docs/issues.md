@@ -181,6 +181,17 @@ when history is present, keeping the single-turn prompt **byte-for-byte** identi
 
 ---
 
+## Corpus Maintenance
+
+Recurring data-freshness work driven by the monthly epsca.org drift check (#91).
+
+| # | type | status | title |
+|---|------|--------|-------|
+| [#178](https://github.com/BoilerHAUS/EPSCAxplor/issues/178) | pr | [ ] | fix(ingestion): resolve epsca.org corpus drift — 8 IBEW LU 353 wage reissues (→ May 2026) + 2 Sheet Metal LU 504 URL renames. Adds `run_pipeline.py --source-filename` targeted reingest and `purge_documents.py` orphan cleanup (a reissue changes the filename → old rows/points orphan). Union Dues deferred to #179. **Completion gate = VPS reingest + purge (see docs/runbooks/ingestion.md); PR lands manifest + tooling only.** |
+| [#179](https://github.com/BoilerHAUS/EPSCAxplor/issues/179) | pr | [ ] | feat(rag): model cross-union / EPSCA-general documents; ingest Union Dues (May 2025). Needs a `general` document_type migration + `build_filter` retrieval widening + eval; removes the #178 Union Dues drift denylist. |
+
+---
+
 ## Phase 4 — Go to Market
 
 Goal: Paid product with billing and white-label capability.

@@ -81,5 +81,64 @@ POSTGRES_DSN="postgresql://epsca_user:<password>@127.0.0.1:5433/epsca?sslmode=di
 
 `store.py` deletes each document's existing Qdrant points before upserting, so a
 reingest fully replaces the previous chunks (no stale points when the chunk count
-shrinks). Then rerun the Phase 1 eval (`services/api/eval/run_eval.py`) and review
-the wage questions (W01–W12) in `docs/evaluation/phase1_results.md`.
+shrinks) — **but only when the `source_filename` is unchanged.** A reissue that
+changes the filename inserts a new row/points and orphans the old ones; see
+"Applying a corpus-drift update" below. Then rerun the Phase 1 eval
+(`services/api/eval/run_eval.py`) and review the wage questions (W01–W12) in
+`docs/evaluation/phase1_results.md`.
+
+### Applying a corpus-drift update (issue #178)
+
+The monthly drift check (#91) opens an issue when epsca.org diverges from the
+manifest. Resolving it has two traps the plain reingest above does not handle
+(orphaned points on a filename change, and re-embedding all ~279 schedules to
+fix a handful), so follow this flow.
+
+**1. Update `corpus_manifest.yaml`:**
+
+- **Reissue** (new effective date, e.g. May 2025 → May 2026): update `source_url`,
+  `source_filename`, and `effective_date`. The filename **changes**.
+- **Rename** (same content, upstream filename normalised): update `source_url`
+  only and **keep** `source_filename`, so the existing row updates in place and
+  no points orphan.
+
+Confirm the manifest matches the site (exit 0 = clean):
+
+```bash
+python3 check_corpus_drift.py
+```
+
+**2. Reingest only the changed documents** with `--source-filename` (repeatable)
+— not the whole `wage_schedule` set — on the VPS behind the socat tunnels
+(see CLAUDE.md "Running ingestion on the VPS"):
+
+```bash
+POSTGRES_DSN="postgresql://epsca_user:<password>@127.0.0.1:5433/epsca?sslmode=disable" \
+QDRANT_API_KEY="<read-write-key>" \
+python3 run_pipeline.py \
+  --source-filename "E-10-C LU 353 Oshawa-Port Hope - May 01, 2026.pdf" \
+  --source-filename "SM - 14 LU 504 Sudbury - May 1, 2025.pdf"
+  # ... one --source-filename per changed doc (new names for reissues,
+  #     unchanged names for renames)
+```
+
+The download stage fetches only PDFs missing from `corpus/` (reissues have new
+names so they download; renames are skipped as already present).
+
+**3. Purge superseded documents — REQUIRED for reissues.** Because a reissue
+changes `source_filename`, step 2 created a NEW `documents` row + Qdrant points
+and the OLD ones now orphan (their stale rates are still retrievable). Delete
+them by their **old** `source_filename` (preview with `--dry-run` first):
+
+```bash
+POSTGRES_DSN="postgresql://epsca_user:<password>@127.0.0.1:5433/epsca?sslmode=disable" \
+QDRANT_API_KEY="<read-write-key>" \
+python3 purge_documents.py --dry-run \
+  "E-10-C LU 353 Oshawa-Port Hope - May 1, 2025.pdf"
+  # ... one OLD filename per reissue; re-run without --dry-run to delete
+```
+
+Renames (step 1, `source_filename` kept) need **no** purge — they update in place.
+
+**4. Verify:** `check_corpus_drift.py` exits 0, and a spot-check query for a
+reissued local returns the new effective-dated rate.

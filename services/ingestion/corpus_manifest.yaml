@@ -107,9 +107,9 @@ documents:
     conversion_engine: "pymupdf4llm"
     agreement_scope: "generation"
     title: "IBEW Generation Wage Schedule E-9-C LU 353 South"
-    source_url: "https://www.epsca.org/upload/request/31?file=E-9-C%20LU%20353%20South%20-%20May%201%2C%202025%20%281%29.pdf&download=1"
-    source_filename: "E-9-C LU 353 South - May 1, 2025 (1).pdf"
-    effective_date: "2025-05-01"
+    source_url: "https://www.epsca.org/upload/request/31?file=E-9-C%20LU%20353%20South%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "E-9-C LU 353 South - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
     expiry_date: null
 
   - union_name: "IBEW"
@@ -117,9 +117,9 @@ documents:
     conversion_engine: "pymupdf4llm"
     agreement_scope: "generation"
     title: "IBEW Generation Wage Schedule E-9A-C LU 353 Pickering Project"
-    source_url: "https://www.epsca.org/upload/request/31?file=E-9A-C%20LU%20353%20Pickering%20Project%20-%20May%201%2C%202025.pdf&download=1"
-    source_filename: "E-9A-C LU 353 Pickering Project - May 1, 2025.pdf"
-    effective_date: "2025-05-01"
+    source_url: "https://www.epsca.org/upload/request/31?file=E-9A-C%20LU%20353%20Pickering%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "E-9A-C LU 353 Pickering - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
     expiry_date: null
 
   - union_name: "IBEW"
@@ -127,9 +127,9 @@ documents:
     conversion_engine: "pymupdf4llm"
     agreement_scope: "generation"
     title: "IBEW Generation Wage Schedule E-10-C LU 353 Oshawa-Port Hope"
-    source_url: "https://www.epsca.org/upload/request/31?file=E-10-C%20LU%20353%20Oshawa-Port%20Hope%20-%20May%201%2C%202025.pdf&download=1"
-    source_filename: "E-10-C LU 353 Oshawa-Port Hope - May 1, 2025.pdf"
-    effective_date: "2025-05-01"
+    source_url: "https://www.epsca.org/upload/request/31?file=E-10-C%20LU%20353%20Oshawa-Port%20Hope%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "E-10-C LU 353 Oshawa-Port Hope - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
     expiry_date: null
 
   - union_name: "IBEW"
@@ -157,9 +157,9 @@ documents:
     conversion_engine: "pymupdf4llm"
     agreement_scope: "generation"
     title: "IBEW Generation Wage Schedule E-14-C LU 353 North"
-    source_url: "https://www.epsca.org/upload/request/31?file=E-14-C%20LU%20353%20North%20-%20May%201%2C%202025%20%281%29.pdf&download=1"
-    source_filename: "E-14-C LU 353 North - May 1, 2025 (1).pdf"
-    effective_date: "2025-05-01"
+    source_url: "https://www.epsca.org/upload/request/31?file=E-14-C%20LU%20353%20North%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "E-14-C LU 353 North - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
     expiry_date: null
 
   - union_name: "IBEW"
@@ -290,7 +290,10 @@ documents:
     conversion_engine: "pymupdf4llm"
     agreement_scope: null
     title: "Sheet Metal Wage Schedule SM-14 LU 504 Sudbury"
-    source_url: "https://www.epsca.org/upload/request/69?file=SM%20-%2014%20LU%20504%20Sudbury%20-%20May%201%2C%202025.pdf&download=1"
+    # EPSCA renamed the site file "SM - 14" → "SM-14" (same May 2025 content);
+    # source_url tracks the live name, source_filename is kept so the existing
+    # Postgres row updates in place rather than orphaning old points (see #178).
+    source_url: "https://www.epsca.org/upload/request/69?file=SM-14%20LU%20504%20Sudbury%20-%20May%201%2C%202025.pdf&download=1"
     source_filename: "SM - 14 LU 504 Sudbury - May 1, 2025.pdf"
     effective_date: "2025-05-01"
     expiry_date: null
@@ -300,7 +303,10 @@ documents:
     conversion_engine: "pymupdf4llm"
     agreement_scope: null
     title: "Sheet Metal Wage Schedule SM-15 LU 504 Sault Ste. Marie"
-    source_url: "https://www.epsca.org/upload/request/69?file=SM%20-%2015%20LU%20504%20Sault%20Ste.%20Marie%20-%20May%201%2C%202025.pdf&download=1"
+    # EPSCA renamed the site file "SM - 15" → "SM-15" (same May 2025 content);
+    # source_url tracks the live name, source_filename is kept so the existing
+    # Postgres row updates in place rather than orphaning old points (see #178).
+    source_url: "https://www.epsca.org/upload/request/69?file=SM-15%20LU%20504%20Sault%20Ste.%20Marie%20-%20May%201%2C%202025.pdf&download=1"
     source_filename: "SM - 15 LU 504 Sault Ste. Marie - May 1, 2025.pdf"
     effective_date: "2025-05-01"
     expiry_date: null
@@ -1367,9 +1373,9 @@ documents:
     conversion_engine: "pymupdf4llm"
     agreement_scope: "transmission"
     title: "IBEW Transmission Wage Schedule ET-10-C LU 353 - Port Hope"
-    source_url: "https://www.epsca.org/upload/request/32?file=ET-10-C%20LU%20353%20-%20Port%20Hope%20-%20May%201%2C%202025.pdf&download=1"
-    source_filename: "ET-10-C LU 353 - Port Hope - May 1, 2025.pdf"
-    effective_date: "2025-05-01"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-10-C%20LU%20353%20Port%20Hope%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "ET-10-C LU 353 Port Hope - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
     expiry_date: null
 
   - union_name: "IBEW"
@@ -1397,9 +1403,9 @@ documents:
     conversion_engine: "pymupdf4llm"
     agreement_scope: "transmission"
     title: "IBEW Transmission Wage Schedule ET-14-C LU 353 - North"
-    source_url: "https://www.epsca.org/upload/request/32?file=ET-14-C%20LU%20353%20-%20North%20-%20May%201%2C%202025.pdf&download=1"
-    source_filename: "ET-14-C LU 353 - North - May 1, 2025.pdf"
-    effective_date: "2025-05-01"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-14-C%20LU%20353%20North%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "ET-14-C LU 353 North - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
     expiry_date: null
 
   - union_name: "IBEW"
@@ -1477,9 +1483,9 @@ documents:
     conversion_engine: "pymupdf4llm"
     agreement_scope: "transmission"
     title: "IBEW Transmission Wage Schedule ET-9-C LU 353 - South"
-    source_url: "https://www.epsca.org/upload/request/32?file=ET-9-C%20LU%20353%20-%20South%20-%20May%201%2C%202025.pdf&download=1"
-    source_filename: "ET-9-C LU 353 - South - May 1, 2025.pdf"
-    effective_date: "2025-05-01"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-9-C%20LU%20353%20South%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "ET-9-C LU 353 South - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
     expiry_date: null
 
   - union_name: "IBEW"
@@ -1487,9 +1493,9 @@ documents:
     conversion_engine: "pymupdf4llm"
     agreement_scope: "transmission"
     title: "IBEW Transmission Wage Schedule ET-9A-C LU 353 - Pickering Project"
-    source_url: "https://www.epsca.org/upload/request/32?file=ET-9A-C%20LU%20353%20-%20Pickering%20Project%20-%20May%201%2C%202025.pdf&download=1"
-    source_filename: "ET-9A-C LU 353 - Pickering Project - May 1, 2025.pdf"
-    effective_date: "2025-05-01"
+    source_url: "https://www.epsca.org/upload/request/32?file=ET-9A-C%20LU%20353%20Pickering%20Project%20-%20May%2001%2C%202026.pdf&download=1"
+    source_filename: "ET-9A-C LU 353 Pickering Project - May 01, 2026.pdf"
+    effective_date: "2026-05-01"
     expiry_date: null
 
   # ─── Insulators ─────────────────────────────────────────────────────────────
