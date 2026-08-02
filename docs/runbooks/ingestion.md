@@ -33,6 +33,7 @@ python3 run_pipeline.py --doc-type wage_schedule --dry-run
 | Stage | Script | Description |
 |---|---|---|
 | download | download.py | Fetch PDFs from corpus_manifest.yaml |
+| convert | convert.py | PDF → Markdown, per the entry's `conversion_engine` (legacy path only) |
 | extract | extract.py | Extract text from PDFs with pdfplumber |
 | wage parse | epsca_wage_parser.py | Default deterministic parser for wage schedules |
 | classify | classify.py | Assign doc_type (primary_ca, nuclear_pa, etc.) |
@@ -67,6 +68,49 @@ with `document_type: wage_schedule` are parsed deterministically by
 Disable with `INGEST_EPSCA_WAGE_PARSER=0` (falls back to the legacy
 Markdown/pdfplumber path). Any parse failure automatically falls back as well.
 (The former Docling + TPDS wage-table branch was retired in #90.)
+
+## Administrative documents (`document_type: general`, issue #179)
+
+`general` covers a union's administrative forms — dues, remittance — that are
+neither an agreement nor a rate table. It is still **union-scoped**: `general`
+describes what a document *is*, not how widely it applies. Filing such a form
+under `wage_schedule` would route it to the EPSCA wage-form parser, which finds
+no classification rate rows in it, so `is_wage_schedule_entry()` returns False
+for a `general` entry and the legacy convert → extract → classify → chunk path
+runs instead.
+
+The corpus's first `general` document is the Teamsters `Union Dues - May 2025.pdf`
+form. epsca.org files it inside the `var wageSchedules` JSON beside the Teamsters
+provincial wage schedule — the two sides of the drift check therefore disagree
+about its bucket, which `build_drift_report` tolerates (a document tracked on
+either side is not drift).
+
+### Two-column forms (`conversion_engine: pdfplumber_columns`)
+
+EPSCA prints some forms as side-by-side cards. Read in visual line order, the
+columns interleave and the association the form exists to state is destroyed:
+
+```
+Teamsters Local 230 Teamsters Local 879
+2.5x the hourly rate plus $7.00 assessment 3x the hourly rate
+```
+
+A reader — human or model — cannot tell which formula belongs to which local.
+Set `conversion_engine: "pdfplumber_columns"` on the manifest entry for these.
+The engine rebuilds the columns from word coordinates (a blank corridor at least
+24pt wide that at least two consecutive lines agree on) and emits each column
+whole, then re-attaches full-width tables in page order:
+
+```
+Teamsters Local 230
+2.5x the hourly rate plus $7.00 assessment
+...
+Teamsters Local 879
+3x the hourly rate
+```
+
+Gold questions D01/D02 in `services/api/eval/run_eval.py` guard this: D02 asserts
+the 3x figure for local 879, so a regression in column handling fails the eval.
 
 ### Reingesting wage schedules (issues #55 / #59)
 

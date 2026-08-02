@@ -50,6 +50,7 @@ describe("DocumentTable", () => {
         documents={[
           CURRENT,
           { ...EXPIRED_SPARSE, id: "d3", document_type: "wage_schedule" },
+          { ...EXPIRED_SPARSE, id: "d5", document_type: "general" },
           { ...EXPIRED_SPARSE, id: "d4", document_type: "letter_of_understanding" },
         ]}
       />,
@@ -57,6 +58,7 @@ describe("DocumentTable", () => {
 
     expect(screen.getByText("Primary CA")).toBeDefined();
     expect(screen.getByText("Wage Schedule")).toBeDefined();
+    expect(screen.getByText("Administrative")).toBeDefined();
     expect(screen.getByText("Letter Of Understanding")).toBeDefined();
   });
 

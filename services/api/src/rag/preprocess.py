@@ -173,6 +173,16 @@ _PROVISION_TERM_RULES: list[tuple[re.Pattern[str], tuple[str, ...]]] = [
         re.compile(r"\bsubsistence\b", re.IGNORECASE),
         ("subsistence allowance",),
     ),
+    # D01 — union dues.  A dues question is answered by two documents that both
+    # sit below the plain-cosine top-k: the union's administrative dues form
+    # (document_type "general", #179), which states the formula and where to
+    # remit, and the CA's dues check-off article, which authorises the
+    # deduction.  Both are reachable from the union bucket the query already
+    # selects, so recall — not filter widening — is what they need.
+    (
+        re.compile(r"\bdues\b", re.IGNORECASE),
+        ("union dues checkoff", "union dues deducted from the hourly rate"),
+    ),
     # N02 — nuclear site-specific provisions (e.g. IBEW NPA Darlington LOU).
     # These tokens also set include_nuclear_pa (see _NUCLEAR_PATTERNS), so the
     # site-specific LOU is filter-eligible when the term pass runs. "Bruce"

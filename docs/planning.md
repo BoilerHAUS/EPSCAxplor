@@ -259,8 +259,9 @@ adds, or removes a schedule.
 
 ### Document Type Classifications
 
-Every document in the corpus belongs to exactly one of these four types. This classification
-drives retrieval behaviour and answer framing.
+Every document in the corpus belongs to exactly one of these types. This classification
+drives retrieval behaviour and answer framing. All of them are union-scoped — including
+`general`, which describes what a document *is*, not how widely it applies.
 
 | Type Code | Description | Retrieval Behaviour |
 |---|---|---|
@@ -268,6 +269,7 @@ drives retrieval behaviour and answer framing.
 | `nuclear_pa` | Nuclear Project Agreement | Included when query context is nuclear/OPG/Bruce Power |
 | `moa_supplement` | MOA or Supplementary Agreement | Included when query matches affected topic and union |
 | `wage_schedule` | Wage Schedule PDF | Primary source for classification and rate queries |
+| `general` | Administrative form (dues, remittance) — neither an agreement nor a rate table | Eligible in the union's bucket like any other type; a "dues" query adds provision-recall terms (#179) |
 
 ### The Nuclear Project Agreement Relationship
 
@@ -406,11 +408,12 @@ CREATE TABLE documents (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     union_name      TEXT NOT NULL,             -- e.g. 'IBEW', 'Sheet Metal'
     document_type   TEXT NOT NULL              -- 'primary_ca', 'nuclear_pa', 'moa_supplement',
-                    CHECK (document_type IN (  --   'wage_schedule'
+                    CHECK (document_type IN (  --   'wage_schedule', 'general'
                         'primary_ca',
                         'nuclear_pa',
                         'moa_supplement',
-                        'wage_schedule'
+                        'wage_schedule',
+                        'general'
                     )),
     agreement_scope TEXT,                      -- 'generation', 'transmission', or NULL
     title           TEXT NOT NULL,             -- Full document title as on EPSCA site
@@ -484,7 +487,7 @@ Every point (chunk) stored in Qdrant carries the following payload:
 |---|---|---|---|
 | `union_name` | string | Canonical union name | `"IBEW"` |
 | `document_id` | string (UUID) | Foreign key to `documents` table | `"abc123..."` |
-| `document_type` | string | One of the four type codes | `"primary_ca"` |
+| `document_type` | string | One of the type codes above | `"primary_ca"` |
 | `agreement_scope` | string \| null | `"generation"`, `"transmission"`, or null | `"generation"` |
 | `title` | string | Full document title | `"IBEW Generation 2025-2030 Collective Agreement"` |
 | `effective_date` | string (ISO date) | Agreement or wage effective date | `"2025-05-01"` |

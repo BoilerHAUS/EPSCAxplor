@@ -805,3 +805,35 @@ class TestAppendixBoundary:
         assert all(
             c.article_number == "Article 5" for c in chunks if not c.is_table
         )
+
+
+class TestMatchSection:
+    """Section stamps become citations, so a false positive misattributes text."""
+
+    def test_decimal_section_is_matched(self) -> None:
+        from chunk import _match_section
+
+        assert _match_section("26.2 Subsistence allowance shall be paid") == "26.2"
+
+    def test_lettered_clause_is_matched(self) -> None:
+        from chunk import _match_section
+
+        assert _match_section("4.02a The Employer shall provide") == "4.02a"
+
+    def test_margin_section_is_matched(self) -> None:
+        from chunk import _match_section
+
+        assert _match_section("806 A. Employees shall") == "806"
+
+    def test_multiplier_is_not_a_section(self) -> None:
+        # "2.5x the hourly rate" opens the Teamsters dues form (#179); reading
+        # it as section "2.5x" stamps every following chunk with a section that
+        # does not exist in the document.
+        from chunk import _match_section
+
+        assert _match_section("2.5x the hourly rate plus $7.00 assessment") is None
+
+    def test_multiplier_without_suffix_letter_is_still_not_a_section(self) -> None:
+        from chunk import _match_section
+
+        assert _match_section("3x the hourly rate") is None
