@@ -68,6 +68,41 @@ class Settings(BaseSettings):
     # a smaller value would force an eviction sweep on every request.
     rate_limit_max_keys: int = Field(default=10_000, ge=1)
     cors_origins: str = "http://localhost:3000"
+    # Public origin of the Next.js app, used to build Stripe Checkout return
+    # URLs (#32). Kept separate from CORS_ORIGINS: that is a multi-value
+    # allow-list, whereas a redirect target must be exactly one origin, and
+    # silently redirecting to "whichever origin happens to be listed first"
+    # would be a bug the day a second origin is added.
+    public_web_url: str = "http://localhost:3000"
+
+    # ─── Stripe billing (#32) ────────────────────────────────────────────────
+    #
+    # All optional, and the billing routes return 503 while unset. Deliberately
+    # NOT required: making them mandatory would mean an API image that cannot
+    # boot until Stripe env vars exist, which would take prod down on the deploy
+    # that introduces billing rather than at the moment billing is switched on.
+    # The webhook fails CLOSED on a missing signing secret (503, never a skipped
+    # signature check), so "unconfigured" is safe, not permissive.
+    #
+    # TEST MODE ONLY for now — live keys never enter the repo or .env.example.
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    # Price IDs are environment-specific (test and live mode issue different
+    # ids), so they belong in config rather than in code. They are the ONLY
+    # source of the price_id -> tier mapping; see src/billing/plans.py.
+    stripe_price_individual: str | None = None
+    stripe_price_professional: str | None = None
+    # Stripe Tax gate (#181). OFF by default and deliberately contrary to #32's
+    # task list: the owner is a Canadian small supplier under the CAD $30,000
+    # threshold and is NOT GST/HST registered. An unregistered supplier must not
+    # charge GST/HST, and Stripe Tax bills 0.5%/txn to compute a 0% rate. Flip
+    # this to true only once registration is live — and note the threshold is a
+    # rolling four-consecutive-quarter window, and exceeding $30k inside a single
+    # quarter ends small-supplier status immediately.
+    #
+    # This gates BOTH automatic_tax and tax_id_collection: collecting a buyer's
+    # GST/HST number has no purpose while we cannot charge tax.
+    stripe_automatic_tax_enabled: bool = False
     # Commit SHA of the running build, baked into the image at build time
     # (Dockerfile ARG → ENV) and surfaced in /health so the deploy workflow
     # can confirm the freshly built image is actually serving (#75).
