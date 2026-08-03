@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Final
 
 import asyncpg
 from pydantic import BaseModel
@@ -19,19 +20,73 @@ class SubscriptionRecord(BaseModel):
     user_limit: int | None  # NULL means unlimited
     current_period_start: datetime | None
     current_period_end: datetime | None
+    #: Raw Stripe status (011), kept because the mapped ``status`` above is lossy
+    #: in a way entitlement cares about: both ``past_due`` (Stripe still retrying)
+    #: and ``unpaid`` (Stripe has given up) map onto ``past_due``, and only the
+    #: first of those deserves a grace period. NULL for hand-provisioned
+    #: enterprise rows, which never came from a webhook.
+    stripe_status: str | None = None
+    #: Set when the customer cancels through the Billing Portal. Deliberately NOT
+    #: an entitlement input — such a subscription stays ``active`` and fully paid
+    #: until the period actually ends, so ``status`` alone already handles it.
+    #: Carried here so that invariant is visible and testable rather than implied.
+    cancel_at_period_end: bool = False
+
+
+#: The column list behind ``SubscriptionRecord``. A fixed literal shared by the
+#: queries below so the two cannot drift; nothing is interpolated into it.
+_RECORD_COLUMNS: Final = (
+    "id, tenant_id, tier, status, query_limit_monthly, user_limit, "
+    "current_period_start, current_period_end, stripe_status, cancel_at_period_end"
+)
 
 
 async def get_tenant_subscription(
     conn: asyncpg.Connection, tenant_id: uuid.UUID
 ) -> SubscriptionRecord | None:
-    """Return the tenant's most recent subscription, or None if it has none."""
+    """Return the tenant's most recent subscription, or None if it has none.
+
+    Strictly newest-first. Callers deciding *entitlement* want
+    ``get_tenant_subscriptions`` instead — see the ordering note there.
+    """
     row = await conn.fetchrow(
-        "SELECT id, tenant_id, tier, status, query_limit_monthly, user_limit, "
-        "current_period_start, current_period_end "
+        f"SELECT {_RECORD_COLUMNS} "  # noqa: S608 - fixed literal, no user input
         "FROM subscriptions WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT 1",
         tenant_id,
     )
     return SubscriptionRecord.model_validate(dict(row)) if row is not None else None
+
+
+async def get_tenant_subscriptions(
+    conn: asyncpg.Connection, tenant_id: uuid.UUID, *, limit: int = 10
+) -> list[SubscriptionRecord]:
+    """The tenant's subscription rows, best entitlement candidate first (#185).
+
+    A tenant legitimately owns several rows — it cancels and re-subscribes, or an
+    enterprise row is provisioned by hand alongside an old self-serve one — so
+    "which subscription applies" is a real question once ``status`` is enforced.
+    Taking the newest unconditionally, as ``get_tenant_subscription`` does, gets
+    it wrong in a way that costs a *paying* customer their access: a subscriber
+    who starts a second checkout and abandons the 3-D Secure step leaves an
+    ``incomplete`` subscription behind, which the webhook stores as ``cancelled``
+    with a ``created_at`` newer than their still-active row.
+
+    The ``ORDER BY`` is only a coarse pre-filter — it floats the statuses that
+    *could* still be entitled above the ones that definitively are not, so the
+    real decision (which needs a clock, for the dunning grace window) stays in
+    ``src.billing.entitlements`` rather than being half-expressed in SQL. Its
+    purpose is to guarantee that any viable candidate is inside ``limit``, no
+    matter how many dead rows a long-lived tenant has accumulated.
+    """
+    rows = await conn.fetch(
+        f"SELECT {_RECORD_COLUMNS} "  # noqa: S608 - fixed literal, no user input
+        "FROM subscriptions WHERE tenant_id = $1 "
+        "ORDER BY (status IN ('active', 'trialing', 'past_due')) DESC, created_at DESC "
+        "LIMIT $2",
+        tenant_id,
+        limit,
+    )
+    return [SubscriptionRecord.model_validate(dict(row)) for row in rows]
 
 
 # ─── Stripe webhook sync (#32) ───────────────────────────────────────────────

@@ -17,8 +17,9 @@ question and on the checklist in §6.
 | `POST /billing/portal-session` | JWT / API key | Returns a Billing Portal URL (cancel, card, invoices). |
 | `POST /billing/webhook` | **Stripe signature** | Syncs subscription state into `subscriptions`. |
 
-Populating `subscriptions` is what turns tier enforcement on: `enforce_tier_limit` (#25) already
-reads that table and fails open while it is empty. No enforcement code changed in #32.
+Populating `subscriptions` is what turns tier enforcement on: `enforce_tier_limit` (#25) reads that
+table and fails open while it is empty. No enforcement code changed in #32; what a tenant gets once
+its subscription ends was decided separately in #185 — see §9.
 
 The tier a tenant receives is derived **server-side from the Stripe Price ID** via
 `src/billing/plans.py`. A client never supplies a tier — `POST /billing/checkout-session` takes a
@@ -192,12 +193,72 @@ DELETE FROM processed_stripe_events WHERE processed_at < NOW() - INTERVAL '90 da
 
 ## 8. Known gaps (deliberately not in #32)
 
-- **A cancelled subscription keeps its quota.** `enforce_tier_limit` reads `query_limit_monthly`
-  and ignores `status`, so once a `cancelled` row exists the tenant still gets that tier's
-  allowance. Before #32 no rows existed, so this was unreachable. Deciding what a cancelled tenant
-  should get (a free-tier quota, zero, or read-only) is a product call, not a webhook fix.
+- ~~**A cancelled subscription keeps its quota.**~~ Closed by #185 — see §9.
 - **`tenants.tier` is not synced.** It duplicates `subscriptions.tier` and is currently read by no
   code. The webhook deliberately leaves it alone rather than writing a second source of truth.
 - **No proration/upgrade-path handling beyond what Stripe does by default.** Changing plans
   through the Billing Portal works and emits `customer.subscription.updated`, which is handled;
   nothing special is done about mid-period credits.
+- **Seat limits are not status-aware.** `scripts/create_user.py` enforces `user_limit` off
+  whatever `get_tenant_subscription` returns, ignoring status. It is an operator-run CLI, so an
+  admin running it is already an authorisation decision, and blocking support from provisioning a
+  user while a customer sorts out a card would be worse than the gap. Unchanged by #185.
+
+---
+
+## 9. What a lapsed subscription gets (#185)
+
+> **Deploy order — migration 011 must be applied first.** `enforce_tier_limit` now selects
+> `stripe_status` and `cancel_at_period_end`, and it runs on *every* `POST /query`. Deploying this
+> image against a database without migration 011 fails every query with a 500, not just billing
+> ones. Migrations are manual on prod (see CLAUDE.md), so confirm before deploying:
+>
+> ```sql
+> SELECT column_name FROM information_schema.columns
+> WHERE table_name = 'subscriptions'
+>   AND column_name IN ('stripe_status', 'cancel_at_period_end');
+> ```
+>
+> Two rows means it is safe to deploy.
+
+`enforce_tier_limit` resolves entitlement through `src/billing/entitlements.py` rather than
+reading `query_limit_monthly` directly. The policy:
+
+| Stripe status | Stored `status` | Gets |
+|---|---|---|
+| `active` | `active` | Full tier quota |
+| `active` + `cancel_at_period_end` | `active` | **Full tier quota** — paid through period end |
+| `trialing` | `trialing` | Full tier quota |
+| `past_due` (retrying) | `past_due` | Full tier quota, up to the backstop below |
+| `unpaid` (retries exhausted) | `past_due` | Lapsed allowance |
+| `canceled` / `incomplete` / `incomplete_expired` / `paused` | `cancelled` | Lapsed allowance |
+| *no subscription row at all* | — | **Unlimited** (bootstrap tenant, hand-provisioned) |
+
+The lapsed allowance is `LAPSED_QUERY_LIMIT_MONTHLY` in `src/billing/plans.py` (10/month,
+calendar-month window). It is not a tier: there is no Price, it is absent from `GET /billing/plans`,
+and the row keeps the tier it was bought on.
+
+Exhausting it returns **402**, not 429 — waiting will not help, paying will. A paying tenant that
+exhausts its real quota still gets 429 with `Retry-After`. `/history` and `/documents` are not
+gated, so a churned customer keeps read access to answers they already paid to produce.
+
+> **Operational dependency — check this in the Dashboard.** `past_due` keeps full quota because
+> Stripe's own dunning schedule is treated as the grace period. That only terminates if
+> **Billing → Subscriptions and emails → Manage failed payments** is set to cancel or mark unpaid
+> after the final retry. If it is left on "do nothing", the subscription sits `past_due` forever.
+> `PAST_DUE_GRACE_DAYS` (env, default 14) is the backstop that bounds this, measured from
+> `current_period_start`. **Keep it at or above the Dashboard's retry window**, or it will cut
+> customers off while Stripe is still legitimately collecting.
+
+To verify after a status change, re-read the row and confirm what the tenant now gets:
+
+```sql
+SELECT tier, status, stripe_status, cancel_at_period_end,
+       query_limit_monthly, current_period_start
+FROM subscriptions WHERE tenant_id = '<uuid>'
+ORDER BY (status IN ('active','trialing','past_due')) DESC, created_at DESC;
+```
+
+The `ORDER BY` matches `get_tenant_subscriptions`: the top row is the one that decides access.
+It is not always the newest — an abandoned 3-D Secure checkout leaves an `incomplete` row newer
+than the subscription actually being paid for, and entitled rows deliberately outrank it.
