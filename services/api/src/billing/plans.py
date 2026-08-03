@@ -62,6 +62,22 @@ _ENTITLEMENTS: Final[dict[str, PlanEntitlements]] = {
     TIER_ENTERPRISE: PlanEntitlements(query_limit_monthly=None, user_limit=None),
 }
 
+#: What a tenant keeps once its subscription has definitively lapsed — cancelled,
+#: or past_due past the point where Stripe has stopped retrying (#185).
+#:
+#: This is deliberately NOT a fourth tier. Migration 003's CHECK constraint allows
+#: only individual/professional/enterprise, and a lapsed tenant's row keeps the
+#: tier it was bought on; this is the allowance applied *instead of* that tier's
+#: quota once ``src.billing.entitlements`` judges the row unentitled. Keeping it
+#: out of the catalog means it has no Price, cannot be checked out, and never
+#: appears on the pricing page — it is a lapsed state, not a product.
+#:
+#: Small but non-zero on purpose: it keeps a churned account able to spot-check an
+#: agreement (and to see that the product still works) without leaving a paid
+#: allowance running for free. Every one of these queries still costs a Claude
+#: call, so this is the number to watch if abandoned accounts accumulate.
+LAPSED_QUERY_LIMIT_MONTHLY: Final = 10
+
 
 class PublicPlan(BaseModel, frozen=True):
     """A self-serve plan as exposed to the web layer.

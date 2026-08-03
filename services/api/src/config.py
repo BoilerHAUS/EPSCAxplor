@@ -103,6 +103,14 @@ class Settings(BaseSettings):
     # This gates BOTH automatic_tax and tax_id_collection: collecting a buyer's
     # GST/HST number has no purpose while we cannot charge tax.
     stripe_automatic_tax_enabled: bool = False
+    # How long a past_due subscription keeps its paid quota, measured from the
+    # start of the unpaid period (#185). This is a BACKSTOP, not the grace policy
+    # itself — Stripe's own dunning schedule decides when retries stop, and this
+    # only bounds the damage if that schedule is configured never to terminate.
+    # Keep it at or above the Dashboard's retry window or it will cut customers
+    # off while Stripe is still legitimately trying to collect. 0 disables the
+    # grace entirely (past_due lapses at once).
+    past_due_grace_days: int = Field(default=14, ge=0)
     # Commit SHA of the running build, baked into the image at build time
     # (Dockerfile ARG → ENV) and surfaced in /health so the deploy workflow
     # can confirm the freshly built image is actually serving (#75).
